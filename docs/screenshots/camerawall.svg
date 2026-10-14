@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" style="background:#0b0f17; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <!-- Header Bar -->
+  <rect x="0" y="0" width="1200" height="54" fill="#0f172a" stroke="#1e293b" stroke-width="1" />
+  <circle cx="25" cy="27" r="6" fill="#ef4444" />
+  <circle cx="45" cy="27" r="6" fill="#f59e0b" />
+  <circle cx="65" cy="27" r="6" fill="#10b981" />
+  <text x="95" y="32" fill="#38bdf8" font-size="14" font-weight="bold">📹 MURO DE 159 CÁMARAS DGT EN VIVO · ALICANTE</text>
+  
+  <rect x="620" y="14" width="220" height="26" rx="6" fill="#1e293b" />
+  <text x="635" y="31" fill="#94a3b8" font-size="11">🔍 Filtrar por calle o zona...</text>
+  
+  <rect x="860" y="14" width="150" height="26" rx="6" fill="#0284c7" />
+  <text x="872" y="31" fill="#ffffff" font-size="11" font-weight="bold">🔄 Refresco automático (15s)</text>
+
+  <rect x="1030" y="14" width="140" height="26" rx="6" fill="#10b981" />
+  <text x="1045" y="31" fill="#020617" font-size="11" font-weight="bold">📌 Cámaras de Ruta (6)</text>
+
+  <!-- Camera Grid (4x3 sample of live feeds) -->
+  <g transform="translate(30, 75)">
+    <!-- Row 1 -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#06b6d4" stroke-width="2" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #001 · Pl. Luceros / Maisonnave</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <!-- Traffic simulation -->
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <circle cx="120" cy="110" r="5" fill="#ef4444" />
+      <circle cx="150" cy="115" r="5" fill="#f59e0b" />
+      <text x="10" y="162" fill="#22c55e" font-size="10" font-weight="bold">🟢 Tráfico Fluido · 48 km/h</text>
+    </g>
+
+    <g transform="translate(290, 0)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #014 · Av. Alfonso X el Sabio</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#38bdf8" font-size="10" font-weight="bold">🚌 Carril Bus-Taxi Despejado</text>
+    </g>
+
+    <g transform="translate(580, 0)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #028 · Estación AVE Renfe</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#fbbf24" font-size="10" font-weight="bold">🚖 Parada de Taxi con Afluencia</text>
+    </g>
+
+    <g transform="translate(870, 0)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #042 · Av. Dénia / Vía Parque</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#22c55e" font-size="10" font-weight="bold">🟢 Fluido hacia San Juan</text>
+    </g>
+
+    <!-- Row 2 -->
+    <g transform="translate(0, 195)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #056 · Puerto / Paseo Marítimo</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#38bdf8" font-size="10">Visibilidad Óptima · Tráfico Ligero</text>
+    </g>
+
+    <g transform="translate(290, 195)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #073 · Explanada de España</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#22c55e" font-size="10">🟢 Zona Peatonal Respetada</text>
+    </g>
+
+    <g transform="translate(580, 195)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#f59e0b" stroke-width="2" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #089 · Gran Vía / Pintor Baeza</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#f59e0b" font-size="10" font-weight="bold">🟡 Semáforo Lento (Rotonda)</text>
+    </g>
+
+    <g transform="translate(870, 195)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #104 · Playa de San Juan</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#22c55e" font-size="10">🟢 Entrada despejada</text>
+    </g>
+
+    <!-- Row 3 -->
+    <g transform="translate(0, 390)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #118 · A-31 Entrada Alicante</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#22c55e" font-size="10">🟢 Acceso Autovía 90 km/h</text>
+    </g>
+
+    <g transform="translate(290, 390)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #132 · Hospital General ALC</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#38bdf8" font-size="10">🚑 Zona de Urgencias Despejada</text>
+    </g>
+
+    <g transform="translate(580, 390)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #145 · Aeropuerto El Altet Acc.</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#fbbf24" font-size="10">✈️ Alta afluencia de taxis</text>
+    </g>
+
+    <g transform="translate(870, 390)">
+      <rect x="0" y="0" width="265" height="175" rx="8" fill="#020617" stroke="#334155" stroke-width="1.5" />
+      <rect x="0" y="0" width="265" height="26" rx="8" fill="#0f172a" />
+      <text x="10" y="17" fill="#f8fafc" font-size="10" font-weight="bold">🔴 DGT #159 · Cabo de las Huertas</text>
+      <rect x="8" y="32" width="249" height="110" rx="4" fill="#1e293b" />
+      <polygon points="8,142 80,80 180,80 257,142" fill="#0f172a" />
+      <text x="10" y="162" fill="#22c55e" font-size="10">🟢 Costa Fluido</text>
+    </g>
+  </g>
+</svg>

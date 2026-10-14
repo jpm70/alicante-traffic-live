@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Alicante Tráfico en Vivo - Rutas y Cámaras</title>
+    <meta name="description" content="Calcula el camino más rápido en Alicante analizando el tráfico en tiempo real y visualiza las cámaras de tráfico en una sola pantalla." />
+    <meta property="og:title" content="Alicante Tráfico en Vivo - Rutas y Cámaras" />
+    <meta property="og:description" content="Calcula el camino más rápido en Alicante analizando el tráfico en tiempo real y visualiza las cámaras de tráfico en una sola pantalla." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/png" href="/icono.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0b0f17" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tráfico ALC" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+      }
+    </script>
+    <script>
+      // Gracefully ignore Vite HMR / ModuleRunner WebSocket connection disconnects in iframe/proxy environment
+      window.addEventListener('error', function (e) {
+        var msg = String(e?.message || '');
+        var src = String(e?.filename || '');
+        var stack = String(e?.error?.stack || '');
+        var full = msg + ' ' + src + ' ' + stack;
+        if (full.includes('WebSocket') || full.includes('@vite/client') || full.includes('createWebSocketModuleRunnerTransport')) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          return true;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        var str = String(e?.reason?.message || '') + ' ' + String(e?.reason || '') + ' ' + String(e?.reason?.stack || '');
+        if (str.includes('WebSocket') || str.includes('@vite/client') || str.includes('createWebSocketModuleRunnerTransport')) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+    </script>
+  </head>
+  <body class="bg-[#0b0f17] text-slate-100 antialiased font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

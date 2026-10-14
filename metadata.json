@@ -1,0 +1,6 @@
+{
+  "name": "Alicante Tráfico en Vivo - Rutas y Cámaras",
+  "description": "Calcula el camino más rápido en Alicante analizando el tráfico en tiempo real y visualiza las cámaras de tráfico en una sola pantalla.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
