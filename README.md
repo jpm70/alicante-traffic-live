@@ -138,7 +138,7 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 
 ### Paso 1: Clonar el repositorio
 ```bash
-git clone https://github.com/jpm70/alicante-trafico-en-vivo.git
+git clone https://github.com/unfantasmaenelsistema/alicante-trafico-en-vivo.git
 cd alicante-trafico-en-vivo
 ```
 
