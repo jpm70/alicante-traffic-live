@@ -380,16 +380,16 @@ ${advice}`;
             <button
               onClick={() => onStartTour?.(fastestRoute, 'streetview')}
               className="py-2 px-1 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/40 text-blue-300 hover:text-blue-200 text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition-all shadow-sm active:scale-95"
-              title="Opción 1: Recorrido a pie de calle con Google Street View y clave API en navegador"
+              title="Opción 1: Recorrido panorámico de tipo Street View a pie de calle"
             >
               <Eye className="w-3.5 h-3.5 text-blue-400" />
-              <span className="text-[11px] truncate">1. Pie de Calle</span>
+              <span className="text-[11px] truncate">1. Street View</span>
             </button>
 
             <button
               onClick={() => onStartTour?.(fastestRoute, 'flythrough')}
               className="py-2 px-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 hover:text-cyan-200 text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1 transition-all shadow-sm active:scale-95"
-              title="Opción 2: Simulación de vuelo 3D por la carretera con telemetría en tiempo real"
+              title="Opción 2: Simulación de vuelo 3D por la carretera con Three.js"
             >
               <Compass className="w-3.5 h-3.5 text-cyan-400" />
               <span className="text-[11px] truncate">2. Vuelo 3D</span>
@@ -512,13 +512,24 @@ ${advice}`;
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        onStartTour?.(route, 'streetview');
+                      }}
+                      className="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 transition-colors hover:underline text-[11px]"
+                      title="Ver recorrido a pie de calle en Street View panorámico"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>Street View</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onStartTour?.(route, 'flythrough');
                       }}
-                      className="text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1 transition-colors hover:underline text-[11px]"
-                      title="Iniciar tour 3D o ver cámaras de esta ruta"
+                      className="text-slate-400 hover:text-cyan-300 font-medium flex items-center gap-1 transition-colors hover:underline text-[11px]"
+                      title="Simulación de Vuelo 3D con Three.js"
                     >
-                      <Compass className="w-3 h-3" />
-                      <span>Tour 3D</span>
+                      <Compass className="w-3 h-3 text-cyan-400" />
+                      <span>3D</span>
                     </button>
                     <button
                       onClick={(e) => {
