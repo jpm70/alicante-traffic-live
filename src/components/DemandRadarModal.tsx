@@ -44,11 +44,11 @@ export const DemandRadarModal: React.FC<DemandRadarModalProps> = ({
                   Monitor de Demanda de Pasajeros
                 </h3>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">
-                  RADAR EN VIVO
+                  FRANJAS DE REFERENCIA
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Puntos calientes de Alicante: Llegadas AVE, Aeropuerto y Cruceros
+                Horas punta habituales en AVE, Aeropuerto y Cruceros (no son llegadas en tiempo real)
               </p>
             </div>
           </div>
@@ -110,9 +110,8 @@ export const DemandRadarModal: React.FC<DemandRadarModalProps> = ({
                     <strong className="text-slate-200">{hub.peakWindow}</strong>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <span>Próxima llegada:</span>
-                    <strong className="text-amber-400 font-mono">en {hub.nextArrivalMinutes} min</strong>
+                  <div className="flex items-center gap-1.5 text-slate-500">
+                    <span>Horarios reales: web del operador</span>
                   </div>
                 </div>
 

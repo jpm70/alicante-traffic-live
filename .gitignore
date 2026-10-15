@@ -6,5 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
-server.js
+public/data/
 package-lock.json
+.cache/

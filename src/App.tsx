@@ -9,10 +9,11 @@ import {
   calculateAlternativeRoutes,
   applyIncidents,
   fetchWithTimeout,
+  OSM_REQUEST_INIT,
   CalculatedRoute,
   RoutePoint,
 } from './services/routing';
-import { TrafficAlert, TrafficAlertsResponse } from './data/trafficAlerts';
+import { TrafficAlert, TrafficAlertsResponse, withDisplayTimes } from './data/trafficAlerts';
 import { Header } from './components/Header';
 import { RouteSelector } from './components/RouteSelector';
 import { RouteComparisonPanel } from './components/RouteComparisonPanel';
@@ -36,7 +37,9 @@ import { ShieldAlert, Navigation, ChevronRight, Share2, X, Check, Compass, Exter
 const RouteTourModal = lazy(() => import('./components/RouteTourModal').then((m) => ({ default: m.RouteTourModal })));
 const GpsNavigatorModal = lazy(() => import('./components/GpsNavigatorModal').then((m) => ({ default: m.GpsNavigatorModal })));
 
-const ALERTS_REFRESH_MS = 3 * 60 * 1000;
+// The data file is regenerated every ~15 min; checking every 5 min is enough
+const ALERTS_REFRESH_MS = 5 * 60 * 1000;
+const ALERTS_URL = `${import.meta.env.BASE_URL}data/alerts.json`;
 
 function ModalLoading() {
   return (
@@ -232,16 +235,17 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now());
 
-  // Official DGT incidents (served and cached by our backend)
+  // Official DGT incidents (static file published with the site)
   const alertsRef = React.useRef<TrafficAlert[]>([]);
   alertsRef.current = alerts;
 
   const handleFetchAlerts = useCallback(async () => {
     setIsAlertsLoading(true);
     try {
-      const res = await fetchWithTimeout('/api/traffic-alerts', 30000);
+      const res = await fetchWithTimeout(`${ALERTS_URL}?t=${Date.now()}`, 20000, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: TrafficAlertsResponse = await res.json();
-      if (Array.isArray(data.alerts)) setAlerts(data.alerts);
+      if (Array.isArray(data.alerts)) setAlerts(data.alerts.map((a) => withDisplayTimes(a)));
       setAlertsMeta({ source: data.source, updatedAt: data.updatedAt, error: data.success ? undefined : data.error });
     } catch (err) {
       console.error('Error fetching traffic alerts:', err);
@@ -339,7 +343,8 @@ export default function App() {
     try {
       const res = await fetchWithTimeout(
         `https://nominatim.openstreetmap.org/reverse?lat=${point.lat}&lon=${point.lng}&format=json&zoom=17&accept-language=es`,
-        3000
+        4000,
+        OSM_REQUEST_INIT
       );
       if (res.ok) {
         const data = await res.json();

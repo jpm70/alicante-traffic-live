@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Key, Sparkles, CheckCircle2, AlertTriangle, Eye, EyeOff, Trash2, ExternalLink, X, ShieldCheck } from 'lucide-react';
 
-export const GEMINI_API_KEY_STORAGE_KEY = 'alicante_gemini_api_key';
+import { GEMINI_API_KEY_STORAGE_KEY, testGeminiKey, explainGeminiError } from '../services/gemini';
+
+export { GEMINI_API_KEY_STORAGE_KEY };
 
 interface AiApiKeyModalProps {
   isOpen: boolean;
@@ -65,32 +67,13 @@ export const AiApiKeyModal: React.FC<AiApiKeyModalProps> = ({ isOpen, onClose, o
     setTestResult(null);
 
     try {
-      const res = await fetch('/api/test-gemini-key', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-gemini-api-key': keyToTest,
-        },
-        body: JSON.stringify({ apiKey: keyToTest }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setTestResult({
-          success: true,
-          message: '¡Conexión verificada con éxito con Gemini! La clave es válida.',
-        });
-      } else {
-        setTestResult({
-          success: false,
-          message: data.error || 'La clave no pudo ser validada por Gemini.',
-        });
-      }
-    } catch (err: any) {
+      await testGeminiKey(keyToTest);
       setTestResult({
-        success: false,
-        message: 'Error de red al comprobar la clave. Verifica tu conexión.',
+        success: true,
+        message: '¡Conexión verificada con éxito con Gemini! La clave es válida.',
       });
+    } catch (err) {
+      setTestResult({ success: false, message: explainGeminiError(err) });
     } finally {
       setIsTesting(false);
     }

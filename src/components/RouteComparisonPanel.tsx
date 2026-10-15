@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { CalculatedRoute, RoutePoint } from '../services/routing';
 import { HistoricalTrafficChart } from './HistoricalTrafficChart';
+import { askTrafficAdvisor, getStoredGeminiKey } from '../services/gemini';
 import {
   Clock,
   Gauge,
@@ -107,32 +108,12 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
 
   const handleConsultAiAdvisor = async () => {
     setIsAiLoading(true);
-    const userApiKey = (typeof window !== 'undefined' ? localStorage.getItem('alicante_gemini_api_key') : '') || '';
+    const userApiKey = getStoredGeminiKey();
 
     try {
-      const res = await fetch('/api/ai-traffic-advisor', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-gemini-api-key': userApiKey,
-        },
-        body: JSON.stringify({
-          origin: { name: originName },
-          destination: { name: destinationName },
-          routes,
-          rushHourActive,
-          customApiKey: userApiKey,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.analysis) {
-          setAiReport(data.analysis);
-          return;
-        }
-      }
-      throw new Error('Fallback to local engine');
+      if (!userApiKey) throw new Error('Sin clave: motor local');
+      const analysis = await askTrafficAdvisor({ apiKey: userApiKey, originName, destinationName, routes, rushHourActive });
+      setAiReport(analysis);
     } catch {
       // Offline & GitHub Pages Client-side Traffic Control Engine (No API required)
       const congestedCams = fastestRoute.cameras.filter((c) => c.status !== 'fluido');

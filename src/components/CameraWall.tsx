@@ -49,6 +49,13 @@ export const CameraWall: React.FC<CameraWallProps> = ({
     return new Set(activeRoute.cameras.map((c) => c.id));
   }, [activeRoute]);
 
+  // Estimated status, only known for the cameras on the active route
+  const routeCameraStatus = useMemo(() => {
+    const m = new Map<string, string>();
+    activeRoute?.cameras.forEach((c) => m.set(c.id, c.status));
+    return m;
+  }, [activeRoute]);
+
   // Compute camera list to display based on active filter
   const displayedCameras = useMemo(() => {
     let list: TrafficCamera[] = [];
@@ -391,7 +398,20 @@ export const CameraWall: React.FC<CameraWallProps> = ({
                     {/* Bottom Metadata */}
                     <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between text-[10px] text-slate-400 pointer-events-none">
                       <span className="font-mono text-slate-300 truncate">{cam.zona}</span>
-                      <span className="text-emerald-400 font-semibold font-mono">Fluido</span>
+                      {routeCameraStatus.has(cam.id) && (
+                        <span
+                          className={`font-semibold font-mono ${
+                            routeCameraStatus.get(cam.id) === 'retencion'
+                              ? 'text-rose-400'
+                              : routeCameraStatus.get(cam.id) === 'denso'
+                                ? 'text-amber-400'
+                                : 'text-emerald-400'
+                          }`}
+                          title="Estimación por franja horaria, no medición"
+                        >
+                          {routeCameraStatus.get(cam.id) === 'retencion' ? 'Retención' : routeCameraStatus.get(cam.id) === 'denso' ? 'Denso' : 'Fluido'} (est.)
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

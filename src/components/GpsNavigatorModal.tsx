@@ -88,7 +88,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     return route.coordinates[0] || [origin.lat, origin.lng];
   });
   const [currentHeading, setCurrentHeading] = useState<number>(0);
-  const [currentSpeedKmH, setCurrentSpeedKmH] = useState<number>(50);
+  const [currentSpeedKmH, setCurrentSpeedKmH] = useState<number>(0);
   const [voiceEnabled, setVoiceEnabled] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [recenterTrigger, setRecenterTrigger] = useState<number>(0);
@@ -547,9 +547,9 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
       {/* TOP NAVIGATION MANEUVER HUD (Waze / Google Maps Style) */}
       {/* ------------------------------------------------------------------ */}
       <div className="bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 p-3 sm:px-6 shadow-2xl flex flex-col gap-2 z-20 flex-shrink-0">
-        <div className="flex items-center justify-between gap-3">
-          {/* Main Maneuver Box */}
-          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          {/* Main Maneuver Box (full width on phones, buttons go to a second row) */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 basis-full sm:basis-0">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-500/15 border-2 border-emerald-500/50 flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-950/40">
               {getManeuverIcon(activeManeuver.type)}
             </div>
@@ -574,10 +574,10 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
           </div>
 
           {/* Quick Action Buttons in Top Bar */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-auto">
             {/* Screen Wake Lock Status Badge */}
             <div
-              className={`px-2 py-1.5 rounded-lg border text-[11px] font-mono flex items-center gap-1 shadow-sm ${
+              className={`hidden sm:flex px-2 py-1.5 rounded-lg border text-[11px] font-mono items-center gap-1 shadow-sm ${
                 wakeLockActive
                   ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
                   : 'bg-slate-900 border-slate-800 text-slate-500'
@@ -728,7 +728,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                   {upcomingCamera.name}
                 </span>
                 <span className="text-[10px] text-emerald-400 capitalize font-mono">
-                  Tráfico {upcomingCamera.status} · {upcomingCamera.zona}
+                  Tráfico {upcomingCamera.status === 'retencion' ? 'con retención' : upcomingCamera.status} (estimado) · {upcomingCamera.zona}
                 </span>
               </div>
             </div>

@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { CalculatedRoute, RouteTrafficCamera } from '../services/routing';
+import { streamBuildings, BuildingFootprint } from '../services/osmBuildings';
 import {
   LatLng,
   RouteIndex,
@@ -96,50 +97,7 @@ const tile2lat = (y: number, z: number) => {
   return (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
 };
 
-// --- Buildings (OpenStreetMap via our backend, which proxies and caches Overpass) ---
-interface BuildingFootprint {
-  h: number; // height in meters
-  p: LatLng[]; // closed outer ring
-}
-
-const buildingsCache = new Map<string, Promise<BuildingFootprint[]>>();
-
-function routeKey(coords: LatLng[]): string {
-  const a = coords[0];
-  const b = coords[coords.length - 1];
-  return `${a[0].toFixed(5)},${a[1].toFixed(5)}-${b[0].toFixed(5)},${b[1].toFixed(5)}-${coords.length}`;
-}
-
-function loadBuildings(coords: LatLng[], maxBuildings: number): Promise<BuildingFootprint[]> {
-  const key = `${routeKey(coords)}-${maxBuildings}`;
-  const cached = buildingsCache.get(key);
-  if (cached) return cached;
-
-  // Overpass `around` accepts a polyline; keep the request small
-  let tolerance = 20;
-  let line = simplifyPolyline(coords, tolerance);
-  while (line.length > 150) {
-    tolerance *= 1.6;
-    line = simplifyPolyline(coords, tolerance);
-  }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 90000);
-  const promise = fetch('/api/buildings', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ line: line.map(([lat, lng]) => [+lat.toFixed(6), +lng.toFixed(6)]), radius: 80, limit: maxBuildings }),
-    signal: controller.signal,
-  })
-    .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
-    .then((data) => (Array.isArray(data.buildings) ? (data.buildings as BuildingFootprint[]) : []))
-    .finally(() => clearTimeout(timer));
-
-  buildingsCache.set(key, promise);
-  promise.catch(() => buildingsCache.delete(key));
-  return promise;
-}
-
+// --- Buildings: OpenStreetMap footprints (src/services/osmBuildings.ts) -----------
 // -------------------------------------------------------------------------------
 export class RouteScene {
   private container: HTMLElement;
@@ -584,61 +542,65 @@ export class RouteScene {
     marker(coords[coords.length - 1], 0xef4444);
   }
 
+  private buildingMaterial: THREE.Material | null = null;
+  private buildingCount = 0;
+
+  // Adds one stretch of buildings as a single merged mesh
+  private addBuildings(buildings: BuildingFootprint[]) {
+    const geometries: THREE.BufferGeometry[] = [];
+    for (const b of buildings) {
+      if (b.p.length < 3) continue;
+      const shape = new THREE.Shape(b.p.map(([lat, lng]) => {
+        const p = this.proj.toXY(lat, lng);
+        return new THREE.Vector2(p.x, p.y);
+      }));
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: b.h, bevelEnabled: false, curveSegments: 1 });
+      geo.rotateX(-Math.PI / 2);
+      geometries.push(geo.index ? geo.toNonIndexed() : geo);
+    }
+    if (geometries.length === 0) return;
+    const merged = mergeGeometries(geometries, false);
+    geometries.forEach((g) => g.dispose());
+    if (!merged) return;
+    merged.computeVertexNormals();
+    if (!this.buildingMaterial) {
+      const night = this.opts.theme === 'night';
+      this.buildingMaterial = new THREE.MeshLambertMaterial({
+        color: night ? 0x64748b : 0xe7dccb,
+        emissive: night ? 0x172033 : 0x000000,
+        transparent: night,
+        opacity: night ? 0.92 : 1,
+      });
+    }
+    this.scene.add(new THREE.Mesh(merged, this.buildingMaterial));
+    this.buildingCount += geometries.length;
+    this.dirty = true;
+  }
+
+  // Buildings arrive stretch by stretch (from the start of the route) and are added
+  // as they come, so the city fills in progressively instead of after a long wait.
   private buildBuildings(attempt = 0) {
     if (this.route.isApproximate) return;
     this.buildingsStatus = 'loading';
-    loadBuildings(this.index.coords, this.lowPower ? 2500 : 6000)
-      .then((buildings) => {
+    streamBuildings(
+      this.index.coords,
+      { overpassRadius: 80, keepRadius: this.lowPower ? 140 : 250, limit: this.lowPower ? 3000 : 8000 },
+      (chunk) => this.addBuildings(chunk),
+      () => this.disposed
+    )
+      .then(() => {
         if (this.disposed) return;
-        if (buildings.length === 0) {
-          this.buildingsStatus = 'unavailable';
-          return;
-        }
-        const geometries: THREE.BufferGeometry[] = [];
-        for (const b of buildings) {
-          if (b.p.length < 3) continue;
-          const shape = new THREE.Shape(b.p.map(([lat, lng]) => {
-            const p = this.proj.toXY(lat, lng);
-            return new THREE.Vector2(p.x, p.y);
-          }));
-          const geo = new THREE.ExtrudeGeometry(shape, { depth: b.h, bevelEnabled: false, curveSegments: 1 });
-          geo.rotateX(-Math.PI / 2);
-          geometries.push(geo.index ? geo.toNonIndexed() : geo);
-        }
-        if (geometries.length === 0) {
-          this.buildingsStatus = 'unavailable';
-          return;
-        }
-        const merged = mergeGeometries(geometries, false);
-        geometries.forEach((g) => g.dispose());
-        if (!merged) {
-          this.buildingsStatus = 'unavailable';
-          return;
-        }
-        merged.computeVertexNormals();
-        const night = this.opts.theme === 'night';
-        const mesh = new THREE.Mesh(
-          merged,
-          new THREE.MeshLambertMaterial({
-            color: night ? 0x64748b : 0xe7dccb,
-            emissive: night ? 0x172033 : 0x000000,
-            transparent: night,
-            opacity: night ? 0.92 : 1,
-          })
-        );
-        this.scene.add(mesh);
-        this.buildingsStatus = 'ready';
-        this.dirty = true;
+        this.buildingsStatus = this.buildingCount > 0 ? 'ready' : 'unavailable';
         this.emitTelemetry(true);
       })
       .catch(() => {
         if (this.disposed) return;
         // Public Overpass servers are often busy for a few seconds: one more try
-        if (attempt === 0) {
+        if (attempt === 0 && this.buildingCount === 0) {
           setTimeout(() => !this.disposed && this.buildBuildings(1), 8000);
           return;
         }
-        this.buildingsStatus = 'unavailable';
+        this.buildingsStatus = this.buildingCount > 0 ? 'ready' : 'unavailable';
         this.emitTelemetry(true);
       });
   }
