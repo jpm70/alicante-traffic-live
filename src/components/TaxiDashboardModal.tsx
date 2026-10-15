@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   X,
   Navigation,
@@ -19,8 +19,9 @@ import {
   CornerUpRight,
   CornerUpLeft,
 } from 'lucide-react';
-import { CalculatedRoute, RoutePoint } from '../services/routing';
-import { generateRouteManeuvers } from '../services/navigationManeuvers';
+import { CalculatedRoute, RoutePoint, getDistanceMeters } from '../services/routing';
+import { generateRouteManeuvers, nextManeuverIndex, currentStreetName } from '../services/navigationManeuvers';
+import { buildRouteIndex, projectOnRoute } from '../services/geometry';
 import {
   ALICANTE_TAXI_STANDS,
   TaxiStand,
@@ -53,16 +54,29 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
   const [simKm, setSimKm] = useState<number>(0);
   const [simWaitSeconds, setSimWaitSeconds] = useState<number>(0);
 
-  // Simulated vehicle movement along route
-  const [currentSpeed, setCurrentSpeed] = useState<number>(42);
-  const [currentManeuverIdx, setCurrentManeuverIdx] = useState<number>(0);
+  // Vehicle tracking: the device GPS when available (phones, car head units),
+  // otherwise a deterministic simulation along the route at its average speed.
+  const [trackingMode, setTrackingMode] = useState<'gps' | 'sim'>(() =>
+    typeof navigator !== 'undefined' && 'geolocation' in navigator && /Android|iPhone|iPad|Mobi|Automotive/i.test(navigator.userAgent)
+      ? 'gps'
+      : 'sim'
+  );
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [currentSpeed, setCurrentSpeed] = useState<number>(0);
+  const [alongMeters, setAlongMeters] = useState<number>(0);
   const [isVoiceActive, setIsVoiceActive] = useState<boolean>(true);
 
   // Quick camera snapshot modal
   const [selectedQuickCamUrl, setSelectedQuickCamUrl] = useState<string | null>(null);
 
-  const maneuvers = generateRouteManeuvers(route, origin, destination);
-  const currentManeuver = maneuvers[currentManeuverIdx] || maneuvers[0];
+  const maneuvers = useMemo(() => generateRouteManeuvers(route, origin, destination), [route, origin, destination]);
+  const routeIndex = useMemo(() => buildRouteIndex(route.coordinates), [route]);
+  const currentManeuver = maneuvers[nextManeuverIndex(maneuvers, alongMeters)] || maneuvers[0];
+  const streetNow = currentStreetName(maneuvers, alongMeters, route.name);
+  const alongRef = useRef(0);
+  alongRef.current = alongMeters;
+  const taximeterActiveRef = useRef(taximeterActive);
+  taximeterActiveRef.current = taximeterActive;
 
   // Taximeter fare calculation in real-time
   const flagDrop = taximeterRate === 'tarifa-2' ? 2.55 : 2.15;
@@ -75,34 +89,79 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
     flagDrop + simKm * priceKm + simWaitSeconds * pricePerSecWait
   );
 
-  // Taximeter ticker
+  // Real GPS: speed and distance from the device; waiting time while (almost) stopped
   useEffect(() => {
-    if (!taximeterActive) return;
+    if (trackingMode !== 'gps') return;
+    if (!navigator.geolocation) {
+      setGpsError('Sin geolocalización en este dispositivo: modo simulación.');
+      setTrackingMode('sim');
+      return;
+    }
+    setGpsError(null);
+    let last: { lat: number; lng: number; t: number } | null = null;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude: lat, longitude: lng, speed, accuracy } = pos.coords;
+        const t = pos.timestamp || Date.now();
+        let kmh = speed !== null && !Number.isNaN(speed) ? speed * 3.6 : null;
+        if (last) {
+          const dt = (t - last.t) / 1000;
+          const d = getDistanceMeters(last.lat, last.lng, lat, lng);
+          if (kmh === null && dt > 0.5) kmh = (d / dt) * 3.6;
+          if (taximeterActiveRef.current && dt > 0) {
+            // Ignore GPS jitter: count distance only with a decent fix and real movement
+            if (accuracy <= 30 && d > 3 && (kmh ?? 0) >= 5) setSimKm((prev) => prev + d / 1000);
+            else if ((kmh ?? 0) < 5) setSimWaitSeconds((prev) => prev + Math.round(dt));
+          }
+        }
+        last = { lat, lng, t };
+        setCurrentSpeed(Math.max(0, Math.round(kmh ?? 0)));
+        setAlongMeters(projectOnRoute(routeIndex, lat, lng, alongRef.current).alongMeters);
+      },
+      (err) => {
+        setGpsError(
+          `${err.code === err.PERMISSION_DENIED ? 'Permiso de ubicación denegado' : 'GPS no disponible'}: modo simulación.`
+        );
+        setTrackingMode('sim');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 1000 }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [trackingMode, routeIndex]);
 
+  // Simulation: real-time drive along the route at its average speed, slowing down
+  // and briefly stopping at each maneuver (no random numbers).
+  useEffect(() => {
+    if (trackingMode !== 'sim' || !taximeterActive) return;
+    const avg = Math.min(60, Math.max(15, route.distanceKm / (Math.max(route.totalMinutes, 1) / 60)));
+    let stopLeft = 0;
+    let lastStopId: string | null = null;
     const interval = setInterval(() => {
-      // Simulate advance: at 42 km/h, vehicle travels ~11.6 meters per second
-      setSimKm((prev) => Math.round((prev + 0.012) * 1000) / 1000);
-
-      // Random brief red light stop every now and then
-      if (Math.random() < 0.15) {
-        setSimWaitSeconds((prev) => prev + 3);
+      const along = alongRef.current;
+      if (along >= routeIndex.totalMeters) {
         setCurrentSpeed(0);
-      } else {
-        setCurrentSpeed(Math.floor(38 + Math.random() * 12));
+        return;
       }
+      const next = maneuvers[nextManeuverIndex(maneuvers, along)];
+      const toNext = next ? next.accumulatedDistanceMeters - along : Infinity;
+      if (stopLeft > 0) {
+        stopLeft--;
+        setCurrentSpeed(0);
+        setSimWaitSeconds((prev) => prev + 1);
+        return;
+      }
+      if (next && toNext < 15 && next.id !== lastStopId && next.type !== 'straight') {
+        lastStopId = next.id;
+        stopLeft = 4; // junction / traffic light
+      }
+      const speed = toNext < 60 ? Math.max(12, avg * 0.5) : avg;
+      const advance = speed / 3.6;
+      setCurrentSpeed(Math.round(speed));
+      setAlongMeters(Math.min(routeIndex.totalMeters, along + advance));
+      setSimKm((prev) => prev + advance / 1000);
     }, 1000);
-
     return () => clearInterval(interval);
-  }, [taximeterActive]);
-
-  // Maneuver advancement
-  useEffect(() => {
-    if (!taximeterActive || maneuvers.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentManeuverIdx((prev) => (prev + 1) % maneuvers.length);
-    }, 9000);
-    return () => clearInterval(interval);
-  }, [taximeterActive, maneuvers.length]);
+  }, [trackingMode, taximeterActive, route, routeIndex, maneuvers]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement && containerRef.current) {
@@ -192,7 +251,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
                 Próxima Maniobra · En 80 m
               </span>
               <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mt-1 truncate">
-                {currentManeuver?.streetName || route.name}
+                {streetNow}
               </h2>
               <p className="text-sm sm:text-lg text-slate-300 mt-1">
                 {currentManeuver?.instruction || 'Continúe recto por la vía'}
@@ -231,7 +290,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-amber-500/30">
               <span className="text-xs font-mono font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
                 <Receipt className="w-4 h-4" />
-                TAXÍMETRO DIGITAL EN SERVICIO
+                TAXÍMETRO ESTIMADO · {trackingMode === 'gps' ? 'GPS' : 'SIMULACIÓN'}
               </span>
 
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
@@ -245,6 +304,11 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
               <span className="text-3xl sm:text-5xl font-black text-amber-400 ml-2">€</span>
             </div>
           </div>
+
+          <p className="text-[10px] text-slate-500 text-center -mt-2 mb-2">
+            Estimación orientativa: no sustituye al taxímetro homologado del vehículo.
+            {gpsError ? ` ${gpsError}` : ''}
+          </p>
 
           {/* Taximeter Telemetry: Km, Time, Wait */}
           <div className="grid grid-cols-3 gap-2 text-center bg-slate-900/90 border border-slate-800 rounded-2xl p-3">

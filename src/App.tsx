@@ -1,16 +1,18 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import { CAMERAS, ALICANTE_LANDMARKS, TrafficCamera } from './data/cameras';
 import {
   calculateAlternativeRoutes,
+  applyIncidents,
+  fetchWithTimeout,
   CalculatedRoute,
   RoutePoint,
 } from './services/routing';
-import { INITIAL_ALICANTE_ALERTS, TrafficAlert } from './data/trafficAlerts';
+import { TrafficAlert, TrafficAlertsResponse } from './data/trafficAlerts';
 import { Header } from './components/Header';
 import { RouteSelector } from './components/RouteSelector';
 import { RouteComparisonPanel } from './components/RouteComparisonPanel';
@@ -18,8 +20,6 @@ import { InteractiveMap } from './components/InteractiveMap';
 import { CameraWall } from './components/CameraWall';
 import { CameraLightbox } from './components/CameraLightbox';
 import { TrafficAlerts } from './components/TrafficAlerts';
-import { RouteTourModal } from './components/RouteTourModal';
-import { GpsNavigatorModal } from './components/GpsNavigatorModal';
 import { FloatingCameraPip } from './components/FloatingCameraPip';
 import { GhostLogo } from './components/GhostLogo';
 import { AiApiKeyModal } from './components/AiApiKeyModal';
@@ -30,6 +30,21 @@ import { TaxiDashboardModal } from './components/TaxiDashboardModal';
 import { LocalClosuresModal } from './components/LocalClosuresModal';
 import { TaxiStand } from './data/publicTransport';
 import { ShieldAlert, Navigation, ChevronRight, Share2, X, Check, Compass, ExternalLink } from 'lucide-react';
+
+// Heavy views loaded on demand: the 3D tour pulls in three.js (~600 kB), which phones
+// and car head units should not download just to see the map.
+const RouteTourModal = lazy(() => import('./components/RouteTourModal').then((m) => ({ default: m.RouteTourModal })));
+const GpsNavigatorModal = lazy(() => import('./components/GpsNavigatorModal').then((m) => ({ default: m.GpsNavigatorModal })));
+
+const ALERTS_REFRESH_MS = 3 * 60 * 1000;
+
+function ModalLoading() {
+  return (
+    <div className="fixed inset-0 z-50 bg-[#090d16]/95 flex items-center justify-center text-sm text-slate-300 font-mono">
+      Cargando…
+    </div>
+  );
+}
 
 function parseInitialShareParams() {
   if (typeof window === 'undefined') return null;
@@ -105,7 +120,8 @@ export default function App() {
   });
 
   // Routes calculation state
-  const [routes, setRoutes] = useState<CalculatedRoute[]>([]);
+  // Routes as returned by the routing server; official incidents are applied on top
+  const [baseRoutes, setBaseRoutes] = useState<CalculatedRoute[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [rushHourActive, setRushHourActive] = useState<boolean>(() => {
@@ -116,7 +132,11 @@ export default function App() {
   const [selectedCameraIds, setSelectedCameraIds] = useState<Set<string>>(new Set());
 
   // Traffic Alerts State
-  const [alerts, setAlerts] = useState<TrafficAlert[]>(INITIAL_ALICANTE_ALERTS);
+  const [alerts, setAlerts] = useState<TrafficAlert[]>([]);
+  const [alertsMeta, setAlertsMeta] = useState<{ source: string; updatedAt: string; error?: string } | null>(null);
+
+  // Routes with the latest official incidents applied (no new routing request needed)
+  const routes = useMemo(() => applyIncidents(baseRoutes, alerts), [baseRoutes, alerts]);
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
   const [isAlertsLoading, setIsAlertsLoading] = useState<boolean>(false);
 
@@ -212,40 +232,51 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now());
 
-  // Fetch real-time traffic alerts
+  // Official DGT incidents (served and cached by our backend)
+  const alertsRef = React.useRef<TrafficAlert[]>([]);
+  alertsRef.current = alerts;
+
   const handleFetchAlerts = useCallback(async () => {
     setIsAlertsLoading(true);
     try {
-      const res = await fetch('/api/traffic-alerts');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.alerts && Array.isArray(data.alerts)) {
-          setAlerts(data.alerts);
-        }
-      }
+      const res = await fetchWithTimeout('/api/traffic-alerts', 30000);
+      const data: TrafficAlertsResponse = await res.json();
+      if (Array.isArray(data.alerts)) setAlerts(data.alerts);
+      setAlertsMeta({ source: data.source, updatedAt: data.updatedAt, error: data.success ? undefined : data.error });
     } catch (err) {
       console.error('Error fetching traffic alerts:', err);
+      setAlertsMeta((prev) => ({
+        source: prev?.source || 'DGT',
+        updatedAt: prev?.updatedAt || new Date().toISOString(),
+        error: 'No se pudieron cargar las incidencias de la DGT',
+      }));
     } finally {
       setIsAlertsLoading(false);
     }
   }, []);
 
-  // Initial alerts fetch
+  // Initial alerts fetch + periodic refresh
   useEffect(() => {
     handleFetchAlerts();
+    const id = setInterval(handleFetchAlerts, ALERTS_REFRESH_MS);
+    return () => clearInterval(id);
   }, [handleFetchAlerts]);
 
-  // Calculate routes handler
+  // Only the latest calculation may update the UI: when the user changes origin,
+  // destination or options quickly, slower earlier answers must not overwrite it.
+  const calcSeqRef = React.useRef(0);
+
   const handleCalculateRoutes = useCallback(async () => {
+    const seq = ++calcSeqRef.current;
     setIsCalculating(true);
     try {
-      const calculated = await calculateAlternativeRoutes(
-        origin,
-        destination,
-        rushHourActive,
-        isPublicTransportMode && busTaxiLaneActive
-      );
-      setRoutes(calculated);
+      const calculated = await calculateAlternativeRoutes(origin, destination, {
+        rushHourForced: rushHourActive,
+        busTaxiLaneActive: isPublicTransportMode && busTaxiLaneActive,
+        incidents: alertsRef.current,
+      });
+      if (seq !== calcSeqRef.current) return;
+      setBaseRoutes(calculated);
 
       // Select target route from shared link if provided, otherwise select fastest
       const targetId = targetRouteIdRef.current;
@@ -256,23 +287,35 @@ export default function App() {
 
       if (selected) {
         setSelectedRouteId(selected.id);
-
         // Pre-select cameras of this route into the wall
-        const camSet = new Set<string>();
-        selected.cameras.forEach((c) => camSet.add(c.id));
-        setSelectedCameraIds(camSet);
+        setSelectedCameraIds(new Set(selected.cameras.map((c) => c.id)));
       }
     } catch (err) {
       console.error('Error calculating routes:', err);
     } finally {
-      setIsCalculating(false);
+      if (seq === calcSeqRef.current) setIsCalculating(false);
     }
   }, [origin, destination, rushHourActive, isPublicTransportMode, busTaxiLaneActive]);
 
-  // Initial calculation on load
+  // Recalculate whenever origin, destination or traffic options change
   useEffect(() => {
     handleCalculateRoutes();
   }, [handleCalculateRoutes]);
+
+  // GPS re-routing: new route from the driver's current position to the destination
+  const handleGpsReroute = useCallback(
+    async (lat: number, lng: number): Promise<CalculatedRoute | null> => {
+      const calculated = await calculateAlternativeRoutes({ lat, lng }, destination, {
+        rushHourForced: rushHourActive,
+        busTaxiLaneActive: isPublicTransportMode && busTaxiLaneActive,
+        incidents: alertsRef.current,
+        quick: true,
+      });
+      const best = calculated.find((r) => r.isFastest) || calculated[0];
+      return best && !best.isApproximate ? best : null;
+    },
+    [destination, rushHourActive, isPublicTransportMode, busTaxiLaneActive]
+  );
 
   // Swap points handler
   const handleSwapPoints = () => {
@@ -281,21 +324,22 @@ export default function App() {
     setDestination(temp);
   };
 
-  // Click on map to set point
+  // Click on map to set point (the effect above recalculates the routes)
   const handleMapClickSetPoint = async (
     point: { lat: number; lng: number },
     forceType?: 'origin' | 'destination'
   ) => {
     const targetType = forceType || isPickOnMapActive;
     if (!targetType) return;
+    setIsPickOnMapActive(null);
 
     let pointName = `Punto [${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}]`;
 
     // Fast reverse geocode for a clean street name in Alicante
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${point.lat}&lon=${point.lng}&format=json&zoom=17`,
-        { headers: { 'Accept-Language': 'es' }, signal: AbortSignal.timeout(2500) }
+      const res = await fetchWithTimeout(
+        `https://nominatim.openstreetmap.org/reverse?lat=${point.lat}&lon=${point.lng}&format=json&zoom=17&accept-language=es`,
+        3000
       );
       if (res.ok) {
         const data = await res.json();
@@ -307,39 +351,9 @@ export default function App() {
       // Keep coordinate label
     }
 
-    if (targetType === 'origin') {
-      const newOrigin = { lat: point.lat, lng: point.lng, name: pointName };
-      setOrigin(newOrigin);
-      setIsPickOnMapActive(null);
-
-      // Recalculate route immediately with new origin
-      calculateAlternativeRoutes(newOrigin, destination, rushHourActive).then((calculated) => {
-        setRoutes(calculated);
-        const fastest = calculated.find((r) => r.isFastest) || calculated[0];
-        if (fastest) {
-          setSelectedRouteId(fastest.id);
-          const camSet = new Set<string>();
-          fastest.cameras.forEach((c) => camSet.add(c.id));
-          setSelectedCameraIds(camSet);
-        }
-      });
-    } else if (targetType === 'destination') {
-      const newDest = { lat: point.lat, lng: point.lng, name: pointName };
-      setDestination(newDest);
-      setIsPickOnMapActive(null);
-
-      // Recalculate route immediately with new destination
-      calculateAlternativeRoutes(origin, newDest, rushHourActive).then((calculated) => {
-        setRoutes(calculated);
-        const fastest = calculated.find((r) => r.isFastest) || calculated[0];
-        if (fastest) {
-          setSelectedRouteId(fastest.id);
-          const camSet = new Set<string>();
-          fastest.cameras.forEach((c) => camSet.add(c.id));
-          setSelectedCameraIds(camSet);
-        }
-      });
-    }
+    const newPoint = { lat: point.lat, lng: point.lng, name: pointName };
+    if (targetType === 'origin') setOrigin(newPoint);
+    else setDestination(newPoint);
   };
 
   // Manual refresh trigger
@@ -404,18 +418,7 @@ export default function App() {
   }, [routes, selectedRouteId]);
 
   // Alerts on active route
-  const activeRouteAlerts = useMemo(() => {
-    if (!activeRoute) return [];
-    return alerts.filter((a) => {
-      if (!a.corridorKey) return false;
-      if (activeRoute.id.includes(a.corridorKey)) return true;
-      const st = a.street.toLowerCase();
-      if (activeRoute.name.toLowerCase().includes('litoral') && (st.includes('ramón y cajal') || st.includes('dénia') || st.includes('canalejas'))) return true;
-      if (activeRoute.name.toLowerCase().includes('gran vía') && (st.includes('soler') || st.includes('gran vía'))) return true;
-      if (activeRoute.name.toLowerCase().includes('parque') && (st.includes('jaime i') || st.includes('teulada'))) return true;
-      return false;
-    });
-  }, [alerts, activeRoute]);
+  const activeRouteAlerts = activeRoute?.incidents ?? [];
 
   // Select alert and highlight on map
   const handleSelectAlert = (alert: TrafficAlert) => {
@@ -453,9 +456,8 @@ export default function App() {
         selectedCamerasCount={selectedCameraIds.size}
         rushHourActive={rushHourActive}
         setRushHourActive={(val) => {
+          // The routes effect recalculates with the new traffic weight
           setRushHourActive(val);
-          // Recalculate routes with new traffic weight
-          setTimeout(handleCalculateRoutes, 50);
         }}
         alertsCount={alerts.length}
         hasActiveRoute={routes.length > 0}
@@ -473,7 +475,6 @@ export default function App() {
           busTaxiLaneActive={busTaxiLaneActive}
           onToggleBusTaxiLane={() => {
             setBusTaxiLaneActive(!busTaxiLaneActive);
-            setTimeout(handleCalculateRoutes, 50);
           }}
           showTaxiStandsOnMap={showTaxiStandsOnMap}
           onToggleTaxiStandsOnMap={() => setShowTaxiStandsOnMap(!showTaxiStandsOnMap)}
@@ -616,6 +617,7 @@ export default function App() {
                 /* Sub-tab 2: Traffic Alerts Component */
                 <TrafficAlerts
                   alerts={alerts}
+                  alertsMeta={alertsMeta}
                   isLoading={isAlertsLoading}
                   onRefreshAlerts={handleFetchAlerts}
                   onSelectAlert={handleSelectAlert}
@@ -756,6 +758,7 @@ export default function App() {
             <aside className="w-full lg:w-[460px] lg:min-w-[460px] border-b lg:border-b-0 lg:border-r border-slate-800 bg-[#0f172a]/95 flex flex-col overflow-y-auto p-4 space-y-3">
               <TrafficAlerts
                 alerts={alerts}
+                alertsMeta={alertsMeta}
                 isLoading={isAlertsLoading}
                 onRefreshAlerts={handleFetchAlerts}
                 onSelectAlert={handleSelectAlert}
@@ -813,6 +816,7 @@ export default function App() {
 
       {/* 3D Flythrough, Street View & Live Cameras Route Tour Modal (Options 1, 2, 3) */}
       {tourModalRoute && (
+        <Suspense fallback={<ModalLoading />}>
         <RouteTourModal
           route={tourModalRoute}
           origin={origin}
@@ -821,17 +825,21 @@ export default function App() {
           initialTab={tourInitialTab}
           onClose={() => setTourModalRoute(null)}
         />
+        </Suspense>
       )}
 
       {/* Turn-by-Turn GPS Navigator Modal (Real GPS & Virtual Simulation) */}
       {gpsModalRoute && (
+        <Suspense fallback={<ModalLoading />}>
         <GpsNavigatorModal
           route={gpsModalRoute}
           origin={origin}
           destination={destination}
           cacheBuster={cacheBuster}
           onClose={() => setGpsModalRoute(null)}
+          onReroute={handleGpsReroute}
         />
+        </Suspense>
       )}
 
       {/* Gemini AI API Key Settings Modal (Persisted locally in user's browser) */}

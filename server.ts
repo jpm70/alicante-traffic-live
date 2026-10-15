@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
+import { getDgtAlerts } from './server/dgtIncidents';
+import { getBuildingsAlongLine, validateBuildingsRequest, BuildingsRequestError } from './server/osmBuildings';
 
 dotenv.config();
 
@@ -12,122 +14,54 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.resolve(__dirname, 'public')));
+// `npm start` runs the bundled server.js next to dist/; `npm run dev` runs server.ts through tsx
+const isProduction = process.env.NODE_ENV === 'production' || path.basename(__filename) === 'server.js';
+
+app.use(express.json({ limit: '1mb' }));
 
 // Healthcheck
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'Alicante Traffic Server' });
 });
 
-// Real-Time Traffic Alerts & Construction Warnings Endpoint
-app.get('/api/traffic-alerts', (req, res) => {
-  // Real-time Alicante incident reports & roadworks
-  const alerts = [
-    {
-      id: 'alt-01',
-      type: 'obra',
-      severity: 'alta',
-      title: 'Obras de Reurbanización y Mejora de Pavimento',
-      street: 'Avda. Ramón y Cajal · Paseo de Canalejas',
-      zone: 'Centro Ciudad / Litoral',
-      description: 'Corte de carril derecho sentido Puerto. Tráfico desviado hacia Avda. Doctor Gadea. Precaución en horas punta.',
-      lat: 38.3415,
-      lng: -0.4855,
-      source: 'Movilidad Ayuntamiento Alicante',
-      timestamp: 'Actualizado hace 15 min',
-      durationEstimate: 'Hasta 19:30',
-      delayMin: 7,
-      corridorKey: 'litoral',
-    },
-    {
-      id: 'alt-02',
-      type: 'corte',
-      severity: 'alta',
-      title: 'Trabajos de Red de Saneamiento y Zanja',
-      street: 'C/ Pintor Xavier Soler (Rotonda CC Gran Vía)',
-      zone: 'Gran Vía',
-      description: 'Ocupación de calzada sentido Albufereta. Reducción a 1 solo carril habilitado. Retenciones intermitentes.',
-      lat: 38.3665,
-      lng: -0.4735,
-      source: 'Policía Local Alicante',
-      timestamp: 'Actualizado hace 25 min',
-      durationEstimate: 'Hasta 18:00',
-      delayMin: 6,
-      corridorKey: 'granvia',
-    },
-    {
-      id: 'alt-03',
-      type: 'retencion',
-      severity: 'media',
-      title: 'Afluencia Densa en Enlace Autovía',
-      street: 'Avda. de Dénia (Rotonda de la Paz · Acceso A-70)',
-      zone: 'Avda. Denia',
-      description: 'Densidad elevada de vehículos en incorporación sentido Valencia / Madrid. Circulación lenta.',
-      lat: 38.3710,
-      lng: -0.4560,
-      source: 'DGT',
-      timestamp: 'Actualizado hace 8 min',
-      durationEstimate: 'Tiempo real',
-      delayMin: 5,
-      corridorKey: 'litoral',
-    },
-    {
-      id: 'alt-04',
-      type: 'accidente',
-      severity: 'alta',
-      title: 'Alcance entre dos turismos',
-      street: 'Avda. Jaime I con Bulevar Teulada',
-      zone: 'Vía Parque · Norte',
-      description: 'Vehículos inmovilizados ocupando carril central. Asistencia de grúa y patrulla de Policía Local en el lugar.',
-      lat: 38.3645,
-      lng: -0.5015,
-      source: 'Policía Local Alicante',
-      timestamp: 'Actualizado hace 12 min',
-      durationEstimate: 'Retirada inminente',
-      delayMin: 8,
-      corridorKey: 'viaparque',
-    },
-    {
-      id: 'alt-05',
-      type: 'obra',
-      severity: 'baja',
-      title: 'Pintado de Señalización Horizontal',
-      street: 'Avda. de Elche (Cruce C/ México)',
-      zone: 'Avda. Elche / Babel',
-      description: 'Equipo móvil de señalización vial. Tráfico lento pero transitable en ambos sentidos.',
-      lat: 38.3340,
-      lng: -0.5030,
-      source: 'Movilidad Ayuntamiento Alicante',
-      timestamp: 'Actualizado hace 45 min',
-      durationEstimate: 'Hasta 16:00',
-      delayMin: 2,
-      corridorKey: 'elche',
-    },
-    {
-      id: 'alt-06',
-      type: 'evento',
-      severity: 'media',
-      title: 'Montaje de Evento Cultural / Fira',
-      street: 'Avda. Maisonnave · Plaza Calvo Sotelo',
-      zone: 'Centro Ciudad',
-      description: 'Prohibición temporal de carga y descarga y desvío puntual de líneas de autobús municipal.',
-      lat: 38.3440,
-      lng: -0.4880,
-      source: 'Policía Local Alicante',
-      timestamp: 'Actualizado hace 1 h',
-      durationEstimate: 'Todo el día',
-      delayMin: 3,
-      corridorKey: 'centro',
-    },
-  ];
+// Official traffic incidents around Alicante (DGT DATEX II feed, cached 3 min)
+app.get('/api/traffic-alerts', async (req, res) => {
+  try {
+    const { alerts, publishedAt } = await getDgtAlerts();
+    res.json({
+      success: true,
+      count: alerts.length,
+      alerts,
+      source: 'DGT · Punto de Acceso Nacional (DATEX II)',
+      updatedAt: publishedAt,
+    });
+  } catch (err: any) {
+    console.error('Error fetching DGT incidents:', err?.message || err);
+    res.status(502).json({
+      success: false,
+      count: 0,
+      alerts: [],
+      source: 'DGT · Punto de Acceso Nacional (DATEX II)',
+      updatedAt: new Date().toISOString(),
+      error: 'No se pudo consultar el servicio de incidencias de la DGT',
+    });
+  }
+});
 
-  res.json({
-    success: true,
-    count: alerts.length,
-    alerts,
-    updatedAt: new Date().toISOString(),
-  });
+// OpenStreetMap building footprints along a route (for the 3D tours)
+app.post('/api/buildings', async (req, res) => {
+  try {
+    const { line, radius, limit } = validateBuildingsRequest(req.body);
+    const buildings = await getBuildingsAlongLine(line, radius, limit);
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.json({ success: true, count: buildings.length, buildings, attribution: '© OpenStreetMap contributors' });
+  } catch (err: any) {
+    if (err instanceof BuildingsRequestError) {
+      return res.status(400).json({ success: false, error: err.message, buildings: [] });
+    }
+    console.error('Error fetching OSM buildings:', err?.message || err);
+    res.status(502).json({ success: false, error: 'Servicio de edificios OSM no disponible', buildings: [] });
+  }
 });
 
 // AI Traffic Advisor Endpoint
@@ -250,7 +184,8 @@ app.post('/api/test-gemini-key', async (req, res) => {
 
 // Mount Vite middleware in development
 async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProduction) {
+    app.use(express.static(path.resolve(__dirname, 'public')));
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: {
@@ -264,7 +199,7 @@ async function startServer() {
   } else {
     // Serve static files in production
     app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (req, res) => {
+    app.get(/^(?!\/api\/).*/, (req, res) => {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
   }

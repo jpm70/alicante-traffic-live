@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import * as THREE from 'three';
+import { CAMERA_UNAVAILABLE_IMG } from '../data/placeholders';
+import { RouteScene, isWebGLAvailable } from '../three/RouteScene';
 import { CalculatedRoute, RoutePoint, getDistanceMeters } from '../services/routing';
-import { generateRouteManeuvers, getBearing } from '../services/navigationManeuvers';
+import { generateRouteManeuvers, currentStreetName } from '../services/navigationManeuvers';
+import { buildRouteIndex, pointAtDistance, getBearing } from '../services/geometry';
 import {
   Play,
   Pause,
@@ -66,7 +68,6 @@ export interface StreetWaypoint {
   progressPercent: number;
   speedLimit: number;
   segmentType: StreetSegmentType;
-  panoramicFallbackUrl: string;
   nearbyCamera?: {
     id: string;
     name: string;
@@ -79,34 +80,6 @@ export interface StreetWaypoint {
 
 const LOCAL_STORAGE_KEY = 'alicante_streetview_api_key';
 
-// High-resolution panoramic street photographs tailored for Alicante environments
-const PANORAMA_CATALOG: Record<StreetSegmentType, string[]> = {
-  avenida: [
-    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&auto=format&fit=crop&q=85',
-    'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1600&auto=format&fit=crop&q=85',
-  ],
-  maritimo: [
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&auto=format&fit=crop&q=85',
-    'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1600&auto=format&fit=crop&q=85',
-  ],
-  granvia: [
-    'https://images.unsplash.com/photo-1508873696983-2df5703bc20d?w=1600&auto=format&fit=crop&q=85',
-    'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=1600&auto=format&fit=crop&q=85',
-  ],
-  centro: [
-    'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=1600&auto=format&fit=crop&q=85',
-    'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1600&auto=format&fit=crop&q=85',
-  ],
-  rotonda: [
-    'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1600&auto=format&fit=crop&q=85',
-    'https://images.unsplash.com/photo-1508873696983-2df5703bc20d?w=1600&auto=format&fit=crop&q=85',
-  ],
-  acceso: [
-    'https://images.unsplash.com/photo-1508873696983-2df5703bc20d?w=1600&auto=format&fit=crop&q=85',
-    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&auto=format&fit=crop&q=85',
-  ],
-};
-
 export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
   route,
   origin,
@@ -117,7 +90,11 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
   // 'streetview-pano': Official/panoramic static street images simulating the real journey
   // '3d-drive': Sunny Mediterranean 3D driving simulation
   // 'dgt-cameras': DGT Traffic Camera Tour
-  const [viewMode, setViewMode] = useState<'streetview-pano' | '3d-drive' | 'dgt-cameras'>('streetview-pano');
+  // Without a Google key there is no real street imagery, so start in the 3D drive
+  // (real aerial imagery + OpenStreetMap buildings) instead of showing fake photos.
+  const [viewMode, setViewMode] = useState<'streetview-pano' | '3d-drive' | 'dgt-cameras'>(() =>
+    typeof window !== 'undefined' && localStorage.getItem(LOCAL_STORAGE_KEY) ? 'streetview-pano' : '3d-drive'
+  );
 
   // Google API Key State (stored safely in browser localStorage)
   const [apiKey, setApiKey] = useState<string>(() => {
@@ -142,10 +119,9 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
   const [showLiveCamPiP, setShowLiveCamPiP] = useState<boolean>(true);
   const [googleImgFailed, setGoogleImgFailed] = useState<boolean>(false);
 
-  // Smooth progress along the route (0 to 1) for the 3D drive mode
-  const [progressT, setProgressT] = useState<number>(0);
-
   const canvasMountRef = useRef<HTMLDivElement>(null);
+  const driveEngineRef = useRef<RouteScene | null>(null);
+  const [driveError, setDriveError] = useState<string | null>(null);
   const isPlayingRef = useRef<boolean>(isPlaying);
   const speedRef = useRef<number>(speedMultiplier);
   const currentIndexRef = useRef<number>(currentIndex);
@@ -174,107 +150,89 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
     if (!route.coordinates || route.coordinates.length < 2) return [];
 
     const maneuvers = generateRouteManeuvers(route, origin, destination);
-    const coords = route.coordinates;
-    const totalPoints = coords.length;
+    const index = buildRouteIndex(route.coordinates);
+    const total = Math.max(1, index.totalMeters);
 
-    // We want around 30-40 frames across the journey for smooth pacing
-    const targetSteps = Math.min(40, Math.max(16, Math.floor(totalPoints / 2)));
-    const stepSize = Math.max(1, Math.floor(totalPoints / targetSteps));
-
+    // Evenly spaced frames by distance (not by polyline vertex, which bunches up in
+    // roundabouts and leaves long gaps on avenues): ~40 frames, at least 40 m apart.
+    const spacing = Math.max(40, total / 40);
+    const count = Math.max(2, Math.floor(total / spacing) + 1);
     const items: StreetWaypoint[] = [];
-    let cumulativeDist = 0;
-    const totalDistMeters = Math.max(1, (route.distanceKm || 1) * 1000);
 
-    for (let i = 0; i < totalPoints; i += stepSize) {
-      const [ptLat, ptLng] = coords[i];
-      const nextIdx = Math.min(i + 1, totalPoints - 1);
-      const [nextPtLat, nextPtLng] = coords[nextIdx];
+    for (let k = 0; k < count; k++) {
+      const along = k === count - 1 ? total : k * spacing;
+      const here = pointAtDistance(index, along);
+      // Heading of the road a few meters ahead, so the camera looks down the street
+      const ahead = pointAtDistance(index, Math.min(total, along + 15));
+      const behind = pointAtDistance(index, Math.max(0, along - 5));
+      const heading = Math.round(
+        Math.hypot(ahead.lat - behind.lat, ahead.lng - behind.lng) > 0
+          ? getBearing(behind.lat, behind.lng, ahead.lat, ahead.lng)
+          : here.bearing
+      );
 
-      // Exact bearing to the next waypoint along the roadway
-      const heading = Math.round(getBearing(ptLat, ptLng, nextPtLat, nextPtLng));
+      const streetName = currentStreetName(maneuvers, along, route.name);
 
-      // Match street name and maneuver instruction
-      let streetName = `Tramo ${route.name}`;
-      let instruction = 'Continúe recto por la vía';
+      // Next maneuver ahead (within 250 m) gives the instruction on the street sign
+      const nextManeuver = maneuvers.find((m) => m.accumulatedDistanceMeters > along + 5);
+      let instruction = `Continúa por ${streetName}`;
       let maneuverType = 'straight';
-
-      for (const m of maneuvers) {
-        const d = getDistanceMeters(ptLat, ptLng, m.point[0], m.point[1]);
-        if (d < 350) {
-          streetName = m.streetName || streetName;
-          instruction = m.instruction || instruction;
-          maneuverType = m.type || 'straight';
-          break;
+      if (nextManeuver) {
+        const dist = Math.round(nextManeuver.accumulatedDistanceMeters - along);
+        if (dist <= 250) {
+          instruction = `En ${dist} m: ${nextManeuver.instruction}`;
+          maneuverType = nextManeuver.type;
         }
       }
+      if (k === 0) instruction = maneuvers[0]?.instruction || instruction;
+      if (k === count - 1) {
+        instruction = `Has llegado a tu destino: ${destination.name}`;
+        maneuverType = 'destination';
+      }
 
-      // Check for closest Alicante DGT camera within 350m
+      // Closest traffic camera of the route within 150 m
       let nearbyCam: StreetWaypoint['nearbyCamera'] | undefined;
-      let minCamDist = 99999;
+      let minCamDist = 150;
       for (const c of route.cameras) {
-        const d = getDistanceMeters(ptLat, ptLng, c.lat, c.lng);
-        if (d <= 350 && d < minCamDist) {
+        const d = getDistanceMeters(here.lat, here.lng, c.lat, c.lng);
+        if (d <= minCamDist) {
           minCamDist = d;
-          nearbyCam = {
-            id: c.id,
-            name: c.name,
-            zona: c.zona,
-            status: c.status,
-            url: c.url,
-            distanceMeters: Math.round(d),
-          };
+          nearbyCam = { id: c.id, name: c.name, zona: c.zona, status: c.status, url: c.url, distanceMeters: Math.round(d) };
         }
       }
 
-      if (i > 0) {
-        const prevIdx = Math.max(0, i - stepSize);
-        const [prevLat, prevLng] = coords[prevIdx];
-        cumulativeDist += getDistanceMeters(prevLat, prevLng, ptLat, ptLng);
-      }
-
-      const progressPercent = Math.min(100, Math.round((cumulativeDist / totalDistMeters) * 100));
-      const remainingMeters = Math.max(0, Math.round(totalDistMeters - cumulativeDist));
-
-      // Classify street segment topology
-      const lowerName = (streetName + ' ' + route.name).toLowerCase();
+      // Rough street classification for the speed-limit badge (orientative only)
+      const lowerName = streetName.toLowerCase();
       let segType: StreetSegmentType = 'avenida';
       let speedLimit = 50;
-
-      if (lowerName.includes('gran vía') || lowerName.includes('via parque') || lowerName.includes('a-70') || lowerName.includes('a-31') || lowerName.includes('autov') || lowerName.includes('n-332')) {
+      if (/autov|ap-7|a-7\b|a-31|a-70|a-77|n-332|ronda|v[ií]a parque/.test(lowerName)) {
         segType = 'granvia';
-        speedLimit = lowerName.includes('autov') || lowerName.includes('a-31') ? 80 : 50;
-      } else if (lowerName.includes('explanada') || lowerName.includes('puerto') || lowerName.includes('marítim') || lowerName.includes('postiguet') || lowerName.includes('conde de vallellano')) {
+        speedLimit = /autov|ap-7|a-7\b|a-31|a-70|a-77/.test(lowerName) ? 80 : 50;
+      } else if (/explanada|puerto|mar[ií]tim|postiguet|vallellano/.test(lowerName)) {
         segType = 'maritimo';
-        speedLimit = 40;
-      } else if (lowerName.includes('glorieta') || lowerName.includes('plaza') || lowerName.includes('rotonda') || lowerName.includes('luceros') || lowerName.includes('estrella')) {
+        speedLimit = 30;
+      } else if (/glorieta|plaza|pla[çc]a|rotonda/.test(lowerName) || maneuverType === 'roundabout') {
         segType = 'rotonda';
         speedLimit = 30;
-      } else if (lowerName.includes('calle') || lowerName.includes('san fernando') || lowerName.includes('teatro') || lowerName.includes('castaños') || lowerName.includes('rambla')) {
+      } else if (/^(calle|carrer|c\/)/.test(lowerName)) {
         segType = 'centro';
         speedLimit = 30;
-      } else {
-        segType = 'avenida';
-        speedLimit = 50;
       }
 
-      const catalogUrls = PANORAMA_CATALOG[segType] || PANORAMA_CATALOG.avenida;
-      const fallbackUrl = catalogUrls[items.length % catalogUrls.length];
-
       items.push({
-        id: `wp-${i}`,
-        index: items.length,
-        lat: ptLat,
-        lng: ptLng,
+        id: `wp-${k}`,
+        index: k,
+        lat: here.lat,
+        lng: here.lng,
         heading,
         streetName,
         instruction,
         maneuverType,
-        distanceMeters: Math.round(cumulativeDist),
-        remainingMeters,
-        progressPercent,
+        distanceMeters: Math.round(along),
+        remainingMeters: Math.max(0, Math.round(total - along)),
+        progressPercent: Math.min(100, Math.round((along / total) * 100)),
         speedLimit,
         segmentType: segType,
-        panoramicFallbackUrl: fallbackUrl,
         nearbyCamera: nearbyCam,
       });
     }
@@ -295,7 +253,8 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
   // Google Street View Static Image URL (when API key is configured)
   const googleStreetViewUrl = useMemo(() => {
     if (!activeWaypoint || !apiKey) return '';
-    return `https://maps.googleapis.com/maps/api/streetview?size=1200x640&location=${activeWaypoint.lat},${activeWaypoint.lng}&heading=${currentHeading}&pitch=${pitchOffset}&fov=95&key=${encodeURIComponent(
+    // return_error_code: answer 404 when there is no panorama instead of a grey placeholder
+    return `https://maps.googleapis.com/maps/api/streetview?size=1200x640&location=${activeWaypoint.lat},${activeWaypoint.lng}&heading=${currentHeading}&pitch=${pitchOffset}&fov=95&radius=60&source=outdoor&return_error_code=true&key=${encodeURIComponent(
       apiKey.trim()
     )}`;
   }, [activeWaypoint, apiKey, currentHeading, pitchOffset]);
@@ -311,8 +270,8 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
     if (apiKey && !googleImgFailed && googleStreetViewUrl) {
       return googleStreetViewUrl;
     }
-    return activeWaypoint ? activeWaypoint.panoramicFallbackUrl : '';
-  }, [apiKey, googleImgFailed, googleStreetViewUrl, activeWaypoint]);
+    return '';
+  }, [apiKey, googleImgFailed, googleStreetViewUrl]);
 
   // ---------------------------------------------------------------------------
   // AUTOMATIC ROUTE PROGRESSION TIMER (Simulating Driving Journey)
@@ -329,10 +288,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
           setIsPlaying(false);
           return prev;
         }
-        const next = prev + 1;
-        const t = next / Math.max(1, waypoints.length - 1);
-        setProgressT(t);
-        return next;
+        return prev + 1;
       });
     }, intervalMs);
 
@@ -342,24 +298,19 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
   // Stepper handlers
   const goToNext = () => {
     if (currentIndex < waypoints.length - 1) {
-      const nextIdx = currentIndex + 1;
-      setCurrentIndex(nextIdx);
-      setProgressT(nextIdx / Math.max(1, waypoints.length - 1));
+      setCurrentIndex(currentIndex + 1);
     }
   };
 
   const goToPrev = () => {
     if (currentIndex > 0) {
-      const prevIdx = currentIndex - 1;
-      setCurrentIndex(prevIdx);
-      setProgressT(prevIdx / Math.max(1, waypoints.length - 1));
+      setCurrentIndex(currentIndex - 1);
     }
   };
 
   const handleJumpToIndex = (idx: number) => {
     const validIdx = Math.max(0, Math.min(waypoints.length - 1, idx));
     setCurrentIndex(validIdx);
-    setProgressT(validIdx / Math.max(1, waypoints.length - 1));
   };
 
   // API Key handlers
@@ -384,7 +335,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
     setApiKey('');
     setInputKey('');
     setGoogleImgFailed(false);
-    setKeyStatusMessage('Clave eliminada. Se utilizarán las panorámicas locales de Alicante.');
+    setKeyStatusMessage('Clave eliminada. Sin clave se usa la conducción 3D con ortofoto real.');
     setTimeout(() => {
       setIsConfigOpen(false);
       setKeyStatusMessage(null);
@@ -392,138 +343,37 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
   };
 
   // ---------------------------------------------------------------------------
-  // THREE.JS 3D SCENE SETUP (Optional Sub-Mode: Conducción 3D Día)
+  // 3D DRIVE (shared engine, day theme): one WebGL context for as long as the mode
+  // is open; the car follows the timeline smoothly instead of rebuilding the scene.
   // ---------------------------------------------------------------------------
-  const { curve } = useMemo(() => {
-    if (!route.coordinates || route.coordinates.length < 2) {
-      return { curve: null };
+  useEffect(() => {
+    if (viewMode !== '3d-drive' || !canvasMountRef.current) return;
+    if (!isWebGLAvailable()) {
+      setDriveError('Este dispositivo no tiene WebGL activado, necesario para la vista 3D.');
+      return;
     }
-    const [refLat, refLng] = route.coordinates[0];
-    const metersPerDegLat = 111320;
-    const metersPerDegLng = 111320 * Math.cos((refLat * Math.PI) / 180);
-
-    const points3D: THREE.Vector3[] = [];
-    let lastPoint = new THREE.Vector3(-99999, 0, -99999);
-
-    for (let i = 0; i < route.coordinates.length; i++) {
-      const [pLat, pLng] = route.coordinates[i];
-      const x = (pLng - refLng) * metersPerDegLng;
-      const z = -(pLat - refLat) * metersPerDegLat;
-      const pt = new THREE.Vector3(x, 0, z);
-
-      if (pt.distanceTo(lastPoint) > 1.5) {
-        points3D.push(pt);
-        lastPoint = pt;
-      }
+    let engine: RouteScene;
+    try {
+      engine = new RouteScene(canvasMountRef.current, route, { theme: 'day', cameraMode: 'cockpit', autoplay: false });
+    } catch (err) {
+      console.error('3D drive error:', err);
+      setDriveError('No se pudo iniciar la vista 3D en este dispositivo.');
+      return;
     }
-
-    return {
-      curve: new THREE.CatmullRomCurve3(points3D, false, 'catmullrom', 0.15),
+    setDriveError(null);
+    engine.seek(waypoints[currentIndexRef.current]?.distanceMeters || 0);
+    driveEngineRef.current = engine;
+    return () => {
+      engine.dispose();
+      driveEngineRef.current = null;
     };
-  }, [route]);
+    // The engine lives for the whole mode; position updates go through setFollowTarget
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, route]);
 
   useEffect(() => {
-    if (viewMode !== '3d-drive' || !canvasMountRef.current || !curve) return;
-
-    const container = canvasMountRef.current;
-    const width = container.clientWidth || 800;
-    const height = container.clientHeight || 500;
-    const aspect = height > 0 ? width / height : 16 / 9;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x38bdf8); // Mediterranean blue sky
-    scene.fog = new THREE.FogExp2(0xbae6fd, 0.0018);
-
-    const camera = new THREE.PerspectiveCamera(65, aspect, 0.5, 3000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    container.innerHTML = '';
-    container.appendChild(renderer.domElement);
-
-    // Warm Mediterranean Sun Light
-    const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
-    sunLight.position.set(150, 250, 100);
-    scene.add(sunLight);
-
-    const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0xfde047, 0.9);
-    scene.add(hemiLight);
-
-    // Ground plane
-    const groundGeo = new THREE.PlaneGeometry(5000, 5000);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0xd6d3d1 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.05;
-    scene.add(ground);
-
-    // Road ribbon
-    const roadGeo = new THREE.TubeGeometry(curve, 350, 5.5, 8, false);
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
-    const roadMesh = new THREE.Mesh(roadGeo, roadMat);
-    roadMesh.position.y = 0.02;
-    scene.add(roadMesh);
-
-    // Alicante buildings
-    const buildingGroup = new THREE.Group();
-    const bGeo = new THREE.BoxGeometry(1, 1, 1);
-    const bColors = [0xfef3c7, 0xfde68a, 0xe2e8f0, 0xffedd5];
-
-    for (let i = 0; i < 90; i++) {
-      const t = (i / 90);
-      const pt = curve.getPointAt(t);
-      const tangent = curve.getTangentAt(t);
-      const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
-
-      const side = (i % 2 === 0 ? 1 : -1) * (18 + (i % 4) * 8);
-      const bHeight = 12 + (i % 6) * 7;
-      const bWidth = 14 + (i % 3) * 6;
-
-      const mat = new THREE.MeshLambertMaterial({ color: bColors[i % bColors.length] });
-      const bMesh = new THREE.Mesh(bGeo, mat);
-      bMesh.scale.set(bWidth, bHeight, bWidth);
-      bMesh.position.copy(pt).addScaledVector(normal, side);
-      bMesh.position.y = bHeight / 2;
-      buildingGroup.add(bMesh);
-    }
-    scene.add(buildingGroup);
-
-    let animId: number;
-    const animate = () => {
-      animId = requestAnimationFrame(animate);
-
-      // Interpolate along the curve based on progressT
-      const t = Math.min(0.999, Math.max(0.001, progressT));
-      const camPos = curve.getPointAt(t);
-      const forwardT = Math.min(0.9999, t + 0.015);
-      const lookAtPos = curve.getPointAt(forwardT);
-
-      // Place camera in driver cockpit view (1.6m high)
-      camera.position.set(camPos.x, 2.2, camPos.z);
-      camera.lookAt(lookAtPos.x, 2.0, lookAtPos.z);
-
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!container) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', handleResize);
-      renderer.dispose();
-      if (container) container.innerHTML = '';
-    };
-  }, [viewMode, curve, progressT]);
+    driveEngineRef.current?.setFollowTarget(activeWaypoint ? activeWaypoint.distanceMeters : null);
+  }, [activeWaypoint, viewMode]);
 
   // Mini-map bounding box calculation for SVG preview
   const miniMapBounds = useMemo(() => {
@@ -584,7 +434,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
   return (
     <div className="w-full h-full flex flex-col bg-[#0b0f19] text-white overflow-hidden select-none">
       {/* Sub-Bar: Mode Selector & Google API Key Settings */}
-      <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-slate-950 border-b border-slate-800 text-xs flex-shrink-0 z-30">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2 bg-slate-950 border-b border-slate-800 text-xs flex-shrink-0 z-30">
         {/* View Mode Tabs */}
         <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-lg">
           <button
@@ -597,7 +447,8 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
             title="Vista panorámica estática paso a paso simulando el trayecto real"
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>Panorámica Street View</span>
+            <span className="hidden sm:inline">Panorámica Street View</span>
+            <span className="sm:hidden">Street View</span>
           </button>
 
           <button
@@ -667,7 +518,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
               </button>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Si introduces tu clave de Google Cloud con la <strong>Street View Static API</strong> habilitada, verás fotos fotorrealistas oficiales de Google para cada coordenada exacta del trayecto. Si no introduces ninguna clave, el sistema utiliza el catálogo de panorámicas de alta resolución de Alicante y las 159 cámaras en directo de la DGT de forma 100% gratuita.
+              Si introduces tu clave de Google Cloud con la <strong>Street View Static API</strong> habilitada, verás fotos fotorrealistas oficiales de Google para cada coordenada exacta del trayecto. Sin clave, el recorrido se muestra con la conducción 3D (ortofoto real de Esri y edificios de OpenStreetMap) y las cámaras municipales en directo, de forma gratuita. La clave se guarda solo en este navegador.
             </p>
             <div className="flex items-center gap-2">
               <input
@@ -704,25 +555,55 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
       )}
 
       {/* Main Viewport + Telemetry Panel Layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 overflow-hidden min-h-0 relative">
+      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-3 overflow-hidden min-h-0 relative">
         {/* Left 2 Cols: Main Panoramic Street View Display */}
-        <div className="lg:col-span-2 relative bg-black flex flex-col items-center justify-center overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-800">
+        <div className="flex-[3] min-h-0 lg:col-span-2 relative bg-black flex flex-col items-center justify-center overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-800">
           
           {/* MODE 1: STREET VIEW PANORAMIC IMAGES (Simulating real path) */}
           {viewMode === 'streetview-pano' && (
             <div className="relative w-full h-full flex items-center justify-center bg-slate-950 overflow-hidden">
               {/* Wide-Angle Static Panoramic Street Image */}
               <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-                <img
-                  key={activeWaypoint.id + '-' + angleOffset}
-                  src={activeImageUrl}
-                  alt={`Street View en ${activeWaypoint.streetName}`}
-                  onError={() => setGoogleImgFailed(true)}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out select-none"
-                  style={{
-                    transform: `scale(1.05) translateX(${angleOffset * -0.2}%) translateY(${pitchOffset * -0.5}%)`,
-                  }}
-                />
+                {activeImageUrl ? (
+                  <img
+                    key={activeWaypoint.id + '-' + angleOffset}
+                    src={activeImageUrl}
+                    alt={`Street View en ${activeWaypoint.streetName}`}
+                    onError={() => setGoogleImgFailed(true)}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out select-none"
+                    style={{
+                      transform: `scale(1.05) translateX(${angleOffset * -0.2}%) translateY(${pitchOffset * -0.5}%)`,
+                    }}
+                  />
+                ) : (
+                  // No key, or Google has no panorama here: say so instead of showing a stock photo
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center bg-gradient-to-b from-slate-900 to-slate-950">
+                    <Eye className="w-10 h-10 text-slate-500" />
+                    <p className="text-sm font-bold text-slate-100 max-w-md">
+                      {apiKey
+                        ? 'Google no tiene imagen a pie de calle en este punto (o la clave no es válida para Street View Static API).'
+                        : 'Para ver fotos reales a pie de calle hace falta una clave de Google con la Street View Static API.'}
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-2 pointer-events-auto">
+                      <button
+                        onClick={() => setViewMode('3d-drive')}
+                        className="px-3 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1.5"
+                      >
+                        <Sun className="w-4 h-4" />
+                        Ver conducción 3D (ortofoto real)
+                      </button>
+                      {!apiKey && (
+                        <button
+                          onClick={() => setIsConfigOpen(true)}
+                          className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs flex items-center gap-1.5"
+                        >
+                          <Key className="w-4 h-4 text-cyan-400" />
+                          Configurar clave
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Subtle Cinematic Vignette & Lighting Contrast Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/50 pointer-events-none" />
@@ -731,9 +612,9 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                 <div className="absolute top-4 left-4 z-20 pointer-events-auto">
                   <div className="bg-slate-950/90 backdrop-blur-md border-2 border-cyan-500/60 rounded-xl px-3.5 py-2.5 shadow-2xl flex items-center gap-3 max-w-sm sm:max-w-md">
                     <div className="w-9 h-9 rounded-lg bg-blue-600/30 border border-blue-400 text-blue-300 flex items-center justify-center font-bold flex-shrink-0">
-                      {activeWaypoint.maneuverType === 'turn-right' ? (
+                      {activeWaypoint.maneuverType?.includes('right') ? (
                         <CornerUpRight className="w-5 h-5 text-amber-400" />
-                      ) : activeWaypoint.maneuverType === 'turn-left' ? (
+                      ) : activeWaypoint.maneuverType?.includes('left') ? (
                         <CornerUpLeft className="w-5 h-5 text-amber-400" />
                       ) : (
                         <ArrowUp className="w-5 h-5 text-emerald-400" />
@@ -763,7 +644,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                   <div className="flex items-center gap-1.5 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 px-2.5 py-1 rounded-lg text-[11px] font-mono shadow-xl">
                     <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                     <span className="text-slate-200 font-semibold">
-                      {apiKey && !googleImgFailed ? 'Google Street View Static' : 'Panorámica de Calle (Alicante)'}
+                      {activeImageUrl ? 'Google Street View' : 'Sin imagen a pie de calle'}
                     </span>
                   </div>
 
@@ -785,9 +666,9 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                   <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-xl shadow-2xl pointer-events-auto flex items-center gap-2">
                     <Gauge className="w-4 h-4 text-emerald-400" />
                     <div>
-                      <span className="text-[9px] text-slate-400 uppercase font-mono block">Velocidad</span>
+                      <span className="text-[9px] text-slate-400 uppercase font-mono block">Límite orientativo</span>
                       <span className="text-xs font-mono font-bold text-emerald-400">
-                        {isPlaying ? `${activeWaypoint.speedLimit - 2} km/h` : '0 km/h (Pausa)'}
+                        {activeWaypoint.speedLimit} km/h
                       </span>
                     </div>
                   </div>
@@ -894,7 +775,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src =
-                            'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=300&q=80';
+                            CAMERA_UNAVAILABLE_IMG;
                         }}
                       />
                       <div className="absolute bottom-1 left-1 right-1 bg-slate-950/85 px-1.5 py-0.5 rounded text-[9px] text-slate-200 font-mono truncate">
@@ -996,13 +877,43 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
 
           {/* MODE 2: 3D DAYTIME DRIVING SIMULATION (Three.js) */}
           {viewMode === '3d-drive' && (
-            <div className="relative w-full h-full flex items-center justify-center bg-[#38bdf8] overflow-hidden">
-              <div
-                ref={canvasMountRef}
-                className="w-full h-full relative cursor-grab active:cursor-grabbing select-none"
-              />
-              <div className="absolute bottom-3 left-4 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-mono text-cyan-300 z-10">
-                Simulador 3D Calzada Alicante · {activeWaypoint.streetName}
+            <div className="relative w-full h-full overflow-hidden bg-slate-900">
+              {driveError ? (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-6 text-center">
+                  <AlertTriangle className="w-8 h-8 text-amber-400" />
+                  <p className="text-sm text-slate-200 max-w-md">{driveError}</p>
+                </div>
+              ) : (
+                <div ref={canvasMountRef} className="absolute inset-0 select-none" />
+              )}
+
+              {/* Street sign with the real street name and the next instruction */}
+              <div className="absolute top-3 left-3 right-3 sm:right-auto z-10 pointer-events-none">
+                <div className="bg-slate-950/90 backdrop-blur-md border-2 border-cyan-500/60 rounded-xl px-3 py-2 shadow-2xl flex items-center gap-3 sm:max-w-md">
+                  <div className="w-9 h-9 rounded-lg bg-blue-600/30 border border-blue-400 flex items-center justify-center flex-shrink-0">
+                    {activeWaypoint.maneuverType?.includes('right') ? (
+                      <CornerUpRight className="w-5 h-5 text-amber-400" />
+                    ) : activeWaypoint.maneuverType?.includes('left') ? (
+                      <CornerUpLeft className="w-5 h-5 text-amber-400" />
+                    ) : (
+                      <ArrowUp className="w-5 h-5 text-emerald-400" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-sm sm:text-base font-extrabold text-white truncate">{activeWaypoint.streetName}</h4>
+                    <p className="text-[11px] text-slate-300 truncate">{activeWaypoint.instruction}</p>
+                  </div>
+                </div>
+              </div>
+
+              {route.isApproximate && (
+                <div className="absolute top-20 left-3 z-10 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/90 border border-amber-600/60 text-amber-200">
+                  Trazado aproximado: sin datos del servidor de rutas
+                </div>
+              )}
+
+              <div className="absolute bottom-2 left-3 z-10 text-[9px] font-mono text-white/80 bg-black/40 px-1.5 py-0.5 rounded pointer-events-none">
+                Ortofoto © Esri · Edificios © OpenStreetMap
               </div>
             </div>
           )}
@@ -1028,7 +939,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80';
+                          CAMERA_UNAVAILABLE_IMG;
                       }}
                     />
                     <div className="absolute top-3 left-3 bg-slate-950/85 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-mono text-white border border-slate-700">
@@ -1056,7 +967,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
         </div>
 
         {/* Right 1 Col: Telemetry, Waypoint Details & Controls */}
-        <div className="p-4 sm:p-5 flex flex-col justify-between overflow-y-auto bg-[#0b0f19] space-y-4">
+        <div className="flex-[2] min-h-0 p-4 sm:p-5 flex flex-col justify-between overflow-y-auto bg-[#0b0f19] space-y-4">
           <div className="space-y-4">
             {/* Header info */}
             <div>

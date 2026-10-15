@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CAMERA_UNAVAILABLE_IMG } from '../data/placeholders';
 import { TrafficCamera } from '../data/cameras';
 import { X, Maximize2, Minimize2, Move, Video, RefreshCw } from 'lucide-react';
 
@@ -92,7 +93,7 @@ export const FloatingCameraPip: React.FC<FloatingCameraPipProps> = ({
             className="w-full h-full object-cover"
             onError={(e) => {
               (e.target as HTMLImageElement).src =
-                'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&q=80';
+                CAMERA_UNAVAILABLE_IMG;
             }}
           />
 
