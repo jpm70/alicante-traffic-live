@@ -44,7 +44,14 @@ interface GpsNavigatorModalProps {
   onReroute?: (lat: number, lng: number) => Promise<CalculatedRoute | null>;
   // Official DGT speed cameras (province of Alicante)
   radars?: Radar[];
+  // Opened as "modo coche": real GPS, full screen, driver layout in landscape
+  carMode?: boolean;
 }
+
+// Landscape screens with little height (phones turned sideways, car head units) get the
+// two-column driver layout; desktops keep the regular one.
+const isCarScreen = () =>
+  typeof window !== 'undefined' && window.innerWidth > window.innerHeight && window.innerWidth >= 560 && window.innerHeight <= 720;
 
 // Speed-camera warnings: distances ahead at which the driver is told (meters)
 const RADAR_WARN_FAR = 500;
@@ -69,6 +76,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   cacheBuster,
   onReroute,
   radars = [],
+  carMode = false,
 }) => {
   // The route being followed (replaced when the driver leaves it and we re-route)
   const [activeRoute, setActiveRoute] = useState<CalculatedRoute>(route);
@@ -91,7 +99,27 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   const slowAnnouncementsRef = useRef<Set<string>>(new Set());
 
   // Mode: Real Device GPS vs Simulation
-  const [isSimulating, setIsSimulating] = useState<boolean>(() => !prefersRealGps());
+  const [isSimulating, setIsSimulating] = useState<boolean>(() =>
+    carMode && typeof navigator !== 'undefined' && 'geolocation' in navigator ? false : !prefersRealGps()
+  );
+
+  // Driver layout: forced by "modo coche" or chosen automatically on landscape screens
+  const [carLayout, setCarLayout] = useState<boolean>(() => carMode || isCarScreen());
+  useEffect(() => {
+    const update = () => setCarLayout(carMode || isCarScreen());
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, [carMode]);
+
+  // "Modo coche" goes full screen (it is opened by a tap, which browsers require)
+  useEffect(() => {
+    if (!carMode || typeof document === 'undefined' || document.fullscreenElement) return;
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  }, [carMode]);
   const [simulationPlaying, setSimulationPlaying] = useState<boolean>(true);
   // Progress along the route in meters (drives guidance, ETA and remaining distance)
   const [alongMeters, setAlongMeters] = useState<number>(0);
@@ -493,7 +521,8 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     // Dark Street Map Tile Provider (No API key needed)
     L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-      { maxZoom: 19 }
+      // Esri's dark canvas has tiles up to zoom 16; deeper zooms scale those up
+      { maxZoom: 19, maxNativeZoom: 16 }
     ).addTo(map);
 
     // Route Polyline Layer
@@ -572,6 +601,22 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     announcedCameraIdsRef.current = new Set();
   }, [activeRoute]);
 
+  useEffect(() => {
+    const t = setTimeout(() => mapRef.current?.invalidateSize(), 150);
+    return () => clearTimeout(t);
+  }, [carLayout]);
+
+  // Car layout: closer zoom in town, wider view at motorway speeds
+  const zoomBucketRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!carLayout || !mapRef.current) return;
+    const zoom = currentSpeedKmH >= 80 ? 15 : currentSpeedKmH >= 45 ? 16 : 17;
+    if (zoomBucketRef.current !== zoom) {
+      zoomBucketRef.current = zoom;
+      mapRef.current.setZoom(zoom, { animate: true });
+    }
+  }, [carLayout, currentSpeedKmH]);
+
   // Sync vehicle position on map
   useEffect(() => {
     if (!mapRef.current || !vehicleMarkerRef.current) return;
@@ -637,10 +682,144 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#090d16] flex flex-col overflow-hidden select-none animate-in fade-in duration-200">
-      {/* ------------------------------------------------------------------ */}
-      {/* TOP NAVIGATION MANEUVER HUD (Waze / Google Maps Style) */}
-      {/* ------------------------------------------------------------------ */}
+    <div className={`fixed inset-0 z-50 bg-[#090d16] flex ${carLayout ? 'flex-row' : 'flex-col'} overflow-hidden select-none animate-in fade-in duration-200`}>
+      {carLayout ? (
+        // ------------------------------------------------------------------
+        // CAR MODE (landscape): everything the driver needs in one column,
+        // large type and large touch targets; the map takes the rest.
+        // ------------------------------------------------------------------
+        <aside aria-label="Panel del conductor" className="w-[42%] max-w-[440px] min-w-[300px] h-full bg-[#0b1120] border-r border-slate-800 flex flex-col gap-2 p-2.5 [@media(min-height:520px)]:gap-3 [@media(min-height:520px)]:p-3 overflow-y-auto z-20 flex-shrink-0 [&>*]:flex-shrink-0">
+          {/* Next maneuver */}
+          <div className="rounded-2xl bg-emerald-950/40 border-2 border-emerald-500/50 p-2 [@media(min-height:520px)]:p-3 flex items-center gap-3">
+            <div className="w-14 h-14 [@media(min-height:520px)]:w-20 [@media(min-height:520px)]:h-20 rounded-2xl bg-emerald-500/15 border-2 border-emerald-500/60 flex items-center justify-center flex-shrink-0 [&>svg]:w-10 [&>svg]:h-10 [@media(min-height:520px)]:[&>svg]:w-12 [@media(min-height:520px)]:[&>svg]:h-12">
+              {getManeuverIcon(activeManeuver.type)}
+            </div>
+            <div className="min-w-0">
+              <div className="text-3xl [@media(min-height:520px)]:text-4xl font-black font-mono text-emerald-400 leading-none">
+                {distanceToNextManeuverMeters <= 40 ? 'Ahora' : formatDistance(distanceToNextManeuverMeters)}
+              </div>
+              <div className="text-base [@media(min-height:520px)]:text-lg font-extrabold text-white leading-snug mt-1 line-clamp-2">{activeManeuver.instruction}</div>
+            </div>
+          </div>
+          <div className="hidden [@media(min-height:520px)]:block px-1 -mt-1 text-sm text-slate-300 truncate">
+            Por <span className="font-bold text-white">{streetNow}</span>
+            {nextUpcomingManeuver && <span className="text-slate-400"> · Después: {nextUpcomingManeuver.instruction}</span>}
+          </div>
+
+          {/* Warnings: speed camera and slow traffic measured ahead */}
+          {radarWarning && (
+            <div className={`rounded-2xl border-2 p-2 [@media(min-height:520px)]:p-3 flex items-center gap-3 ${radarWarning.inSection ? 'bg-amber-950/80 border-amber-500/70' : 'bg-red-950/80 border-red-500/70'}`}>
+              <Camera className={`w-9 h-9 flex-shrink-0 ${radarWarning.inSection ? 'text-amber-300' : 'text-red-300'}`} />
+              <div className="min-w-0">
+                <div className="text-xl [@media(min-height:520px)]:text-2xl font-black text-white leading-tight">
+                  {radarWarning.inSection ? `Quedan ${radarWarning.distance} m` : `Radar a ${radarWarning.distance} m`}
+                </div>
+                <div className="text-sm text-slate-200 truncate">{radarWarning.text}</div>
+              </div>
+            </div>
+          )}
+          {slowTraffic && (
+            <div className={`rounded-2xl border-2 p-3 ${slowTraffic.jam ? 'bg-red-950/80 border-red-500/70' : 'bg-amber-950/80 border-amber-500/70'}`}>
+              <div className="text-2xl font-black text-white leading-tight">
+                {slowTraffic.jam ? 'Retención' : 'Tráfico lento'} a {formatDistance(slowTraffic.distance)}
+              </div>
+              <div className="text-sm text-slate-200">
+                {slowTraffic.speed} km/h medidos por la DGT · {slowTraffic.text}
+              </div>
+            </div>
+          )}
+          {(gpsError || isRerouting || (!isSimulating && offRouteMeters > 50) || activeRoute.isApproximate) && (
+            <div className="rounded-xl bg-slate-900 border border-amber-500/50 p-2.5 text-sm font-semibold text-amber-100 space-y-1">
+              {gpsError && <div>{gpsError}</div>}
+              {isRerouting ? (
+                <div className="text-cyan-200">Recalculando ruta desde tu posición…</div>
+              ) : (
+                !isSimulating && offRouteMeters > 50 && <div className="text-rose-200">Fuera de la ruta ({offRouteMeters} m)</div>
+              )}
+              {activeRoute.isApproximate && <div>Trazado aproximado: las indicaciones no siguen calles.</div>}
+            </div>
+          )}
+
+          {/* Speed and arrival */}
+          <div className="mt-auto grid grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-slate-950 border border-slate-800 p-2 [@media(min-height:520px)]:p-3">
+              <div className="text-4xl [@media(min-height:520px)]:text-5xl font-black font-mono text-cyan-400 leading-none">{currentSpeedKmH}</div>
+              <div className="text-xs font-mono text-slate-400 uppercase mt-1">km/h</div>
+            </div>
+            <div className="rounded-2xl bg-slate-950 border border-slate-800 p-2 [@media(min-height:520px)]:p-3">
+              <div className="text-2xl [@media(min-height:520px)]:text-3xl font-black font-mono text-white leading-none">
+                {new Date(Date.now() + Math.max(1, Math.round(activeRoute.totalMinutes * remainingFraction)) * 60000).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              <div className="text-xs font-mono text-slate-400 mt-1">
+                llegada · {Math.max(1, Math.round(activeRoute.totalMinutes * remainingFraction))} min · {Math.round((remainingMeters / 1000) * 10) / 10} km
+              </div>
+            </div>
+          </div>
+
+          {/* Large controls */}
+          <div className="grid grid-cols-4 gap-2">
+            <button
+              onClick={() => setVoiceEnabled(!voiceEnabled)}
+              className={`h-12 [@media(min-height:520px)]:h-14 rounded-2xl border-2 flex items-center justify-center ${voiceEnabled ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+              aria-label={voiceEnabled ? 'Silenciar voz' : 'Activar voz'}
+            >
+              {voiceEnabled ? <Volume2 className="w-7 h-7" /> : <VolumeX className="w-7 h-7" />}
+            </button>
+            <button
+              onClick={handleRecenter}
+              className="h-12 [@media(min-height:520px)]:h-14 rounded-2xl border-2 bg-slate-800 border-slate-700 text-cyan-300 flex items-center justify-center"
+              aria-label="Centrar mapa en el vehículo"
+            >
+              <Crosshair className="w-7 h-7" />
+            </button>
+            <button
+              onClick={() => setIsHudMode(true)}
+              className="h-12 [@media(min-height:520px)]:h-14 rounded-2xl border-2 bg-slate-800 border-amber-500/40 text-amber-300 flex items-center justify-center"
+              aria-label="Modo HUD para el parabrisas"
+            >
+              <Moon className="w-7 h-7" />
+            </button>
+            <button
+              onClick={onClose}
+              className="h-12 [@media(min-height:520px)]:h-14 rounded-2xl border-2 bg-rose-500/20 border-rose-500/60 text-rose-300 flex items-center justify-center"
+              aria-label="Finalizar navegación"
+            >
+              <X className="w-7 h-7" />
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center bg-slate-900 border border-slate-800 p-0.5 rounded-lg">
+              <button
+                onClick={() => setIsSimulating(false)}
+                className={`px-3 py-2 rounded-md font-semibold ${!isSimulating ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'}`}
+              >
+                GPS Real{!isSimulating && gpsAccuracy !== null ? ` ±${gpsAccuracy} m` : ''}
+              </button>
+              <button
+                onClick={() => {
+                  setIsSimulating(true);
+                  setSimulationPlaying(true);
+                }}
+                className={`px-3 py-2 rounded-md font-semibold ${isSimulating ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'}`}
+              >
+                Simulador
+              </button>
+            </div>
+            {isSimulating && (
+              <button
+                onClick={() => setSimulationPlaying(!simulationPlaying)}
+                className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200"
+                aria-label={simulationPlaying ? 'Pausar simulación' : 'Continuar simulación'}
+              >
+                {simulationPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </button>
+            )}
+          </div>
+        </aside>
+      ) : (
+      // ------------------------------------------------------------------
+      // TOP NAVIGATION MANEUVER HUD (Waze / Google Maps Style)
+      // ------------------------------------------------------------------
       <div className="bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 p-3 sm:px-6 shadow-2xl flex flex-col gap-2 z-20 flex-shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           {/* Main Maneuver Box (full width on phones, buttons go to a second row) */}
@@ -752,15 +931,17 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         </div>
       </div>
 
+      )}
+
       {/* ------------------------------------------------------------------ */}
       {/* CENTER MAP VIEWPORT (Leaflet Map tracking driver) */}
       {/* ------------------------------------------------------------------ */}
-      <div className="flex-1 relative w-full h-full overflow-hidden">
+      <div className="flex-1 relative w-full h-full overflow-hidden min-w-0">
         <div ref={containerRef} className="w-full h-full" />
 
         {/* Navigation status: GPS problems, off-route and re-routing */}
         {/* Slow traffic measured ahead by the DGT detectors */}
-        {slowTraffic && (
+        {!carLayout && slowTraffic && (
           <div className={`absolute ${radarWarning ? 'bottom-[5.5rem]' : 'bottom-4'} left-3 z-[400] pointer-events-none`}>
             <div className={`px-3 py-2 rounded-xl border shadow-2xl ${slowTraffic.jam ? 'bg-red-950/95 border-red-500/70' : 'bg-amber-950/95 border-amber-500/70'}`}>
               <div className="text-sm font-black text-white leading-tight">
@@ -772,7 +953,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         )}
 
         {/* Speed camera ahead (always visible, independent of other banners) */}
-        {radarWarning && (
+        {!carLayout && radarWarning && (
           <div className="absolute bottom-4 left-3 z-[400] pointer-events-none">
             <div className={`px-3 py-2 rounded-xl border shadow-2xl flex items-center gap-2.5 ${radarWarning.inSection ? 'bg-amber-950/95 border-amber-500/70' : 'bg-red-950/95 border-red-500/70'}`}>
               <Camera className={`w-5 h-5 ${radarWarning.inSection ? 'text-amber-300' : 'text-red-300'}`} />
@@ -786,7 +967,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
           </div>
         )}
 
-        {(gpsError || isRerouting || (!isSimulating && offRouteMeters > 50) || activeRoute.isApproximate) && (
+        {!carLayout && (gpsError || isRerouting || (!isSimulating && offRouteMeters > 50) || activeRoute.isApproximate) && (
           <div className="absolute top-3 left-3 right-3 sm:right-auto sm:max-w-sm z-[400] flex flex-col gap-1.5 pointer-events-none">
             {gpsError && (
               <div className="px-3 py-2 rounded-xl bg-amber-950/95 border border-amber-500/60 text-amber-100 text-xs font-semibold shadow-xl">
@@ -813,7 +994,8 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
           </div>
         )}
 
-        {/* Floating Recenter Button */}
+        {/* Floating Recenter Button (the car layout has its own) */}
+        {!carLayout && (
         <button
           onClick={handleRecenter}
           className="absolute right-4 bottom-28 z-[400] p-3 rounded-full bg-slate-900/90 hover:bg-slate-800 text-cyan-400 border border-slate-700 shadow-2xl backdrop-blur-md transition-all active:scale-95"
@@ -821,10 +1003,11 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         >
           <Crosshair className="w-5 h-5" />
         </button>
+        )}
 
         {/* Floating Traffic Camera Alert Banner (when near camera) */}
         {upcomingCamera && (
-          <div className="absolute top-4 right-4 z-[400] max-w-[290px] bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-3 shadow-2xl animate-in slide-in-from-top duration-200">
+          <div className={`absolute top-4 right-4 z-[400] ${carLayout ? 'max-w-[220px]' : 'max-w-[290px]'} bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-3 shadow-2xl animate-in slide-in-from-top duration-200`}>
             <div className="flex items-center justify-between gap-1 mb-2">
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
@@ -861,6 +1044,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
       {/* ------------------------------------------------------------------ */}
       {/* BOTTOM DASHBOARD: Speedometer, ETA, Distance & Simulation Controls */}
       {/* ------------------------------------------------------------------ */}
+      {!carLayout && (
       <div className="bg-[#0f172a]/95 backdrop-blur-md border-t border-slate-800 p-3 sm:px-6 z-20 flex-shrink-0 flex flex-col gap-2 shadow-2xl">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* Digital Speedometer */}
@@ -965,6 +1149,8 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
           </div>
         </div>
       </div>
+
+      )}
 
       {/* ------------------------------------------------------------------ */}
       {/* HUD NOCTURNO (Reflejo Espejado en Parabrisas de Coche) */}

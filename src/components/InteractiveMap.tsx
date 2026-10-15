@@ -67,6 +67,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const liveLayersRef = useRef<L.Layer[]>([]);
   const [mapStyle, setMapStyle] = useState<MapStyle>('dark');
   const [showAlertsOverlay, setShowAlertsOverlay] = useState<boolean>(true);
+  // Open by default on wide screens, collapsed on phones so it does not cover the map
+  const [legendOpen, setLegendOpen] = useState<boolean>(() => typeof window === 'undefined' || window.innerWidth >= 768);
 
   // Close any open popups when 3D or GPS tour is displayed
   useEffect(() => {
@@ -88,6 +90,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
       options: {
         maxZoom: 19,
+        // This basemap has tiles up to zoom 16; deeper zooms scale those up
+        maxNativeZoom: 16,
         attribution: '&copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
       },
     },
@@ -828,34 +832,48 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       </div>
 
       {/* Map Overlay Legend */}
-      <div className="absolute bottom-3 left-3 z-[400] bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-lg p-2.5 text-[11px] shadow-lg pointer-events-auto">
-        <div className="font-bold text-slate-200 mb-1.5 flex items-center justify-between gap-3">
-          <span>Mapa de Alicante en Vivo</span>
-          <span className="text-[10px] text-cyan-400 font-mono">159 cámaras · {alerts.length} alertas</span>
+      {/* Legend: what is measured, what is estimated (collapsible to free the map on phones) */}
+      {legendOpen ? (
+        <div className="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-md z-[400] bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-lg p-2.5 text-[11px] shadow-lg pointer-events-auto">
+          <div className="font-bold text-slate-200 mb-1.5 flex items-center justify-between gap-3">
+            <span>Leyenda</span>
+            <span className="text-[10px] text-cyan-400 font-mono">
+              159 cámaras · {alerts.length} incidencias · {radars.length} radares
+            </span>
+            <button onClick={() => setLegendOpen(false)} className="text-slate-400 hover:text-white px-1" aria-label="Ocultar leyenda">
+              ✕
+            </button>
+          </div>
+          <div className="space-y-1.5 text-slate-300">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-slate-400 w-full sm:w-auto">Cámaras (estimación horaria):</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />Fluido</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" />Denso</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-500" />Retención</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-cyan-400 ring-2 ring-white/50" />En tu ruta</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-slate-400 w-full sm:w-auto">Datos oficiales DGT:</span>
+              <span className="flex items-center gap-1.5">
+                <span className="px-1 rounded-full bg-emerald-500 text-slate-950 font-mono font-bold text-[10px] leading-4 border border-slate-950">95</span>
+                Velocidad medida (km/h)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded bg-slate-950 border-2 border-white ring-1 ring-red-600 flex items-center justify-center text-[9px]">📷</span>
+                Radar
+              </span>
+              <span className="flex items-center gap-1.5"><span className="text-xs">🚧</span>Incidencia</span>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-400">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span>Fluido</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-            <span>Denso</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-            <span>Retención</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 ring-2 ring-white/50" />
-            <span>En tu Ruta</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs">🚧</span>
-            <span>Obras / Incidencia</span>
-          </div>
-        </div>
-      </div>
+      ) : (
+        <button
+          onClick={() => setLegendOpen(true)}
+          className="absolute bottom-3 left-3 z-[400] px-3 py-1.5 rounded-lg bg-slate-900/95 border border-slate-700 text-[11px] font-semibold text-slate-200 shadow-lg"
+        >
+          Leyenda
+        </button>
+      )}
     </div>
   );
 };

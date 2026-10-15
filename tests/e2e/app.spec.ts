@@ -74,3 +74,31 @@ test('el navegador GPS da instrucciones reales', async ({ page }) => {
   // Distance to the next maneuver
   await expect(page.getByText(/^(En [\d.,]+ k?m|Ahora)$/).first()).toBeVisible();
 });
+
+// Route along the A-70 ring road, where the DGT has detectors and speed cameras
+const A70_ROUTE = './?oLat=38.396&oLng=-0.525&oName=Sant%20Vicent&dLat=38.31&dLng=-0.60&dName=A-70%20aeropuerto';
+
+test('modo coche: en horizontal muestra el panel del conductor', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto(A70_ROUTE);
+  await expect(page.getByText(/Tiempo base: motor de rutas/)).toBeVisible({ timeout: 45_000 });
+  await page.getByRole('button', { name: /Android Auto/i }).first().click();
+  await page.getByRole('button', { name: /Abrir en modo coche/ }).click();
+
+  const panel = page.getByRole('complementary', { name: 'Panel del conductor' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByLabel('Finalizar navegación')).toBeVisible();
+  await expect(panel.getByText(/llegada/)).toBeVisible();
+  // Map and panel side by side, nothing wider than the screen
+  const { scrollWidth, innerWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
+  expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
+});
+
+test('histórico real de velocidad en una ruta con detectores DGT', async ({ page }) => {
+  await page.goto(A70_ROUTE);
+  await expect(page.getByText(/Tiempo base: motor de rutas/)).toBeVisible({ timeout: 45_000 });
+  const stations = await page.evaluate(async () => (await (await fetch('data/traffic.json')).json()).stations.length);
+  test.skip(stations === 0, 'La DGT no publicó medidas en esta ejecución');
+  await expect(page.getByTestId('real-history')).toBeVisible();
+  await expect(page.getByText('Velocidad real: habitual vs ahora')).toBeVisible();
+});
