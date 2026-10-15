@@ -4,6 +4,7 @@ import { CalculatedRoute, RoutePoint } from '../services/routing';
 import { HistoricalTrafficChart } from './HistoricalTrafficChart';
 import { askTrafficAdvisor, getStoredGeminiKey } from '../services/gemini';
 import { Radar, radarsAlongRoute } from '../services/radars';
+import type { TrafficHistory } from '../services/trafficHistory';
 import {
   Clock,
   Gauge,
@@ -46,7 +47,7 @@ interface RouteComparisonPanelProps {
   destination: RoutePoint & { name: string };
   rushHourActive: boolean;
   onStartTour?: (route: CalculatedRoute, initialTab?: 'streetview' | 'flythrough' | 'cameras') => void;
-  onStartGpsNavigation?: (route: CalculatedRoute) => void;
+  onStartGpsNavigation?: (route: CalculatedRoute, options?: { carMode?: boolean }) => void;
   onShareModalToggle?: (isOpen: boolean) => void;
   onCarLauncherToggle?: (isOpen: boolean) => void;
   onOpenAiConfigModal?: () => void;
@@ -55,6 +56,7 @@ interface RouteComparisonPanelProps {
   onOpenTaxiDashboardModal?: () => void;
   radars?: Radar[];
   liveUpdatedAt?: string | null;
+  trafficHistory?: TrafficHistory | null;
 }
 
 export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
@@ -75,6 +77,7 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
   onOpenTaxiDashboardModal,
   radars = [],
   liveUpdatedAt = null,
+  trafficHistory = null,
 }) => {
   const originName = origin.name;
   const destinationName = destination.name;
@@ -424,7 +427,7 @@ ${advice}`;
       {/* Historical vs Real-time Traffic Line Chart */}
       {(() => {
         const activeRoute = routes.find((r) => r.id === selectedRouteId) || fastestRoute;
-        return <HistoricalTrafficChart route={activeRoute} />;
+        return <HistoricalTrafficChart route={activeRoute} history={trafficHistory} />;
       })()}
 
       {/* Alternative Routes Comparison List */}
@@ -818,7 +821,7 @@ ${advice}`;
             onCarLauncherToggle?.(false);
           }}
           onStartBuiltInGps={() => {
-            onStartGpsNavigation?.(carLauncherRoute);
+            onStartGpsNavigation?.(carLauncherRoute, { carMode: true });
           }}
         />
       )}

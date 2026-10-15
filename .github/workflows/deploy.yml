@@ -37,8 +37,11 @@ jobs:
       - name: Type check and unit tests
         run: bun run lint && bun run test
 
-      - name: Download DGT incidents and speed cameras
+      - name: Download DGT data (incidents, speed cameras, detectors, history)
         run: bun scripts/update-dgt-data.ts
+        env:
+          # The history continues from the copy published with the site
+          HISTORY_URL: https://jpm70.github.io/alicante-traffic-live/data/history.json
 
       - name: Build
         run: bun run build

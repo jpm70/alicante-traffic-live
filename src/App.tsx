@@ -16,6 +16,7 @@ import {
 import { TrafficAlert, TrafficAlertsResponse, withDisplayTimes } from './data/trafficAlerts';
 import { Radar, loadRadars } from './services/radars';
 import { LiveStation, loadLiveTraffic } from './services/liveTraffic';
+import { TrafficHistory, loadTrafficHistory } from './services/trafficHistory';
 import { Header } from './components/Header';
 import { RouteSelector } from './components/RouteSelector';
 import { RouteComparisonPanel } from './components/RouteComparisonPanel';
@@ -226,13 +227,16 @@ export default function App() {
     isLocalClosuresModalOpen
   );
 
+  const [gpsCarMode, setGpsCarMode] = useState<boolean>(false);
+
   const handleStartGpsNavigation = useCallback(
-    (routeToNavigate?: CalculatedRoute) => {
+    (routeToNavigate?: CalculatedRoute, options?: { carMode?: boolean }) => {
       const target =
         routeToNavigate ||
         routes.find((r) => r.id === selectedRouteId) ||
         (routes.length > 0 ? routes[0] : null);
       if (target) {
+        setGpsCarMode(Boolean(options?.carMode));
         setGpsModalRoute(target);
       }
     },
@@ -274,7 +278,10 @@ export default function App() {
     }
   }, []);
 
+  const [trafficHistory, setTrafficHistory] = useState<TrafficHistory | null>(null);
+
   const handleFetchLiveTraffic = useCallback(async () => {
+    loadTrafficHistory().then((h) => h && setTrafficHistory(h));
     const data = await loadLiveTraffic();
     if (data) {
       setLiveStations(data.success ? data.stations : []);
@@ -646,6 +653,7 @@ export default function App() {
                     onOpenTaxiDashboardModal={() => setIsTaxiDashboardModalOpen(true)}
                     radars={radars}
                     liveUpdatedAt={liveUpdatedAt}
+                    trafficHistory={trafficHistory}
                   />
                 </>
               ) : (
@@ -879,6 +887,7 @@ export default function App() {
           cacheBuster={cacheBuster}
           onClose={() => setGpsModalRoute(null)}
           onReroute={handleGpsReroute}
+          carMode={gpsCarMode}
           radars={radars}
         />
         </Suspense>

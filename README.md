@@ -40,6 +40,7 @@ Capturas reales de la aplicación en un móvil (390 × 844), ruta Plaza de los L
 - **Rutas alternativas**: alternativas del propio motor más corredores de Alicante (Litoral, Gran Vía, Vía Parque) cuando el desvío es razonable; se descartan las que repiten el mismo trazado.
 - **Radares DGT** en el mapa y en el resumen de la ruta (carretera y punto kilométrico).
 - **Incidencias oficiales en la ruta**: accidentes, cortes, obras y retenciones del feed DATEX II de la DGT que caen sobre el trazado suman tiempo y cambian el estado de la ruta.
+- **Histórico real**: cada 15 minutos se guarda la velocidad medida por los detectores en un perfil por franja horaria (laborables y fines de semana). En rutas con detectores, la gráfica compara la velocidad de ahora con la habitual a esa hora; en rutas solo urbanas muestra el patrón estimado, marcado como *estimación*.
 - **Velocidad real en la ronda y los accesos**: los detectores de tráfico de la DGT (A-70 y A-31) miden velocidad, intensidad y ocupación cada pocos minutos. En esos tramos la ruta usa la velocidad **medida** en el sentido en que circulas, y el mapa la muestra en cada punto de medida.
 - **Retenciones estimadas en la ciudad**: las calles urbanas no tienen un feed público de velocidades, así que allí la congestión en cada cámara se **estima** por franja horaria y puntos conflictivos (y la interfaz lo indica). Botón de *Hora Punta* para forzar el escenario de máxima carga.
 - **Cámaras en ruta**: solo las que están sobre el trazado (cerca de la línea o en la misma calle), no las de calles paralelas.
@@ -57,6 +58,7 @@ Capturas reales de la aplicación en un móvil (390 × 844), ruta Plaza de los L
 - **Minimapa dinámico** con la posición y la dirección de la vista.
 
 ### 🛰️ 4. Navegador GPS Turn-by-Turn
+- **Modo coche**: desde *Android Auto / Coche → Abrir en modo coche* (o simplemente girando el móvil o en la pantalla del coche), el navegador pasa a pantalla completa con GPS real y una disposición para el soporte del coche: mapa a un lado y, al otro, la maniobra, los avisos (radar, tráfico lento), la velocidad y la hora de llegada en letra grande, con botones grandes. El zoom del mapa se abre al ir rápido.
 - **Modo Real** (por defecto en móviles y pantallas de coche): la posición del GPS se proyecta sobre la ruta para saber qué maniobra viene, cuánto falta y la hora de llegada; si te sales más de 50 m durante varias lecturas, **recalcula la ruta** desde donde estás.
 - **Modo Simulador**: recorre la ruta a su velocidad media en cámara rápida para revisar el paso a paso antes de salir.
 - **Tráfico lento medido delante**: si un detector de la DGT en tu ruta mide retención o tráfico denso en los próximos 2,5 km, aviso visual y por voz con la velocidad real.
@@ -196,6 +198,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   ├── dgtIncidents.ts       # Parser de incidencias DGT (área de Alicante)
 │   ├── dgtRadars.ts          # Parser del inventario de radares DGT (provincia de Alicante)
 │   ├── dgtDetectors.ts       # Detectores DGT: velocidad, intensidad y ocupación por punto y sentido
+│   ├── trafficHistory.ts     # Histórico de velocidad por franja de 15 min (data/history.json)
 │   └── build-buildings.ts    # Genera public/buildings desde Overpass
 ├── src/
 │   ├── components/           # Componentes modulares de interfaz de usuario
@@ -224,6 +227,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   │   ├── osmBuildings.ts    # Edificios: teselas estáticas u Overpass en directo
 │   │   ├── radars.ts          # Radares DGT a lo largo de la ruta
 │   │   ├── liveTraffic.ts     # Velocidad medida por los detectores DGT en la ruta
+│   │   ├── trafficHistory.ts  # Velocidad habitual vs actual de los tramos medidos de la ruta
 │   │   └── gemini.ts          # Asesor IA opcional (Gemini desde el navegador)
 │   ├── three/
 │   │   └── RouteScene.ts      # Motor 3D compartido (ortofoto, edificios OSM, ruta, coche)
@@ -243,6 +247,8 @@ El workflow `.github/workflows/deploy.yml` compila y publica la app en GitHub Pa
 - en cada push a `main`,
 - cada 15 minutos (programado), para refrescar las incidencias, los radares y la velocidad medida de la DGT, cuyo servidor no admite peticiones desde el navegador,
 - y a mano desde la pestaña *Actions* (*Run workflow*).
+
+El histórico de velocidades (`data/history.json`) continúa en cada ejecución a partir de la copia ya publicada, sin hacer commits; si esa copia no se puede leer, la ejecución falla y la web anterior sigue publicada, para no perder el histórico.
 
 Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub puede retrasar unos minutos las ejecuciones programadas y las pausa si el repositorio pasa 60 días sin actividad (se reactivan desde *Actions*).
 

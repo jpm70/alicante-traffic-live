@@ -151,7 +151,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
         {/* 2. Modo Conducción en Soporte (Navegador Integrado con Cámaras en Vivo) */}
         <div className="space-y-2">
           <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest block font-bold">
-            2. Modo Conducción en Soporte (Móvil en Salpicadero)
+            2. Modo coche (móvil en soporte o navegador del coche)
           </span>
 
           <button
@@ -167,13 +167,10 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
               </div>
               <div>
                 <h4 className="text-sm font-extrabold text-emerald-300 flex items-center gap-2">
-                  <span>Navegador GPS con Cámaras en Vivo + HUD</span>
-                  <span className="text-[9px] font-mono bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-800">
-                    EXCLUSIVO
-                  </span>
+                  <span>Abrir en modo coche</span>
                 </h4>
                 <p className="text-[11px] text-slate-300">
-                  Pantalla siempre encendida (Wake Lock), avisos por voz de las 159 cámaras y modo espejo para el parabrisas.
+                  Pantalla completa con GPS real, maniobra y avisos grandes (radares, tráfico lento medido), voz y pantalla siempre encendida. En horizontal, mapa a un lado y datos al otro.
                 </p>
               </div>
             </div>
