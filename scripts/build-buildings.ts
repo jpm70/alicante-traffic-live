@@ -4,7 +4,11 @@
 // Why: the public Overpass servers are often saturated (20-60 s per query, 504s), so
 // asking them from a phone while driving rarely works. Buildings change slowly, so
 // they are downloaded once here and served from GitHub Pages next to the app.
-// Run again (`npm run buildings`) to refresh them; it takes a few minutes.
+// They are refreshed monthly by .github/workflows/buildings.yml, or by hand with
+// `npm run buildings` (it can take more than an hour when Overpass is busy).
+//
+// If Overpass does not answer for part of the area, the buildings already published for
+// that part are kept, so a bad day never deletes buildings from the map.
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -13,11 +17,17 @@ export const BUILDINGS_BBOX = { minLat: 38.28, maxLat: 38.48, minLng: -0.62, max
 export const BUILDINGS_ZOOM = 15;
 
 const CELL_DEG = 0.025; // query cell: small enough for a busy Overpass server
-const ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+const ENDPOINTS = process.env.OVERPASS_ENDPOINTS?.split(',') || [
+  'https://overpass-api.de/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+const ATTEMPTS = Number(process.env.BUILDINGS_ATTEMPTS) || 12;
 const USER_AGENT = 'AlicanteTraficoEnVivo/1.0 (+https://github.com/jpm70/alicante-traffic-live)';
-const OUT_DIR = path.resolve('public', 'buildings');
+// Published tiles (read to keep the parts Overpass could not refresh) and output folder
+const PUBLISHED_DIR = path.resolve('public', 'buildings');
+const OUT_DIR = path.resolve(process.env.BUILDINGS_OUT || PUBLISHED_DIR);
 // Each downloaded cell is kept here, so an interrupted run resumes where it stopped
-const CACHE_DIR = path.resolve('.cache', 'buildings');
+const CACHE_DIR = path.resolve(process.env.BUILDINGS_CACHE || path.join('.cache', 'buildings'));
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -59,7 +69,7 @@ async function query(minLat: number, minLng: number, maxLat: number, maxLng: num
     `way["building"]["building"!~"^(roof|construction|ruins|no)$"]["location"!="underground"](${minLat},${minLng},${maxLat},${maxLng});` +
     `out geom qt;`;
   let lastError: unknown;
-  for (let attempt = 0; attempt < 12; attempt++) {
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     const endpoint = ENDPOINTS[attempt % ENDPOINTS.length];
     try {
       const res = await fetch(endpoint, {
@@ -78,12 +88,43 @@ async function query(minLat: number, minLng: number, maxLat: number, maxLng: num
   throw lastError;
 }
 
+// Buildings currently published, as compact records with their centroid
+async function loadPublished(): Promise<{ rec: number[]; lat: number; lng: number }[]> {
+  try {
+    const index = JSON.parse(await readFile(path.join(PUBLISHED_DIR, 'index.json'), 'utf8'));
+    const out: { rec: number[]; lat: number; lng: number }[] = [];
+    for (const key of index.tiles as string[]) {
+      const recs: number[][] = JSON.parse(await readFile(path.join(PUBLISHED_DIR, String(index.zoom), `${key}.json`), 'utf8'));
+      for (const rec of recs) {
+        let lat = rec[1];
+        let lng = rec[2];
+        let sLat = lat;
+        let sLng = lng;
+        let n = 1;
+        for (let i = 3; i + 1 < rec.length; i += 2) {
+          lat += rec[i];
+          lng += rec[i + 1];
+          sLat += lat;
+          sLng += lng;
+          n++;
+        }
+        out.push({ rec, lat: sLat / n / 1e6, lng: sLng / n / 1e6 });
+      }
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
 async function main() {
   const { minLat, maxLat, minLng, maxLng } = BUILDINGS_BBOX;
+  const published = await loadPublished();
   const tiles = new Map<string, number[][]>();
   const seen = new Set<number>();
   let cells = 0;
   const failedCells: string[] = [];
+  const refreshedCells: number[][] = [];
   const totalCells = Math.ceil((maxLat - minLat) / CELL_DEG) * Math.ceil((maxLng - minLng) / CELL_DEG);
 
   for (let lat = minLat; lat < maxLat - 1e-9; lat += CELL_DEG) {
@@ -106,6 +147,7 @@ async function main() {
           continue;
         }
       }
+      refreshedCells.push([...box]);
       let added = 0;
       for (const el of data.elements || []) {
         if (el.type !== 'way' || !Array.isArray(el.geometry) || el.geometry.length < 4 || seen.has(el.id)) continue;
@@ -129,6 +171,29 @@ async function main() {
     }
   }
 
+  // Keep the published buildings of every part Overpass could not refresh: anything not
+  // downloaded again whose centre is not inside a refreshed cell (where the new data
+  // rules, so demolished buildings do disappear)
+  let kept = 0;
+  if (failedCells.length && published.length) {
+    const fresh = new Set<string>();
+    for (const recs of tiles.values()) for (const r of recs) fresh.add(`${r[1]},${r[2]}`);
+    for (const b of published) {
+      if (fresh.has(`${b.rec[1]},${b.rec[2]}`)) continue;
+      const refreshed = refreshedCells.some(([s, w, n, e]) => b.lat >= s && b.lat < n && b.lng >= w && b.lng < e);
+      if (refreshed) continue;
+      const key = `${lng2tile(b.lng, BUILDINGS_ZOOM)}/${lat2tile(b.lat, BUILDINGS_ZOOM)}`;
+      if (!tiles.has(key)) tiles.set(key, []);
+      tiles.get(key)!.push(b.rec);
+      kept++;
+    }
+  }
+  if (failedCells.length === totalCells) {
+    console.error('Overpass no respondió para ninguna zona: no se cambia nada.');
+    process.exitCode = 1;
+    return;
+  }
+
   await rm(OUT_DIR, { recursive: true, force: true });
   for (const [key, recs] of tiles) {
     const file = path.join(OUT_DIR, String(BUILDINGS_ZOOM), `${key}.json`);
@@ -141,15 +206,14 @@ async function main() {
       zoom: BUILDINGS_ZOOM,
       bbox: BUILDINGS_BBOX,
       tiles: [...tiles.keys()].sort(),
-      buildings: seen.size,
+      buildings: seen.size + kept,
       generatedAt: new Date().toISOString(),
       attribution: '© OpenStreetMap contributors (ODbL)',
     })
   );
-  console.log(`Listo: ${seen.size} edificios en ${tiles.size} teselas`);
+  console.log(`Listo: ${seen.size + kept} edificios en ${tiles.size} teselas`);
   if (failedCells.length) {
-    console.warn(`Faltan ${failedCells.length} celdas (Overpass no respondió). Vuelve a ejecutar \`npm run buildings\` para completarlas.`);
-    process.exitCode = 2;
+    console.warn(`${failedCells.length} de ${totalCells} zonas sin respuesta de Overpass: se mantienen sus ${kept} edificios publicados.`);
   }
 }
 
