@@ -19,10 +19,23 @@ Creado por [unfantasmaenelsistema.com](https://www.unfantasmaenelsistema.com/).
 
 ## 📸 Capturas de Pantalla
 
-Capturas reales de la aplicación en un móvil (390 × 844), ruta Plaza de los Luceros → Playa de San Juan.
+Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y en la pantalla de un coche (1280 × 600). Rutas: Sant Vicent del Raspeig → El Campello por la A-70 (radares y velocidades medidas por la DGT) y Plaza de los Luceros → Playa de San Juan (3D, cámaras y taxi).
 
-| Ruta recomendada | Mapa con la ruta, cámaras e incidencias |
+| Ruta recomendada con radares DGT | Mapa: velocidades medidas, radares y leyenda |
 | :---: | :---: |
+| <img src="docs/screenshots/01-ruta.jpg" width="300" alt="Ruta recomendada"> | <img src="docs/screenshots/02-mapa.jpg" width="300" alt="Mapa con velocidades medidas, radares y leyenda"> |
+| **Vuelo 3D** (ortofoto + edificios OSM) | **Conducción 3D** (vista conductor) |
+| <img src="docs/screenshots/03-vuelo-3d.jpg" width="300" alt="Vuelo 3D"> | <img src="docs/screenshots/04-conduccion-3d.jpg" width="300" alt="Conducción 3D"> |
+| **Navegador GPS** con aviso de radar | **Mural de cámaras** de la ruta |
+| <img src="docs/screenshots/05-gps.jpg" width="300" alt="Navegador GPS con aviso de radar"> | <img src="docs/screenshots/07-camaras.jpg" width="300" alt="Mural de cámaras"> |
+| **Incidencias oficiales DGT** | **Salpicadero de taxi** |
+| <img src="docs/screenshots/08-alertas-dgt.jpg" width="300" alt="Incidencias DGT"> | <img src="docs/screenshots/09-taxi.jpg" width="300" alt="Salpicadero de taxi"> |
+
+**Modo coche / Android Auto** (pantalla apaisada del coche: maniobra, aviso de radar, velocidad, llegada y botones grandes)
+
+<img src="docs/screenshots/06-modo-coche.jpg" width="640" alt="Modo coche en una pantalla de coche">
+
+---: | :---: |
 | <img src="docs/screenshots/01-ruta.jpg" width="300" alt="Ruta recomendada"> | <img src="docs/screenshots/02-mapa.jpg" width="300" alt="Mapa de Alicante con la ruta"> |
 | **Vuelo 3D** (ortofoto + edificios OSM) | **Conducción 3D** (vista conductor) |
 | <img src="docs/screenshots/03-vuelo-3d.jpg" width="300" alt="Vuelo 3D"> | <img src="docs/screenshots/04-conduccion-3d.jpg" width="300" alt="Conducción 3D"> |
@@ -122,7 +135,7 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 - **Mapas y Geometría**: [Leaflet](https://leafletjs.com/), OpenStreetMap cartography
 - **Gráficos 3D y WebGL**: [Three.js](https://threejs.org/)
 - **Iconografía**: [Lucide React](https://lucide.dev/)
-- **Sin servidor propio**: sitio estático en GitHub Pages; las incidencias DGT y los edificios se generan en tiempo de build (GitHub Actions).
+- **Sin servidor propio**: sitio estático en GitHub Pages; los datos de la DGT se generan en cada despliegue y los edificios cada mes (GitHub Actions).
 - **Inteligencia Artificial (Opcional)**: [@google/genai](https://github.com/google-gemini/generative-ai-js) llamado desde el navegador con la clave Gemini de cada usuario.
 
 ---
@@ -168,7 +181,7 @@ npm run test:e2e    # la app compilada en un móvil (Chromium) y en Firefox
 Los tests e2e usan los servicios públicos reales (OSRM, mapas, OpenStreetMap). En GitHub se ejecutan en cada pull request (`.github/workflows/ci.yml`); el despliegue solo publica si pasan la comprobación de tipos y los tests unitarios.
 
 ### Edificios 3D
-Los edificios de OpenStreetMap del área metropolitana de Alicante están pre-generados en `public/buildings/` (teselas pequeñas que el 3D descarga según la ruta). Para actualizarlos:
+Los edificios de OpenStreetMap del área metropolitana de Alicante están pre-generados en `public/buildings/` (teselas pequeñas que el 3D descarga según la ruta). Se regeneran solos el día 1 de cada mes (`.github/workflows/buildings.yml`, también se puede lanzar a mano desde *Actions*): si algo cambió en OpenStreetMap, el workflow hace commit en `main` y el siguiente despliegue lo publica. Overpass suele ir saturado, así que las zonas que no responden conservan los edificios ya publicados, y si no responde ninguna no se toca nada. Para regenerarlos en local:
 ```bash
 npm run buildings
 ```
@@ -181,15 +194,16 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 ```text
 ├── .github/workflows/
 │   ├── deploy.yml            # Build y despliegue en GitHub Pages (push a main y cada 15 min)
+│   ├── buildings.yml         # Regenera los edificios OSM el día 1 de cada mes
 │   └── ci.yml                # Tests en cada pull request
 ├── docs/
-│   └── screenshots/          # Capturas reales de la app en móvil
+│   └── screenshots/          # Capturas reales de la app (móvil y pantalla de coche)
 ├── tests/
 │   ├── unit/                 # Vitest: geometría, rutas, maniobras, feeds DGT, radares
 │   ├── e2e/                  # Playwright: build real en móvil (Chromium) y Firefox
 │   └── fixtures/             # Extractos reales de los feeds DATEX II de la DGT
 ├── public/                   # Activos estáticos, iconos PWA y manifiesto
-│   ├── buildings/            # Edificios OSM pre-generados en teselas (npm run buildings)
+│   ├── buildings/            # Edificios OSM pre-generados en teselas (mensual)
 │   ├── manifest.json         # Configuración PWA
 │   ├── sw.js                 # Service Worker (solo cachea recursos propios)
 │   └── icono.png             # Icono de la aplicación

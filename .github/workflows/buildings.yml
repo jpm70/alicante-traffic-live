@@ -1,0 +1,47 @@
+name: Update OpenStreetMap buildings
+
+# Monthly refresh of the 3D buildings (public/buildings) from OpenStreetMap.
+# Overpass is often busy, so the job is slow and long; parts that do not answer keep
+# the buildings already published. If anything changed it is committed to main, and
+# the next scheduled deploy (every 15 min) publishes it.
+on:
+  schedule:
+    - cron: '17 3 1 * *' # day 1 of every month, 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: buildings
+  cancel-in-progress: false
+
+jobs:
+  buildings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download buildings from Overpass
+        run: bun scripts/build-buildings.ts
+
+      - name: Commit if the buildings changed
+        run: |
+          if git diff --quiet -- public/buildings/15 && [ -z "$(git ls-files --others --exclude-standard public/buildings)" ]; then
+            echo "Sin cambios en los edificios."
+            git checkout -- public/buildings
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/buildings
+          git commit -m "chore: actualizar edificios de OpenStreetMap ($(date -u +%Y-%m))"
+          git push
