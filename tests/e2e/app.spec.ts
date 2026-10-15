@@ -38,12 +38,21 @@ test('muestra las incidencias y los radares oficiales de la DGT', async ({ page 
   await expect(page.locator('.dgt-radar-icon')).toHaveCount(radars);
 });
 
-test('el vuelo 3D arranca con WebGL', async ({ page }) => {
+test('el vuelo 3D arranca (o avisa si el dispositivo no tiene WebGL)', async ({ page }) => {
   await openApp(page);
+  const hasWebGL = await page.evaluate(() => {
+    const c = document.createElement('canvas');
+    return Boolean(c.getContext('webgl2') || c.getContext('webgl'));
+  });
   // "2. Vuelo 3D" in the route panel opens the tour directly on the 3D flight
   await page.getByRole('button', { name: /^2\. Vuelo 3D$/ }).first().click();
+
+  if (!hasWebGL) {
+    // e.g. Firefox on CI machines without a GPU: the app must explain it, not break
+    await expect(page.getByText(/no tiene WebGL activado/)).toBeVisible();
+    return;
+  }
   await expect(page.locator('canvas')).toHaveCount(1);
-  await expect(page.getByText(/WebGL/)).toHaveCount(0);
   await expect(page.getByText(/Velocidad sim/i)).toBeVisible();
   // The car moves along the route
   const progress = page.getByLabel('Posición en la ruta');

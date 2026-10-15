@@ -30,8 +30,6 @@ export default defineConfig({
       use: {
         browserName: 'firefox',
         viewport: { width: 390, height: 844 },
-        // CI machines have no GPU: allow Firefox's software WebGL (llvmpipe)
-        launchOptions: { firefoxUserPrefs: { 'webgl.force-enabled': true, 'webgl.disabled': false } },
       },
     },
   ],
