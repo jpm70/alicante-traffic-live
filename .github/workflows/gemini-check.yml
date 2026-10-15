@@ -1,0 +1,30 @@
+name: Check Gemini model
+
+# Weekly check that the Gemini model pinned in src/services/gemini.ts still exists.
+# The app switches to another model by itself if Google retires it; a failed run here
+# (GitHub emails the owner) means the pin should be updated.
+# Needs the repository secret GEMINI_API_KEY (Settings → Secrets and variables → Actions);
+# without it the check is skipped.
+on:
+  schedule:
+    - cron: '23 6 * * 1' # Mondays, 06:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gemini:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Check the pinned model
+        run: bun scripts/check-gemini.ts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

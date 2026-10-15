@@ -5,6 +5,7 @@ import { CalculatedRoute, RoutePoint, getDistanceMeters } from '../services/rout
 import { generateRouteManeuvers, NavigationManeuver, nextManeuverIndex, currentStreetName } from '../services/navigationManeuvers';
 import { buildRouteIndex, pointAtDistance, projectOnRoute } from '../services/geometry';
 import { Radar, radarsAlongRoute, describeRadar } from '../services/radars';
+import { MapOrientation, loadMapOrientation, saveMapOrientation, unwrapRotation, rotatedCoverSide } from '../services/mapOrientation';
 import {
   X,
   Volume2,
@@ -161,6 +162,16 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   const vehicleMarkerRef = useRef<L.Marker | null>(null);
   const routeLayerRef = useRef<L.Polyline | null>(null);
   const cameraMarkersRef = useRef<L.CircleMarker[]>([]);
+
+  // Map orientation: north up (default) or heading up. Heading up rotates the Leaflet
+  // container, which is made a square big enough to cover the viewport at any angle.
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewport, setViewport] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+  const [orientation, setOrientation] = useState<MapOrientation>(loadMapOrientation);
+  const [mapRotation, setMapRotation] = useState<number>(0);
+  const [coverRotation, setCoverRotation] = useState<boolean>(() => loadMapOrientation() === 'heading-up');
+  const arrowRotationRef = useRef<number>(0);
+  const positionRef = useRef<[number, number]>(currentPosition);
 
   // Speech synthesizer ref to avoid repeating announcements
   const lastSpokenManeuverIdRef = useRef<string | null>(null);
@@ -563,7 +574,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     const vehicleIcon = L.divIcon({
       className: 'gps-vehicle-puck',
       html: `
-        <div id="gps-vehicle-arrow" style="position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; transform: rotate(${currentHeading}deg); transition: transform 0.2s linear;">
+        <div id="gps-vehicle-arrow" style="position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center; transform: rotate(${arrowRotationRef.current}deg); transition: transform 0.4s linear;">
           <div style="position:absolute; width:40px; height:40px; border-radius:50%; background:rgba(6,182,212,0.3); animation:ping 1.5s infinite;"></div>
           <div style="width:28px; height:28px; border-radius:50%; background:#06b6d4; border:3px solid #ffffff; box-shadow:0 0 16px rgba(6,182,212,1); display:flex; align-items:center; justify-content:center;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#0f172a">
@@ -622,16 +633,92 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     if (!mapRef.current || !vehicleMarkerRef.current) return;
 
     vehicleMarkerRef.current.setLatLng(currentPosition);
+    positionRef.current = currentPosition;
 
-    // Update vehicle heading rotation
+    // Update vehicle heading rotation (the short way round: 359° → 1° is +2°, not -358°)
+    arrowRotationRef.current = unwrapRotation(arrowRotationRef.current, currentHeading);
     const arrowElem = document.getElementById('gps-vehicle-arrow');
     if (arrowElem) {
-      arrowElem.style.transform = `rotate(${currentHeading}deg)`;
+      arrowElem.style.transform = `rotate(${arrowRotationRef.current}deg)`;
     }
 
     // Auto-center map on vehicle
     mapRef.current.panTo(currentPosition, { animate: true, duration: 0.5 });
   }, [currentPosition, currentHeading]);
+
+  // Heading up: the map turns against the heading, so the arrow points up on screen
+  useEffect(() => {
+    const target = orientation === 'heading-up' ? -currentHeading : 0;
+    setMapRotation((prev) => unwrapRotation(prev, target));
+  }, [orientation, currentHeading]);
+
+  // The oversized container is kept until the map has turned back to north
+  useEffect(() => {
+    if (orientation === 'heading-up') {
+      setCoverRotation(true);
+      return;
+    }
+    const t = setTimeout(() => setCoverRotation(false), 450);
+    return () => clearTimeout(t);
+  }, [orientation]);
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => setViewport({ w: el.clientWidth, h: el.clientHeight }));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Container size changed: let Leaflet load the new area and keep the car centred
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.invalidateSize({ pan: false });
+    map.panTo(positionRef.current, { animate: false });
+  }, [coverRotation, viewport]);
+
+  // Dragging a rotated map moves it the wrong way, and the car is followed anyway
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (orientation === 'heading-up') map.dragging.disable();
+    else map.dragging.enable();
+  }, [orientation]);
+
+  const toggleOrientation = () => {
+    const next: MapOrientation = orientation === 'heading-up' ? 'north-up' : 'heading-up';
+    setOrientation(next);
+    saveMapOrientation(next);
+  };
+
+  const coverSide = rotatedCoverSide(viewport.w, viewport.h);
+  const mapContainerStyle: React.CSSProperties = {
+    position: 'absolute',
+    transform: `rotate(${mapRotation}deg)`,
+    transition: 'transform 0.4s linear',
+    ...(coverRotation && viewport.w > 0
+      ? { width: coverSide, height: coverSide, left: (viewport.w - coverSide) / 2, top: (viewport.h - coverSide) / 2 }
+      : { inset: 0 }),
+  };
+
+  const orientationButton = (
+    <button
+      onClick={toggleOrientation}
+      className={`absolute z-[400] rounded-full bg-slate-900/90 hover:bg-slate-800 border shadow-2xl backdrop-blur-md transition-all active:scale-95 flex items-center justify-center ${
+        orientation === 'heading-up' ? 'border-cyan-500/70' : 'border-slate-700'
+      } ${carLayout ? 'top-3 left-3 w-14 h-14' : 'right-4 bottom-44 w-11 h-11'}`}
+      aria-label={orientation === 'heading-up' ? 'Mapa con el rumbo arriba: pulsa para poner el norte arriba' : 'Mapa con el norte arriba: pulsa para que gire con la marcha'}
+      title={orientation === 'heading-up' ? 'Rumbo arriba (pulsa para norte arriba)' : 'Norte arriba (pulsa para rumbo arriba)'}
+    >
+      {/* Needle pointing to the north of the map */}
+      <svg viewBox="0 0 40 40" className={carLayout ? 'w-11 h-11' : 'w-9 h-9'} style={{ transform: `rotate(${mapRotation}deg)`, transition: 'transform 0.4s linear' }} aria-hidden="true">
+        <path d="M20 5 L25 20 L15 20 Z" fill="#ef4444" />
+        <path d="M20 35 L25 20 L15 20 Z" fill="#94a3b8" />
+        <text x="20" y="13.5" textAnchor="middle" fontSize="7" fontWeight="900" fill="#ffffff" fontFamily="sans-serif">N</text>
+      </svg>
+    </button>
+  );
 
   // Recenter button action
   const handleRecenter = () => {
@@ -936,8 +1023,9 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
       {/* ------------------------------------------------------------------ */}
       {/* CENTER MAP VIEWPORT (Leaflet Map tracking driver) */}
       {/* ------------------------------------------------------------------ */}
-      <div className="flex-1 relative w-full h-full overflow-hidden min-w-0">
-        <div ref={containerRef} className="w-full h-full" />
+      <div ref={viewportRef} className="flex-1 relative w-full h-full overflow-hidden min-w-0">
+        <div ref={containerRef} style={mapContainerStyle} data-orientation={orientation} />
+        {orientationButton}
 
         {/* Navigation status: GPS problems, off-route and re-routing */}
         {/* Slow traffic measured ahead by the DGT detectors */}

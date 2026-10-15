@@ -73,6 +73,19 @@ test('el navegador GPS da instrucciones reales', async ({ page }) => {
   await expect(page.getByText(/^(Sal desde|Gira|Continúa|En la rotonda|Toma|Incorpórate)/).first()).toBeVisible();
   // Distance to the next maneuver
   await expect(page.getByText(/^(En [\d.,]+ k?m|Ahora)$/).first()).toBeVisible();
+
+  // North up by default; heading up rotates the map, and the choice is remembered
+  const map = page.locator('[data-orientation]');
+  await expect(map).toHaveAttribute('data-orientation', 'north-up');
+  await page.getByRole('button', { name: /norte arriba: pulsa/i }).click();
+  await expect(map).toHaveAttribute('data-orientation', 'heading-up');
+  // The rotated map still covers the whole screen
+  const box = await map.boundingBox();
+  const viewport = page.viewportSize()!;
+  expect(box!.width).toBeGreaterThan(viewport.width);
+  await page.getByRole('button', { name: /rumbo arriba: pulsa/i }).click();
+  await expect(map).toHaveAttribute('data-orientation', 'north-up');
+  expect(await page.evaluate(() => localStorage.getItem('alicante_gps_orientation'))).toBe('north-up');
 });
 
 // Route along the A-70 ring road, where the DGT has detectors and speed cameras

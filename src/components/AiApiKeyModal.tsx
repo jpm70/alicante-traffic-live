@@ -67,10 +67,10 @@ export const AiApiKeyModal: React.FC<AiApiKeyModalProps> = ({ isOpen, onClose, o
     setTestResult(null);
 
     try {
-      await testGeminiKey(keyToTest);
+      const model = await testGeminiKey(keyToTest);
       setTestResult({
         success: true,
-        message: '¡Conexión verificada con éxito con Gemini! La clave es válida.',
+        message: `¡Conexión verificada con éxito con Gemini! La clave es válida (modelo ${model}).`,
       });
     } catch (err) {
       setTestResult({ success: false, message: explainGeminiError(err) });
