@@ -38,6 +38,7 @@ Capturas reales de la aplicación en un móvil (390 × 844), ruta Plaza de los L
 ### 🗺️ 1. Planificador de Rutas en Alicante
 - **Rutas reales por calles**: trazado, distancia, tiempo base e indicaciones giro a giro con nombres de calle del motor [OSRM](https://project-osrm.org/) (servidor público y espejo FOSSGIS como respaldo). Si ningún servidor responde, la app lo dice y dibuja una línea punteada marcada como *trazado aproximado*, nunca una recta disfrazada de ruta.
 - **Rutas alternativas**: alternativas del propio motor más corredores de Alicante (Litoral, Gran Vía, Vía Parque) cuando el desvío es razonable; se descartan las que repiten el mismo trazado.
+- **Radares DGT** en el mapa y en el resumen de la ruta (carretera y punto kilométrico).
 - **Incidencias oficiales en la ruta**: accidentes, cortes, obras y retenciones del feed DATEX II de la DGT que caen sobre el trazado suman tiempo y cambian el estado de la ruta.
 - **Retenciones estimadas**: no existe un feed público de velocidades en las calles urbanas de Alicante, así que la congestión en cada cámara se **estima** por franja horaria y puntos conflictivos (y la interfaz lo indica). Botón de *Hora Punta* para forzar el escenario de máxima carga.
 - **Cámaras en ruta**: solo las que están sobre el trazado (cerca de la línea o en la misma calle), no las de calles paralelas.
@@ -57,6 +58,7 @@ Capturas reales de la aplicación en un móvil (390 × 844), ruta Plaza de los L
 ### 🛰️ 4. Navegador GPS Turn-by-Turn
 - **Modo Real** (por defecto en móviles y pantallas de coche): la posición del GPS se proyecta sobre la ruta para saber qué maniobra viene, cuánto falta y la hora de llegada; si te sales más de 50 m durante varias lecturas, **recalcula la ruta** desde donde estás.
 - **Modo Simulador**: recorre la ruta a su velocidad media en cámara rápida para revisar el paso a paso antes de salir.
+- **Avisos de radares**: radares fijos y tramos de velocidad media del inventario oficial de la DGT que están en la ruta (solo si la ruta usa esa carretera), con aviso visual y por voz a 500 m y 150 m. Los radares móviles y los municipales no están en el inventario público.
 - **Voz** (Text-to-Speech) para giros y avisos de cámara, pantalla siempre encendida (Wake Lock) y modo HUD espejado para el parabrisas.
 - **En el coche**: Android Auto no ejecuta aplicaciones web; úsala en el móvil con soporte o en el navegador de coches con Android Automotive. El botón *Android Auto / Google Maps* pasa el destino a la navegación nativa.
 
@@ -152,6 +154,15 @@ npm run build
 ```
 Genera el sitio estático en `dist/` (funciona en la raíz de un dominio o en una subcarpeta como la de GitHub Pages).
 
+### Tests
+```bash
+npm test            # tests unitarios (Vitest)
+npm run build
+npx playwright install chromium firefox   # solo la primera vez
+npm run test:e2e    # la app compilada en un móvil (Chromium) y en Firefox
+```
+Los tests e2e usan los servicios públicos reales (OSRM, mapas, OpenStreetMap). En GitHub se ejecutan en cada pull request (`.github/workflows/ci.yml`); el despliegue solo publica si pasan la comprobación de tipos y los tests unitarios.
+
 ### Edificios 3D
 Los edificios de OpenStreetMap del área metropolitana de Alicante están pre-generados en `public/buildings/` (teselas pequeñas que el 3D descarga según la ruta). Para actualizarlos:
 ```bash
@@ -165,17 +176,23 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 
 ```text
 ├── .github/workflows/
-│   └── deploy.yml            # Build y despliegue en GitHub Pages (push a main y cada 15 min)
+│   ├── deploy.yml            # Build y despliegue en GitHub Pages (push a main y cada 15 min)
+│   └── ci.yml                # Tests en cada pull request
 ├── docs/
 │   └── screenshots/          # Capturas reales de la app en móvil
+├── tests/
+│   ├── unit/                 # Vitest: geometría, rutas, maniobras, feeds DGT, radares
+│   ├── e2e/                  # Playwright: build real en móvil (Chromium) y Firefox
+│   └── fixtures/             # Extractos reales de los feeds DATEX II de la DGT
 ├── public/                   # Activos estáticos, iconos PWA y manifiesto
 │   ├── buildings/            # Edificios OSM pre-generados en teselas (npm run buildings)
 │   ├── manifest.json         # Configuración PWA
 │   ├── sw.js                 # Service Worker (solo cachea recursos propios)
 │   └── icono.png             # Icono de la aplicación
 ├── scripts/
-│   ├── update-dgt-alerts.ts  # Descarga el feed DATEX II de la DGT → public/data/alerts.json
+│   ├── update-dgt-data.ts    # Descarga incidencias y radares de la DGT → public/data/*.json
 │   ├── dgtIncidents.ts       # Parser de incidencias DGT (área de Alicante)
+│   ├── dgtRadars.ts          # Parser del inventario de radares DGT (provincia de Alicante)
 │   └── build-buildings.ts    # Genera public/buildings desde Overpass
 ├── src/
 │   ├── components/           # Componentes modulares de interfaz de usuario
@@ -202,6 +219,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   │   ├── geometry.ts        # Distancias, proyección sobre la ruta y simplificación
 │   │   ├── navigationManeuvers.ts # Maniobras en español a partir de los pasos de OSRM
 │   │   ├── osmBuildings.ts    # Edificios: teselas estáticas u Overpass en directo
+│   │   ├── radars.ts          # Radares DGT a lo largo de la ruta
 │   │   └── gemini.ts          # Asesor IA opcional (Gemini desde el navegador)
 │   ├── three/
 │   │   └── RouteScene.ts      # Motor 3D compartido (ortofoto, edificios OSM, ruta, coche)
@@ -219,7 +237,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 El workflow `.github/workflows/deploy.yml` compila y publica la app en GitHub Pages:
 
 - en cada push a `main`,
-- cada 15 minutos (programado), para refrescar las incidencias de la DGT, cuyo servidor no admite peticiones desde el navegador,
+- cada 15 minutos (programado), para refrescar las incidencias y los radares de la DGT, cuyo servidor no admite peticiones desde el navegador,
 - y a mano desde la pestaña *Actions* (*Run workflow*).
 
 Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub puede retrasar unos minutos las ejecuciones programadas y las pausa si el repositorio pasa 60 días sin actividad (se reactivan desde *Actions*).
@@ -230,6 +248,7 @@ Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub puede ret
 
 - **Cámaras de Tráfico**: imágenes del Centro de Control de Tráfico del Ayuntamiento de Alicante (movilidad.alicante.es).
 - **Incidencias**: DGT, Punto de Acceso Nacional de tráfico (nap.dgt.es), feed DATEX II de situaciones.
+- **Radares**: DGT, inventario de cinemómetros fijos y de velocidad media (nap.dgt.es, DATEX II).
 - **Rutas**: OSRM sobre datos de OpenStreetMap (router.project-osrm.org y routing.openstreetmap.de de FOSSGIS).
 - **3D**: ortofoto y rótulos © Esri; edificios © colaboradores de OpenStreetMap (ODbL) vía Overpass API.
 - **Tarifas Oficiales de Taxi**: Reguladas por el Ayuntamiento de Alicante y la Conselleria de Medio Ambiente, Agua, Infraestructuras y Territorio (Generalitat Valenciana).

@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { TrafficCamera, CAMERAS } from '../data/cameras';
 import { CalculatedRoute, RoutePoint } from '../services/routing';
 import { TrafficAlert } from '../data/trafficAlerts';
+import { Radar, describeRadar } from '../services/radars';
 import { ALICANTE_TAXI_STANDS, TaxiStand, ALICANTE_LOCAL_CLOSURES } from '../data/publicTransport';
 
 type MapStyle = 'dark' | 'streets' | 'satellite';
@@ -26,6 +27,7 @@ interface InteractiveMapProps {
   isModalOpen?: boolean;
   isPublicTransportMode?: boolean;
   showTaxiStands?: boolean;
+  radars?: Radar[];
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -47,6 +49,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   isModalOpen = false,
   isPublicTransportMode = false,
   showTaxiStands = false,
+  radars = [],
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -57,6 +60,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const alertMarkersRef = useRef<L.Marker[]>([]);
   const taxiStandMarkersRef = useRef<L.Marker[]>([]);
   const closureMarkersRef = useRef<L.Marker[]>([]);
+  const radarLayersRef = useRef<L.Layer[]>([]);
   const [mapStyle, setMapStyle] = useState<MapStyle>('dark');
   const [showAlertsOverlay, setShowAlertsOverlay] = useState<boolean>(true);
 
@@ -523,6 +527,33 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isModalOpen]);
+
+  // Official DGT speed cameras (fixed cabins and average-speed sections)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    radarLayersRef.current.forEach((l) => l.remove());
+    radarLayersRef.current = [];
+
+    const radarIcon = L.divIcon({
+      className: 'dgt-radar-icon',
+      html: `<div style="width:22px;height:22px;border-radius:6px;background:#0f172a;border:2px solid #f8fafc;box-shadow:0 0 0 2px #dc2626;display:flex;align-items:center;justify-content:center;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+      </div>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    });
+
+    radars.forEach((radar) => {
+      const marker = L.marker([radar.lat, radar.lng], { icon: radarIcon, zIndexOffset: 400 }).addTo(map);
+      marker.bindTooltip(`<b>${describeRadar(radar)}</b><br/><span style="font-size:11px">Inventario oficial DGT</span>`, { direction: 'top', offset: [0, -8] });
+      radarLayersRef.current.push(marker);
+      if (radar.type === 'tramo' && radar.endLat !== undefined && radar.endLng !== undefined) {
+        const line = L.polyline([[radar.lat, radar.lng], [radar.endLat, radar.endLng]], { color: '#dc2626', weight: 3, dashArray: '4, 6', opacity: 0.8 }).addTo(map);
+        radarLayersRef.current.push(line);
+      }
+    });
+  }, [radars]);
 
   // Render Official Taxi Stands and Local Closures when in Public Transport Mode
   useEffect(() => {

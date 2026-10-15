@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { CalculatedRoute, RoutePoint, getDistanceMeters } from '../services/routing';
 import { generateRouteManeuvers, NavigationManeuver, nextManeuverIndex, currentStreetName } from '../services/navigationManeuvers';
 import { buildRouteIndex, pointAtDistance, projectOnRoute } from '../services/geometry';
+import { Radar, radarsAlongRoute, describeRadar } from '../services/radars';
 import {
   X,
   Volume2,
@@ -30,6 +31,7 @@ import {
   Car,
   Zap,
   Radio,
+  Camera,
 } from 'lucide-react';
 
 interface GpsNavigatorModalProps {
@@ -40,7 +42,14 @@ interface GpsNavigatorModalProps {
   cacheBuster: number;
   // Recalculates a route from the given position to the destination (GPS re-routing)
   onReroute?: (lat: number, lng: number) => Promise<CalculatedRoute | null>;
+  // Official DGT speed cameras (province of Alicante)
+  radars?: Radar[];
 }
+
+// Speed-camera warnings: distances ahead at which the driver is told (meters)
+const RADAR_WARN_FAR = 500;
+const RADAR_WARN_NEAR = 150;
+const RADAR_SHOW_FROM = 1000;
 
 const formatDistance = (m: number) =>
   m >= 1000 ? `${(m / 1000).toFixed(1).replace('.', ',')} km` : `${Math.round(m / 10) * 10} m`;
@@ -59,6 +68,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   onClose,
   cacheBuster,
   onReroute,
+  radars = [],
 }) => {
   // The route being followed (replaced when the driver leaves it and we re-route)
   const [activeRoute, setActiveRoute] = useState<CalculatedRoute>(route);
@@ -72,6 +82,11 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   const routeIndex = useMemo(() => buildRouteIndex(activeRoute.coordinates), [activeRoute]);
   const routeIndexRef = useRef(routeIndex);
   routeIndexRef.current = routeIndex;
+
+  // Cameras on the followed route, by distance from its start
+  const routeRadars = useMemo(() => radarsAlongRoute(activeRoute, radars, routeIndex), [activeRoute, radars, routeIndex]);
+  const [radarWarning, setRadarWarning] = useState<{ text: string; distance: number; inSection: boolean } | null>(null);
+  const radarAnnouncementsRef = useRef<Set<string>>(new Set());
 
   // Mode: Real Device GPS vs Simulation
   const [isSimulating, setIsSimulating] = useState<boolean>(() => !prefersRealGps());
@@ -391,6 +406,52 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     }
   }, [currentPosition, alongMeters, offRouteMeters, maneuvers, activeRoute.cameras, speakInstruction, playAlertChime]);
 
+  // 3b. SPEED CAMERAS AHEAD (official DGT inventory)
+  useEffect(() => {
+    if (routeRadars.length === 0) {
+      setRadarWarning(null);
+      return;
+    }
+    // Inside an average-speed section?
+    const section = routeRadars.find(
+      (r) => r.endAlongMeters !== undefined && alongMeters >= r.alongMeters && alongMeters <= r.endAlongMeters
+    );
+    if (section) {
+      const left = Math.round(section.endAlongMeters! - alongMeters);
+      setRadarWarning({ text: `Tramo de velocidad media en ${section.radar.road}`, distance: left, inSection: true });
+      return;
+    }
+    const next = routeRadars.find((r) => r.alongMeters > alongMeters);
+    const distance = next ? Math.round(next.alongMeters - alongMeters) : Infinity;
+    if (!next || distance > RADAR_SHOW_FROM) {
+      setRadarWarning(null);
+      return;
+    }
+    setRadarWarning({ text: describeRadar(next.radar), distance, inSection: false });
+
+    const isSection = next.radar.type === 'tramo';
+    const say = (threshold: number, phrase: string) => {
+      const key = `${next.radar.id}@${threshold}`;
+      if (distance <= threshold && !radarAnnouncementsRef.current.has(key)) {
+        radarAnnouncementsRef.current.add(key);
+        playAlertChime();
+        speakInstruction(phrase);
+      }
+    };
+    if (distance > RADAR_WARN_NEAR) {
+      say(RADAR_WARN_FAR, isSection
+        ? `En ${Math.round(distance / 50) * 50} metros comienza un tramo de control de velocidad media.`
+        : `Radar fijo a ${Math.round(distance / 50) * 50} metros.`);
+    } else {
+      say(RADAR_WARN_NEAR, isSection ? 'Inicio de tramo de velocidad media.' : 'Radar fijo.');
+    }
+  }, [alongMeters, routeRadars, speakInstruction, playAlertChime]);
+
+  // Re-routing starts a new route: allow announcing its cameras again
+  useEffect(() => {
+    radarAnnouncementsRef.current = new Set();
+  }, [activeRoute]);
+
   // 4. LEAFLET MAP INITIALIZATION & SYNC
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -434,6 +495,13 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
       camMarkers.push(m);
     });
     cameraMarkersRef.current = camMarkers;
+
+    // Official speed cameras
+    radars.forEach((radar) => {
+      L.circleMarker([radar.lat, radar.lng], { radius: 7, fillColor: '#dc2626', color: '#ffffff', weight: 2, fillOpacity: 1 })
+        .bindTooltip(`<b>${describeRadar(radar)}</b>`, { direction: 'top' })
+        .addTo(map);
+    });
 
     // Vehicle Navigation Puck
     const vehicleIcon = L.divIcon({
@@ -664,6 +732,21 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         <div ref={containerRef} className="w-full h-full" />
 
         {/* Navigation status: GPS problems, off-route and re-routing */}
+        {/* Speed camera ahead (always visible, independent of other banners) */}
+        {radarWarning && (
+          <div className="absolute bottom-4 left-3 z-[400] pointer-events-none">
+            <div className={`px-3 py-2 rounded-xl border shadow-2xl flex items-center gap-2.5 ${radarWarning.inSection ? 'bg-amber-950/95 border-amber-500/70' : 'bg-red-950/95 border-red-500/70'}`}>
+              <Camera className={`w-5 h-5 ${radarWarning.inSection ? 'text-amber-300' : 'text-red-300'}`} />
+              <div>
+                <div className="text-sm font-black text-white leading-tight">
+                  {radarWarning.inSection ? `Quedan ${radarWarning.distance} m` : `Radar a ${radarWarning.distance} m`}
+                </div>
+                <div className="text-[11px] text-slate-200 leading-tight">{radarWarning.text}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {(gpsError || isRerouting || (!isSimulating && offRouteMeters > 50) || activeRoute.isApproximate) && (
           <div className="absolute top-3 left-3 right-3 sm:right-auto sm:max-w-sm z-[400] flex flex-col gap-1.5 pointer-events-none">
             {gpsError && (
@@ -887,8 +970,13 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
               {currentSpeedKmH}
             </div>
             <div className="text-xl sm:text-2xl font-mono text-emerald-500 uppercase tracking-widest mt-1">
-              km/h · Límite aconsejado: 50
+              km/h
             </div>
+            {radarWarning && (
+              <div className="mt-4 text-2xl sm:text-4xl font-black text-red-400">
+                {radarWarning.inSection ? `TRAMO VEL. MEDIA · ${radarWarning.distance} m` : `RADAR · ${radarWarning.distance} m`}
+              </div>
+            )}
           </div>
 
           {/* HUD Bottom: Street, Compass & Distance Remaining */}

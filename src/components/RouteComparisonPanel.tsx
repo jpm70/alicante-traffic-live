@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { CalculatedRoute, RoutePoint } from '../services/routing';
 import { HistoricalTrafficChart } from './HistoricalTrafficChart';
 import { askTrafficAdvisor, getStoredGeminiKey } from '../services/gemini';
+import { Radar, radarsAlongRoute } from '../services/radars';
 import {
   Clock,
   Gauge,
@@ -52,6 +53,7 @@ interface RouteComparisonPanelProps {
   isPublicTransportMode?: boolean;
   onOpenTaxiFareModal?: () => void;
   onOpenTaxiDashboardModal?: () => void;
+  radars?: Radar[];
 }
 
 export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
@@ -70,6 +72,7 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
   isPublicTransportMode = false,
   onOpenTaxiFareModal,
   onOpenTaxiDashboardModal,
+  radars = [],
 }) => {
   const originName = origin.name;
   const destinationName = destination.name;
@@ -105,6 +108,7 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
   }
 
   const fastestRoute = routes.find((r) => r.isFastest) || routes[0];
+  const fastestRadars = radarsAlongRoute(fastestRoute, radars);
 
   const handleConsultAiAdvisor = async () => {
     setIsAiLoading(true);
@@ -283,10 +287,14 @@ ${advice}`;
 
         <p className="text-[10px] text-slate-500 leading-snug -mt-1 mb-2">
           Tiempo base: motor de rutas {fastestRoute.routingProvider && fastestRoute.routingProvider !== 'none' ? `(${fastestRoute.routingProvider})` : ''}.
-          Retenciones: estimación por franja horaria en {fastestRoute.cameras.length} cámaras
+          Retenciones: estimación por franja horaria en {fastestRoute.cameras.length} cámara{fastestRoute.cameras.length === 1 ? '' : 's'}
           {fastestRoute.incidents.length > 0
             ? ` + ${fastestRoute.incidents.length} incidencia${fastestRoute.incidents.length > 1 ? 's' : ''} oficial${fastestRoute.incidents.length > 1 ? 'es' : ''} DGT.`
             : '; sin incidencias oficiales DGT en el trazado.'}
+          {fastestRadars.length > 0 &&
+            ` ${fastestRadars.length} radar${fastestRadars.length > 1 ? 'es' : ''} DGT en la ruta (${fastestRadars
+              .map((r) => r.radar.road + (r.radar.km !== null ? ' km ' + String(r.radar.km).replace('.', ',') : ''))
+              .join(', ')}).`}
         </p>
 
         {/* Public Transport & Taxi Fare Badge (Only shown in Public Transport Mode) */}
