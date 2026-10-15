@@ -4,6 +4,7 @@ import { TrafficCamera, CAMERAS } from '../data/cameras';
 import { CalculatedRoute, RoutePoint } from '../services/routing';
 import { TrafficAlert } from '../data/trafficAlerts';
 import { Radar, describeRadar } from '../services/radars';
+import { LiveStation, liveStatus, describeStation } from '../services/liveTraffic';
 import { ALICANTE_TAXI_STANDS, TaxiStand, ALICANTE_LOCAL_CLOSURES } from '../data/publicTransport';
 
 type MapStyle = 'dark' | 'streets' | 'satellite';
@@ -28,6 +29,7 @@ interface InteractiveMapProps {
   isPublicTransportMode?: boolean;
   showTaxiStands?: boolean;
   radars?: Radar[];
+  liveStations?: LiveStation[];
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -50,6 +52,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   isPublicTransportMode = false,
   showTaxiStands = false,
   radars = [],
+  liveStations = [],
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -61,6 +64,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const taxiStandMarkersRef = useRef<L.Marker[]>([]);
   const closureMarkersRef = useRef<L.Marker[]>([]);
   const radarLayersRef = useRef<L.Layer[]>([]);
+  const liveLayersRef = useRef<L.Layer[]>([]);
   const [mapStyle, setMapStyle] = useState<MapStyle>('dark');
   const [showAlertsOverlay, setShowAlertsOverlay] = useState<boolean>(true);
 
@@ -554,6 +558,36 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       }
     });
   }, [radars]);
+
+  // DGT road detectors: real measured speed (one marker per kilometre point and direction)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    liveLayersRef.current.forEach((l) => l.remove());
+    liveLayersRef.current = [];
+    const colors: Record<string, string> = { fluido: '#22c55e', denso: '#f59e0b', retencion: '#ef4444', 'sin-datos': '#64748b' };
+    liveStations.forEach((st) => {
+      const status = liveStatus(st);
+      const marker = L.marker([st.lat, st.lng], {
+        icon: L.divIcon({
+          className: 'dgt-live-station',
+          html: `<div style="min-width:30px;height:18px;padding:0 4px;border-radius:9px;background:${colors[status]};border:2px solid #0f172a;color:#0f172a;font:700 10px/14px monospace;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.5)">${st.speed ?? '–'}</div>`,
+          iconSize: [34, 18],
+          iconAnchor: [17, 9],
+        }),
+        zIndexOffset: 300,
+      }).addTo(map);
+      const time = st.time ? new Date(st.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+      marker.bindTooltip(
+        `<b>${describeStation(st)}</b> (sentido ${st.dir === '+' ? 'km creciente' : st.dir === '-' ? 'km decreciente' : '—'})<br/>` +
+          (st.speed !== null ? `Velocidad media medida: <b>${st.speed} km/h</b><br/>` : 'Sin vehículos en la última medida<br/>') +
+          (st.flow !== null ? `Intensidad: ${st.flow} veh/h · ocupación ${st.occupancy ?? '–'} %<br/>` : '') +
+          `<span style="font-size:11px">Detector DGT${time ? ' · ' + time : ''}</span>`,
+        { direction: 'top', offset: [0, -8] }
+      );
+      liveLayersRef.current.push(marker);
+    });
+  }, [liveStations]);
 
   // Render Official Taxi Stands and Local Closures when in Public Transport Mode
   useEffect(() => {

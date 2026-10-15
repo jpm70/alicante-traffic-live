@@ -54,6 +54,7 @@ interface RouteComparisonPanelProps {
   onOpenTaxiFareModal?: () => void;
   onOpenTaxiDashboardModal?: () => void;
   radars?: Radar[];
+  liveUpdatedAt?: string | null;
 }
 
 export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
@@ -73,6 +74,7 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
   onOpenTaxiFareModal,
   onOpenTaxiDashboardModal,
   radars = [],
+  liveUpdatedAt = null,
 }) => {
   const originName = origin.name;
   const destinationName = destination.name;
@@ -291,6 +293,13 @@ ${advice}`;
           {fastestRoute.incidents.length > 0
             ? ` + ${fastestRoute.incidents.length} incidencia${fastestRoute.incidents.length > 1 ? 's' : ''} oficial${fastestRoute.incidents.length > 1 ? 'es' : ''} DGT.`
             : '; sin incidencias oficiales DGT en el trazado.'}
+          {(fastestRoute.liveStations?.length ?? 0) > 0 &&
+            ` Velocidad real medida por la DGT${
+              liveUpdatedAt ? ` (${new Date(liveUpdatedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })})` : ''
+            }: ${fastestRoute.liveStations!
+              .filter((s) => s.station.speed !== null)
+              .map((s) => `${s.station.road} km ${String(s.station.km).replace('.', ',')} ${s.station.speed} km/h`)
+              .join(', ') || 'sin vehículos en la última medida'}.`}
           {fastestRadars.length > 0 &&
             ` ${fastestRadars.length} radar${fastestRadars.length > 1 ? 'es' : ''} DGT en la ruta (${fastestRadars
               .map((r) => r.radar.road + (r.radar.km !== null ? ' km ' + String(r.radar.km).replace('.', ',') : ''))
