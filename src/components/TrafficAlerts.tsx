@@ -18,6 +18,14 @@ import {
   Info,
 } from 'lucide-react';
 
+const TYPE_LABELS: Record<AlertType, string> = {
+  obra: 'Obras',
+  accidente: 'Accidente',
+  corte: 'Corte',
+  retencion: 'Retención',
+  evento: 'Incidencia',
+};
+
 interface TrafficAlertsProps {
   alerts: TrafficAlert[];
   isLoading: boolean;
@@ -25,6 +33,7 @@ interface TrafficAlertsProps {
   onSelectAlert: (alert: TrafficAlert) => void;
   selectedAlertId: string | null;
   activeRoute: CalculatedRoute | null;
+  alertsMeta?: { source: string; updatedAt: string; error?: string } | null;
 }
 
 export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
@@ -34,24 +43,16 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
   onSelectAlert,
   selectedAlertId,
   activeRoute,
+  alertsMeta,
 }) => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'route' | AlertType>('all');
 
   // Filter alerts
   const filteredAlerts = useMemo(() => {
     if (activeFilter === 'route') {
-      if (!activeRoute) return [];
-      // Alerts matching route corridor or nearby
-      return alerts.filter((a) => {
-        if (!a.corridorKey) return false;
-        if (activeRoute.id.includes(a.corridorKey)) return true;
-        // Check street matching
-        const st = a.street.toLowerCase();
-        if (activeRoute.name.toLowerCase().includes('litoral') && (st.includes('ramón y cajal') || st.includes('dénia') || st.includes('canalejas'))) return true;
-        if (activeRoute.name.toLowerCase().includes('gran vía') && (st.includes('soler') || st.includes('gran vía'))) return true;
-        if (activeRoute.name.toLowerCase().includes('parque') && (st.includes('jaime i') || st.includes('teulada'))) return true;
-        return false;
-      });
+      // Incidents located on the active route (matched geometrically by the router)
+      const ids = new Set((activeRoute?.incidents ?? []).map((a) => a.id));
+      return alerts.filter((a) => ids.has(a.id));
     }
 
     if (activeFilter === 'all') return alerts;
@@ -130,7 +131,12 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
                 {alerts.length}
               </span>
             </h3>
-            <p className="text-[10px] text-slate-400">DGT · Policía Local · Movilidad Urbana</p>
+            <p className="text-[10px] text-slate-400">
+              Fuente oficial: DGT (vías interurbanas y accesos)
+              {alertsMeta?.updatedAt && !alertsMeta.error && (
+                <> · act. {new Date(alertsMeta.updatedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</>
+              )}
+            </p>
           </div>
         </div>
 
@@ -211,7 +217,24 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
         >
           ⏳ Retenciones
         </button>
+
+        <button
+          onClick={() => setActiveFilter('evento')}
+          className={`px-2.5 py-1 rounded-md whitespace-nowrap font-medium transition-colors ${
+            activeFilter === 'evento'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          ⚠️ Otras
+        </button>
       </div>
+
+      {alertsMeta?.error && (
+        <div className="p-2 rounded-lg border border-rose-500/40 bg-rose-950/30 text-[11px] text-rose-200">
+          {alertsMeta.error}. Se mostrarán en cuanto el servicio responda.
+        </div>
+      )}
 
       {/* Alerts List */}
       <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
@@ -219,7 +242,9 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
           <div className="p-4 text-center text-slate-500 text-xs bg-slate-900/60 rounded-lg border border-slate-800/80">
             {activeFilter === 'route'
               ? '¡Tu ruta seleccionada está despejada de incidencias mayores!'
-              : 'No hay alertas activas en esta categoría.'}
+              : isLoading && alerts.length === 0
+                ? 'Consultando incidencias oficiales de la DGT…'
+                : 'No hay incidencias activas en esta categoría.'}
           </div>
         ) : (
           filteredAlerts.map((alert) => {
@@ -243,7 +268,7 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
                       )}`}
                     >
                       {getAlertIcon(alert.type)}
-                      <span className="capitalize">{alert.type}</span>
+                      <span>{TYPE_LABELS[alert.type] || alert.type}</span>
                     </span>
                     {getSeverityBadge(alert.severity)}
                   </div>
@@ -268,7 +293,10 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
                 </p>
 
                 <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                  <span>{alert.source} · {alert.timestamp}</span>
+                  <span>
+                    {alert.source} · {alert.timestamp}
+                    {alert.durationEstimate ? ` · ${alert.durationEstimate}` : ''}
+                  </span>
                   <span className="text-cyan-400 hover:underline flex items-center gap-0.5">
                     <span>Localizar</span>
                     <ChevronRight className="w-3 h-3" />

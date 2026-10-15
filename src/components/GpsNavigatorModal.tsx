@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { CAMERA_UNAVAILABLE_IMG } from '../data/placeholders';
 import L from 'leaflet';
 import { CalculatedRoute, RoutePoint, getDistanceMeters } from '../services/routing';
-import {
-  generateRouteManeuvers,
-  NavigationManeuver,
-  getBearing,
-} from '../services/navigationManeuvers';
+import { generateRouteManeuvers, NavigationManeuver, nextManeuverIndex, currentStreetName } from '../services/navigationManeuvers';
+import { buildRouteIndex, pointAtDistance, projectOnRoute } from '../services/geometry';
 import {
   X,
   Volume2,
@@ -40,7 +38,19 @@ interface GpsNavigatorModalProps {
   destination: RoutePoint & { name: string };
   onClose: () => void;
   cacheBuster: number;
+  // Recalculates a route from the given position to the destination (GPS re-routing)
+  onReroute?: (lat: number, lng: number) => Promise<CalculatedRoute | null>;
 }
+
+const formatDistance = (m: number) =>
+  m >= 1000 ? `${(m / 1000).toFixed(1).replace('.', ',')} km` : `${Math.round(m / 10) * 10} m`;
+
+// Simulated seconds per real second in simulator mode
+const SIMULATION_TIME_LAPSE = 8;
+
+// Phones, tablets and car head units start with the real GPS; desktops with the simulator
+const prefersRealGps = () =>
+  typeof navigator !== 'undefined' && 'geolocation' in navigator && /Android|iPhone|iPad|Mobi|CrKey|Automotive/i.test(navigator.userAgent);
 
 export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   route,
@@ -48,17 +58,30 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   destination,
   onClose,
   cacheBuster,
+  onReroute,
 }) => {
-  // Navigation Maneuvers calculated from route geometry
+  // The route being followed (replaced when the driver leaves it and we re-route)
+  const [activeRoute, setActiveRoute] = useState<CalculatedRoute>(route);
+  useEffect(() => setActiveRoute(route), [route]);
+
+  // Real street names and instructions from the routing engine
   const maneuvers = useMemo(
-    () => generateRouteManeuvers(route, origin, destination),
-    [route, origin, destination]
+    () => generateRouteManeuvers(activeRoute, origin, destination),
+    [activeRoute, origin, destination]
   );
+  const routeIndex = useMemo(() => buildRouteIndex(activeRoute.coordinates), [activeRoute]);
+  const routeIndexRef = useRef(routeIndex);
+  routeIndexRef.current = routeIndex;
 
   // Mode: Real Device GPS vs Simulation
-  const [isSimulating, setIsSimulating] = useState<boolean>(true);
+  const [isSimulating, setIsSimulating] = useState<boolean>(() => !prefersRealGps());
   const [simulationPlaying, setSimulationPlaying] = useState<boolean>(true);
-  const [simProgress, setSimProgress] = useState<number>(0); // 0 to 1
+  // Progress along the route in meters (drives guidance, ETA and remaining distance)
+  const [alongMeters, setAlongMeters] = useState<number>(0);
+  const [offRouteMeters, setOffRouteMeters] = useState<number>(0);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [isRerouting, setIsRerouting] = useState<boolean>(false);
 
   // Current Driver Position & Telemetry
   const [currentPosition, setCurrentPosition] = useState<[number, number]>(() => {
@@ -100,12 +123,20 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   const announcedCameraIdsRef = useRef<Set<string>>(new Set());
 
   // Web Audio Chime Sound (played before safety alerts)
+  // One AudioContext for the whole session: browsers cap how many can be created
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  useEffect(() => () => {
+    audioCtxRef.current?.close().catch(() => {});
+  }, []);
+
   const playAlertChime = useCallback(() => {
     if (!voiceEnabled || typeof window === 'undefined') return;
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
-      const ctx = new AudioCtx();
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -179,164 +210,186 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   }, [requestWakeLock, releaseWakeLock]);
 
   // 1. REAL GPS TRACKING (when isSimulating is false)
+  const lastFixRef = useRef<{ lat: number; lng: number; t: number } | null>(null);
+  const offRouteCountRef = useRef(0);
+  const lastRerouteRef = useRef(0);
+  const alongRef = useRef(0);
+  alongRef.current = alongMeters;
+  const activeRouteRef = useRef(activeRoute);
+  activeRouteRef.current = activeRoute;
+
+  const requestReroute = useCallback(
+    async (lat: number, lng: number) => {
+      if (!onReroute || isRerouting) return;
+      lastRerouteRef.current = Date.now();
+      setIsRerouting(true);
+      speakInstruction('Te has salido de la ruta. Recalculando.');
+      try {
+        const newRoute = await onReroute(lat, lng);
+        if (newRoute) {
+          setActiveRoute(newRoute);
+          setAlongMeters(0);
+          lastSpokenManeuverIdRef.current = null;
+          lastSpokenDistanceThresholdRef.current = null;
+          speakInstruction('Ruta recalculada.');
+        }
+      } catch (err) {
+        console.warn('Re-routing failed:', err);
+      } finally {
+        offRouteCountRef.current = 0;
+        setIsRerouting(false);
+      }
+    },
+    [onReroute, isRerouting, speakInstruction]
+  );
+
+  const requestRerouteRef = useRef(requestReroute);
+  requestRerouteRef.current = requestReroute;
+
   useEffect(() => {
-    if (isSimulating || typeof navigator === 'undefined' || !navigator.geolocation) return;
+    if (isSimulating) return;
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGpsError('Este dispositivo no ofrece geolocalización. Usando el simulador.');
+      setIsSimulating(true);
+      return;
+    }
+    setGpsError(null);
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
+        const { latitude: lat, longitude: lng, heading, speed, accuracy } = pos.coords;
         setCurrentPosition([lat, lng]);
+        setGpsAccuracy(Math.round(accuracy));
 
-        if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-          setCurrentHeading(pos.coords.heading);
+        // Progress along the route: snap the fix to the polyline near the last position
+        const proj = projectOnRoute(routeIndexRef.current, lat, lng, alongRef.current);
+        setAlongMeters(proj.alongMeters);
+        setOffRouteMeters(Math.round(proj.offsetMeters));
+
+        // Speed: device value when available, otherwise derived from consecutive fixes
+        const now = pos.timestamp || Date.now();
+        let speedKmH: number | null = speed !== null && !Number.isNaN(speed) ? speed * 3.6 : null;
+        const prev = lastFixRef.current;
+        if (speedKmH === null && prev) {
+          const dt = (now - prev.t) / 1000;
+          if (dt > 0.5) speedKmH = (getDistanceMeters(prev.lat, prev.lng, lat, lng) / dt) * 3.6;
         }
+        lastFixRef.current = { lat, lng, t: now };
+        if (speedKmH !== null) setCurrentSpeedKmH(Math.max(0, Math.round(speedKmH)));
 
-        if (pos.coords.speed !== null && !isNaN(pos.coords.speed)) {
-          setCurrentSpeedKmH(Math.round(pos.coords.speed * 3.6));
+        // Heading: GPS course when moving, otherwise the direction of the road
+        if (heading !== null && !Number.isNaN(heading) && (speedKmH ?? 0) > 3) setCurrentHeading(heading);
+        else if (proj.offsetMeters < 40) setCurrentHeading(proj.bearing);
+
+        // Off-route detection: three consecutive good fixes far from the line
+        const goodFix = accuracy <= 40;
+        if (goodFix && proj.offsetMeters > 50) offRouteCountRef.current++;
+        else if (proj.offsetMeters < 30) offRouteCountRef.current = 0;
+        if (offRouteCountRef.current >= 3 && Date.now() - lastRerouteRef.current > 15000) {
+          requestRerouteRef.current(lat, lng);
         }
       },
       (err) => {
-        console.warn('GPS Error, falling back to simulation mode:', err.message);
+        const reason =
+          err.code === err.PERMISSION_DENIED
+            ? 'Permiso de ubicación denegado'
+            : err.code === err.TIMEOUT
+              ? 'El GPS no responde'
+              : 'Ubicación no disponible';
+        console.warn('GPS error:', err.message);
+        setGpsError(`${reason}. Usando el simulador.`);
         setIsSimulating(true);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 1000,
-      }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 1000 }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
   }, [isSimulating]);
 
-  // 2. SIMULATION LOOP (when isSimulating is true)
+  // 2. SIMULATION LOOP: moves along the route by distance (constant speed on the road,
+  // not by polyline vertex), at the route's average speed in time-lapse.
   useEffect(() => {
     if (!isSimulating || !simulationPlaying) return;
+    if (activeRoute.coordinates.length < 2) return;
 
-    const coords = route.coordinates;
-    if (coords.length < 2) return;
-
+    const index = routeIndexRef.current;
+    const avgKmH = Math.min(90, Math.max(15, activeRoute.distanceKm / (Math.max(activeRoute.totalMinutes, 1) / 60)));
     let animId: number;
     let lastTime = performance.now();
+    let lastUiUpdate = 0;
+    let distance = alongRef.current;
 
-    const loop = () => {
+    const loop = (now: number) => {
       animId = requestAnimationFrame(loop);
-      const now = performance.now();
-      const deltaSec = (now - lastTime) / 1000;
+      const dt = Math.min(0.2, (now - lastTime) / 1000);
       lastTime = now;
-
-      setSimProgress((prev) => {
-        // Move through entire route in ~60 seconds
-        const next = prev + (deltaSec / 60);
-        if (next >= 1) {
-          setSimulationPlaying(false);
-          return 1;
-        }
-
-        // Interpolate position along polyline
-        const totalSegments = coords.length - 1;
-        const exactIndex = next * totalSegments;
-        const idx = Math.min(Math.floor(exactIndex), totalSegments - 1);
-        const subT = exactIndex - idx;
-
-        const p1 = coords[idx];
-        const p2 = coords[idx + 1];
-
-        const lat = p1[0] + (p2[0] - p1[0]) * subT;
-        const lng = p1[1] + (p2[1] - p1[1]) * subT;
-        setCurrentPosition([lat, lng]);
-
-        const bearing = getBearing(p1[0], p1[1], p2[0], p2[1]);
-        setCurrentHeading(bearing);
-
-        const baseSpd = (route.distanceKm / (route.totalMinutes / 60)) || 55;
-        setCurrentSpeedKmH(Math.round(baseSpd + Math.sin(next * 30) * 8));
-
-        return next;
-      });
+      distance += (avgKmH / 3.6) * dt * SIMULATION_TIME_LAPSE;
+      if (distance >= index.totalMeters) {
+        distance = index.totalMeters;
+        setSimulationPlaying(false);
+      }
+      // ~10 UI updates per second are enough and keep the map smooth on phones
+      if (now - lastUiUpdate < 100 && distance < index.totalMeters) return;
+      lastUiUpdate = now;
+      const p = pointAtDistance(index, distance);
+      setAlongMeters(distance);
+      setOffRouteMeters(0);
+      setCurrentPosition([p.lat, p.lng]);
+      setCurrentHeading(p.bearing);
+      setCurrentSpeedKmH(Math.round(avgKmH));
     };
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [isSimulating, simulationPlaying, route]);
+  }, [isSimulating, simulationPlaying, activeRoute]);
 
-  // 3. UPDATE TURN-BY-TURN GUIDANCE & CAMERA PROXIMITY BASED ON CURRENT POSITION
+  // 3. TURN-BY-TURN GUIDANCE & CAMERA PROXIMITY FROM THE PROGRESS ALONG THE ROUTE
   useEffect(() => {
     const [cLat, cLng] = currentPosition;
 
-    // Find next upcoming maneuver
-    let nextIndex = maneuvers.length - 1;
-    let minFutureDistance = Infinity;
-
-    for (let i = 0; i < maneuvers.length; i++) {
-      const m = maneuvers[i];
-      const dist = getDistanceMeters(cLat, cLng, m.point[0], m.point[1]);
-      if (dist > 30) {
-        nextIndex = i;
-        minFutureDistance = dist;
-        break;
-      }
-    }
-
+    const nextIndex = nextManeuverIndex(maneuvers, alongMeters);
+    const currentManeuver = maneuvers[nextIndex];
+    const distToTurn = currentManeuver ? Math.max(0, Math.round(currentManeuver.accumulatedDistanceMeters - alongMeters)) : 0;
     setCurrentManeuverIndex(nextIndex);
-    const distToTurn = Math.round(minFutureDistance === Infinity ? 0 : minFutureDistance);
     setDistanceToNextManeuverMeters(distToTurn);
 
-    // Voice announcement trigger
-    const currentManeuver = maneuvers[nextIndex];
-    if (currentManeuver) {
+    // Voice announcements (once per maneuver and threshold)
+    if (currentManeuver && offRouteMeters < 50) {
       if (distToTurn <= 350 && distToTurn > 150) {
-        if (
-          lastSpokenManeuverIdRef.current !== currentManeuver.id ||
-          lastSpokenDistanceThresholdRef.current !== 300
-        ) {
+        if (lastSpokenManeuverIdRef.current !== currentManeuver.id || lastSpokenDistanceThresholdRef.current !== 300) {
           lastSpokenManeuverIdRef.current = currentManeuver.id;
           lastSpokenDistanceThresholdRef.current = 300;
-          speakInstruction(`En trescientos metros, ${currentManeuver.instruction}`);
+          speakInstruction(`En ${Math.round(distToTurn / 50) * 50} metros, ${currentManeuver.instruction}`);
         }
-      } else if (distToTurn <= 80 && distToTurn > 20) {
-        if (
-          lastSpokenManeuverIdRef.current !== currentManeuver.id ||
-          lastSpokenDistanceThresholdRef.current !== 80
-        ) {
+      } else if (distToTurn <= 80) {
+        if (lastSpokenManeuverIdRef.current !== currentManeuver.id || lastSpokenDistanceThresholdRef.current !== 80) {
           lastSpokenManeuverIdRef.current = currentManeuver.id;
           lastSpokenDistanceThresholdRef.current = 80;
-          speakInstruction(`Ahora, ${currentManeuver.instruction}`);
+          speakInstruction(currentManeuver.type === 'destination' ? currentManeuver.instruction : `Ahora, ${currentManeuver.instruction}`);
         }
       }
     }
 
-    // Check nearest traffic camera (< 300m)
+    // Nearest traffic camera of the route (< 280 m)
     let nearest: any = null;
-    let minCamDist = 280; // alert when camera within 280m
-    for (const cam of route.cameras) {
+    let minCamDist = 280;
+    for (const cam of activeRoute.cameras) {
       const d = getDistanceMeters(cLat, cLng, cam.lat, cam.lng);
       if (d < minCamDist) {
         minCamDist = d;
-        nearest = {
-          id: cam.id,
-          name: cam.name,
-          zona: cam.zona,
-          status: cam.status,
-          url: cam.url,
-          distanceMeters: Math.round(d),
-        };
+        nearest = { id: cam.id, name: cam.name, zona: cam.zona, status: cam.status, url: cam.url, distanceMeters: Math.round(d) };
       }
     }
     setUpcomingCamera(nearest);
 
-    // Proactive Bluetooth/Speaker Voice Alert & Chime for camera proximity
     if (nearest && !announcedCameraIdsRef.current.has(nearest.id)) {
       announcedCameraIdsRef.current.add(nearest.id);
       playAlertChime();
       if (nearest.status === 'retencion' || nearest.status === 'denso') {
-        speakInstruction(`Aviso de tráfico: a ${nearest.distanceMeters} metros, cámara en ${nearest.name} con tráfico ${nearest.status}.`);
-      } else {
-        speakInstruction(`Aproximación a cámara de tráfico en ${nearest.name}.`);
+        speakInstruction(`Aviso: posible tráfico ${nearest.status === 'retencion' ? 'con retenciones' : 'denso'} en ${nearest.name}.`);
       }
     }
-  }, [currentPosition, maneuvers, route.cameras, speakInstruction, playAlertChime]);
+  }, [currentPosition, alongMeters, offRouteMeters, maneuvers, activeRoute.cameras, speakInstruction, playAlertChime]);
 
   // 4. LEAFLET MAP INITIALIZATION & SYNC
   useEffect(() => {
@@ -356,7 +409,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     ).addTo(map);
 
     // Route Polyline Layer
-    const poly = L.polyline(route.coordinates, {
+    const poly = L.polyline(activeRoute.coordinates, {
       color: '#06b6d4',
       weight: 7,
       opacity: 0.9,
@@ -367,7 +420,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
 
     // Add Camera Markers along route
     const camMarkers: L.CircleMarker[] = [];
-    route.cameras.forEach((cam) => {
+    activeRoute.cameras.forEach((cam) => {
       const color =
         cam.status === 'fluido' ? '#10b981' : cam.status === 'denso' ? '#f59e0b' : '#ef4444';
       const m = L.circleMarker([cam.lat, cam.lng], {
@@ -377,7 +430,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         weight: 1.5,
         fillOpacity: 0.9,
       }).addTo(map);
-      m.bindTooltip(`<b>Cámara ${cam.name}</b><br/>Tráfico ${cam.status}`, { direction: 'top' });
+      m.bindTooltip(`<b>Cámara ${cam.name}</b><br/>Tráfico ${cam.status} (estimado)`, { direction: 'top' });
       camMarkers.push(m);
     });
     cameraMarkersRef.current = camMarkers;
@@ -408,6 +461,21 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
       mapRef.current = null;
     };
   }, []);
+
+  // Re-routed: redraw the line being followed and its cameras
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !routeLayerRef.current) return;
+    routeLayerRef.current.setLatLngs(activeRoute.coordinates);
+    cameraMarkersRef.current.forEach((m) => m.remove());
+    cameraMarkersRef.current = activeRoute.cameras.map((cam) => {
+      const color = cam.status === 'fluido' ? '#10b981' : cam.status === 'denso' ? '#f59e0b' : '#ef4444';
+      return L.circleMarker([cam.lat, cam.lng], { radius: 6, fillColor: color, color: '#ffffff', weight: 1.5, fillOpacity: 0.9 })
+        .bindTooltip(`<b>Cámara ${cam.name}</b><br/>Tráfico ${cam.status} (estimado)`, { direction: 'top' })
+        .addTo(map);
+    });
+    announcedCameraIdsRef.current = new Set();
+  }, [activeRoute]);
 
   // Sync vehicle position on map
   useEffect(() => {
@@ -448,6 +516,10 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const remainingMeters = Math.max(0, routeIndex.totalMeters - alongMeters);
+  const remainingFraction = routeIndex.totalMeters > 0 ? remainingMeters / routeIndex.totalMeters : 0;
+  const streetNow = currentStreetName(maneuvers, alongMeters, activeRoute.name);
+
   const activeManeuver = maneuvers[currentManeuverIndex] || maneuvers[0];
   const nextUpcomingManeuver = maneuvers[currentManeuverIndex + 1];
 
@@ -485,7 +557,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-400 leading-none tracking-tight">
-                  {distanceToNextManeuverMeters <= 40 ? 'Ahora' : `En ${distanceToNextManeuverMeters} m`}
+                  {distanceToNextManeuverMeters <= 40 ? 'Ahora' : `En ${formatDistance(distanceToNextManeuverMeters)}`}
                 </span>
                 <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
                   (Paso {currentManeuverIndex + 1} de {maneuvers.length})
@@ -494,11 +566,10 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
               <h2 className="text-sm sm:text-lg font-extrabold text-white truncate leading-tight mt-0.5">
                 {activeManeuver.instruction}
               </h2>
-              {nextUpcomingManeuver && (
-                <p className="text-[11px] text-slate-400 truncate hidden sm:block">
-                  Después: {nextUpcomingManeuver.instruction}
-                </p>
-              )}
+              <p className="text-[11px] text-slate-400 truncate">
+                Por {streetNow}
+                {nextUpcomingManeuver && <span className="hidden sm:inline"> · Después: {nextUpcomingManeuver.instruction}</span>}
+              </p>
             </div>
           </div>
 
@@ -592,6 +663,34 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
       <div className="flex-1 relative w-full h-full overflow-hidden">
         <div ref={containerRef} className="w-full h-full" />
 
+        {/* Navigation status: GPS problems, off-route and re-routing */}
+        {(gpsError || isRerouting || (!isSimulating && offRouteMeters > 50) || activeRoute.isApproximate) && (
+          <div className="absolute top-3 left-3 right-3 sm:right-auto sm:max-w-sm z-[400] flex flex-col gap-1.5 pointer-events-none">
+            {gpsError && (
+              <div className="px-3 py-2 rounded-xl bg-amber-950/95 border border-amber-500/60 text-amber-100 text-xs font-semibold shadow-xl">
+                {gpsError}
+              </div>
+            )}
+            {isRerouting ? (
+              <div className="px-3 py-2 rounded-xl bg-cyan-950/95 border border-cyan-500/60 text-cyan-100 text-xs font-semibold shadow-xl">
+                Recalculando ruta desde tu posición…
+              </div>
+            ) : (
+              !isSimulating &&
+              offRouteMeters > 50 && (
+                <div className="px-3 py-2 rounded-xl bg-rose-950/95 border border-rose-500/60 text-rose-100 text-xs font-semibold shadow-xl">
+                  Fuera de la ruta ({offRouteMeters} m){onReroute ? ' · se recalculará si sigues alejándote' : ''}
+                </div>
+              )
+            )}
+            {activeRoute.isApproximate && (
+              <div className="px-3 py-2 rounded-xl bg-amber-950/95 border border-amber-500/60 text-amber-100 text-xs font-semibold shadow-xl">
+                Trazado aproximado (sin servidor de rutas): las indicaciones no siguen calles.
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Floating Recenter Button */}
         <button
           onClick={handleRecenter}
@@ -621,7 +720,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
-                    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&q=80';
+                    CAMERA_UNAVAILABLE_IMG;
                 }}
               />
               <div className="absolute bottom-0 inset-x-0 bg-slate-950/80 p-1.5 text-center">
@@ -669,7 +768,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                 <span>Tiempo</span>
               </div>
               <div className="text-base sm:text-lg font-bold font-mono text-white leading-tight">
-                {Math.max(1, Math.round(route.totalMinutes * (1 - simProgress)))} min
+                {Math.max(1, Math.round(activeRoute.totalMinutes * remainingFraction))} min
               </div>
             </div>
 
@@ -681,7 +780,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                 <span>Distancia</span>
               </div>
               <div className="text-base sm:text-lg font-bold font-mono text-white leading-tight">
-                {Math.round(route.distanceKm * (1 - simProgress) * 10) / 10} km
+                {Math.round((remainingMeters / 1000) * 10) / 10} km
               </div>
             </div>
           </div>
@@ -701,7 +800,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                 }`}
                 title="Usar antena GPS de tu teléfono o tablet"
               >
-                GPS Real
+                GPS Real{!isSimulating && gpsAccuracy !== null ? ` ±${gpsAccuracy} m` : ''}
               </button>
               <button
                 onClick={() => {
@@ -731,7 +830,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    setSimProgress(0);
+                    setAlongMeters(0);
                     setSimulationPlaying(true);
                   }}
                   className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
@@ -763,7 +862,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
               </div>
               <div>
                 <div className="text-4xl sm:text-6xl font-black font-mono text-emerald-400 leading-none">
-                  {distanceToNextManeuverMeters <= 40 ? 'AHORA' : `${distanceToNextManeuverMeters} m`}
+                  {distanceToNextManeuverMeters <= 40 ? 'AHORA' : formatDistance(distanceToNextManeuverMeters)}
                 </div>
                 <div className="text-xl sm:text-3xl font-extrabold text-white mt-2 max-w-xl truncate leading-tight">
                   {activeManeuver.instruction}
@@ -796,7 +895,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
           <div className="flex items-center justify-between border-t border-emerald-900/60 pt-6">
             <div>
               <div className="text-lg sm:text-2xl font-extrabold text-slate-100">
-                {activeManeuver.streetName}
+                {streetNow}
               </div>
               <div className="text-sm font-mono text-slate-400">
                 Destino: {destination.name}
@@ -805,7 +904,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
 
             <div className="text-right">
               <div className="text-2xl sm:text-4xl font-black font-mono text-cyan-400">
-                {route.distanceKm} km · {route.totalMinutes} min
+                {Math.round((remainingMeters / 1000) * 10) / 10} km · {Math.max(1, Math.round(activeRoute.totalMinutes * remainingFraction))} min
               </div>
               <div className="text-xs font-mono text-slate-400 uppercase tracking-widest">
                 Modo HUD Parabrisas (Espejado) · Toca para salir

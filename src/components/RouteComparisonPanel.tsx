@@ -266,10 +266,18 @@ ${advice}`;
               {fastestRoute.totalMinutes} <span className="text-xs text-slate-400 font-sans font-normal">min</span>
             </div>
             <div className="text-[11px] text-slate-400 font-mono">
-              {fastestRoute.distanceKm} km · {fastestRoute.trafficDelayMinutes > 0 ? `+${fastestRoute.trafficDelayMinutes}m retardo` : 'Sin retrasos'}
+              {fastestRoute.distanceKm} km · {fastestRoute.trafficDelayMinutes > 0 ? `+${fastestRoute.trafficDelayMinutes} min de retraso estimado` : 'Sin retrasos'}
             </div>
           </div>
         </div>
+
+        {fastestRoute.isApproximate && (
+          <div className="my-2 p-2.5 rounded-lg border border-amber-500/60 bg-amber-950/40 text-[11px] text-amber-100 leading-snug">
+            <strong className="text-amber-300">Trazado aproximado.</strong> No se ha podido contactar con el servidor de
+            rutas, así que la línea es una recta orientativa y la distancia y el tiempo son estimaciones. No la uses para
+            conducir: comprueba la conexión y vuelve a calcular.
+          </div>
+        )}
 
         {/* Quick Route Stats */}
         <div className="grid grid-cols-3 gap-2 my-3 py-2 px-3 bg-slate-950/60 rounded-lg border border-slate-800/80 text-center">
@@ -291,6 +299,14 @@ ${advice}`;
             </span>
           </div>
         </div>
+
+        <p className="text-[10px] text-slate-500 leading-snug -mt-1 mb-2">
+          Tiempo base: motor de rutas {fastestRoute.routingProvider && fastestRoute.routingProvider !== 'none' ? `(${fastestRoute.routingProvider})` : ''}.
+          Retenciones: estimación por franja horaria en {fastestRoute.cameras.length} cámaras
+          {fastestRoute.incidents.length > 0
+            ? ` + ${fastestRoute.incidents.length} incidencia${fastestRoute.incidents.length > 1 ? 's' : ''} oficial${fastestRoute.incidents.length > 1 ? 'es' : ''} DGT.`
+            : '; sin incidencias oficiales DGT en el trazado.'}
+        </p>
 
         {/* Public Transport & Taxi Fare Badge (Only shown in Public Transport Mode) */}
         {isPublicTransportMode && (
@@ -477,7 +493,7 @@ ${advice}`;
                   </div>
                 </div>
 
-                <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                <div className="mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-y-1.5 text-[11px]">
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1 text-slate-400">
                       <Video className="w-3 h-3 text-cyan-400" />
@@ -497,7 +513,7 @@ ${advice}`;
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 sm:gap-2.5">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

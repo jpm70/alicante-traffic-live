@@ -285,14 +285,15 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         color: route.color,
         weight: isSelected ? 6 : 4,
         opacity: isSelected ? 0.95 : 0.45,
-        dashArray: isSelected ? undefined : '6, 6',
+        // Approximate (straight-line) routes are always dotted so they are not mistaken for streets
+        dashArray: route.isApproximate ? '2, 10' : isSelected ? undefined : '6, 6',
         lineCap: 'round',
       }).addTo(map);
 
       poly.on('click', () => onSelectRoute(route.id));
 
       poly.bindTooltip(
-        `<b>${route.name}</b><br/>${route.totalMinutes} min · ${route.distanceKm} km · ${route.cameras.length} cámaras`,
+        `<b>${route.name}</b><br/>${route.isApproximate ? 'Trazado aproximado · ' : ''}${route.totalMinutes} min · ${route.distanceKm} km · ${route.cameras.length} cámaras`,
         { sticky: true }
       );
 

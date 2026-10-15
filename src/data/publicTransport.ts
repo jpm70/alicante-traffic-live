@@ -260,6 +260,21 @@ export const BUS_TAXI_CORRIDORS = [
   'Gran Vía (Pintor Baeza / Periodista Rodolfo Salazar)',
 ];
 
+// Normalised (lowercase, no accents) fragments of the street names above, matched
+// against the real street names returned by the routing engine.
+export const BUS_TAXI_STREET_KEYWORDS = [
+  'maisonnave',
+  'alfonso x',
+  'mendez nunez',
+  'aguilera',
+  'avenida de denia',
+  'avinguda de denia',
+  'doctor gadea',
+  'federico soto',
+  'pintor baeza',
+  'rodolfo salazar',
+];
+
 // Critical Demand Hubs in Alicante (Passenger surge radar)
 export interface DemandHub {
   id: string;
