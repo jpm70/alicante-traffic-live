@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ALICANTE_LANDMARKS, Landmark } from '../data/cameras';
-import { RoutePoint } from '../services/routing';
+import { RoutePoint, fetchWithTimeout, OSM_REQUEST_INIT } from '../services/routing';
 import {
   ArrowDownUp,
   MapPin,
@@ -97,9 +97,10 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
 
         try {
           // Fast reverse geocode for Alicante street name
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=17&addressdetails=1`,
-            { headers: { 'Accept-Language': 'es' }, signal: AbortSignal.timeout(3000) }
+          const res = await fetchWithTimeout(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=17&addressdetails=1&accept-language=es`,
+            4000,
+            OSM_REQUEST_INIT
           );
           if (res.ok) {
             const data = await res.json();

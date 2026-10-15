@@ -2,5 +2,5 @@
   "name": "Alicante Tráfico en Vivo - Rutas y Cámaras",
   "description": "Calcula rutas en Alicante con las incidencias oficiales de la DGT y visualiza las cámaras de tráfico municipales en una sola pantalla.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

@@ -10,9 +10,9 @@
     <meta property="og:description" content="Calcula rutas en Alicante con las incidencias oficiales de la DGT y visualiza las cámaras de tráfico municipales en una sola pantalla." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="icon" type="image/png" href="/icono.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="icono.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0b0f17" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -25,30 +25,9 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js').catch(function () {});
+          navigator.serviceWorker.register('sw.js').catch(function () {});
         });
       }
-    </script>
-    <script>
-      // Gracefully ignore Vite HMR / ModuleRunner WebSocket connection disconnects in iframe/proxy environment
-      window.addEventListener('error', function (e) {
-        var msg = String(e?.message || '');
-        var src = String(e?.filename || '');
-        var stack = String(e?.error?.stack || '');
-        var full = msg + ' ' + src + ' ' + stack;
-        if (full.includes('WebSocket') || full.includes('@vite/client') || full.includes('createWebSocketModuleRunnerTransport')) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-          return true;
-        }
-      }, true);
-      window.addEventListener('unhandledrejection', function (e) {
-        var str = String(e?.reason?.message || '') + ' ' + String(e?.reason || '') + ' ' + String(e?.reason?.stack || '');
-        if (str.includes('WebSocket') || str.includes('@vite/client') || str.includes('createWebSocketModuleRunnerTransport')) {
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-      }, true);
     </script>
   </head>
   <body class="bg-[#0b0f17] text-slate-100 antialiased font-sans selection:bg-cyan-500/20 selection:text-cyan-300">

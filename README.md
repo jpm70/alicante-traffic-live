@@ -11,37 +11,25 @@
 
 > **Plataforma web y móvil para moverse por Alicante.** Calcula rutas reales por el callejero (OSRM), las compara con las **incidencias oficiales de la DGT** en tiempo real y con una estimación de retenciones por franja horaria, muestra las **159 cámaras municipales de tráfico** en un solo muro, recorre la ruta en **3D sobre ortofoto real con edificios de OpenStreetMap**, guía con **GPS paso a paso** y ofrece una **suite para taxistas y transporte público** de Alicante.
 
+**👉 Abrir la app: [jpm70.github.io/alicante-traffic-live](https://jpm70.github.io/alicante-traffic-live/)** — pensada para el móvil (se puede instalar como app) y para el navegador del coche.
+
 Creado por [unfantasmaenelsistema.com](https://www.unfantasmaenelsistema.com/).
 
 ---
 
 ## 📸 Capturas de Pantalla
 
-### 1. Mapa Interactivo y Planificador Inteligente de Rutas
-Visualización del trazado con estimación de tiempo, incidencias DGT, cámaras de tráfico en ruta y atajos rápidos.
+Capturas reales de la aplicación en un móvil (390 × 844), ruta Plaza de los Luceros → Playa de San Juan.
 
-![Mapa y Planificador de Rutas de Alicante](docs/screenshots/overview.svg)
-
----
-
-### 2. Tour Virtual Street View Panorámico Sincronizado
-Simulación de trayecto real punto a punto a pie de calle, con cartel oficial de calles de Alicante, telemetría de ruta, minimapa con cono de visión y cámara DGT en Picture-in-Picture.
-
-![Tour Virtual Street View](docs/screenshots/streetview.svg)
-
----
-
-### 3. Modo Salpicadero / Taxi Dashboard (OLED Alto Contraste)
-Interfaz pensada para soporte de parabrisas en smartphones, con velocímetro gigante, estimador oficial de taxímetro (Tarifa 1 y 2), radar de demanda en AVE y Aeropuerto, y avisos de fiestas/cortes.
-
-![Modo Salpicadero Taxi Dashboard](docs/screenshots/taxidashboard.svg)
-
----
-
-### 4. Muro de 159 Cámaras de Tráfico en Vivo
-Monitorización simultánea de todas las cámaras de Alicante en una sola pantalla, con autorrefresco cada 15 segundos y filtrado instantáneo por calle.
-
-![Muro de 159 Cámaras DGT](docs/screenshots/camerawall.svg)
+| Ruta recomendada | Mapa con la ruta, cámaras e incidencias |
+| :---: | :---: |
+| <img src="docs/screenshots/01-ruta.jpg" width="300" alt="Ruta recomendada"> | <img src="docs/screenshots/02-mapa.jpg" width="300" alt="Mapa de Alicante con la ruta"> |
+| **Vuelo 3D** (ortofoto + edificios OSM) | **Conducción 3D** (vista conductor) |
+| <img src="docs/screenshots/03-vuelo-3d.jpg" width="300" alt="Vuelo 3D"> | <img src="docs/screenshots/04-conduccion-3d.jpg" width="300" alt="Conducción 3D"> |
+| **Navegador GPS** con cámara próxima | **Mural de cámaras** de la ruta |
+| <img src="docs/screenshots/05-gps.jpg" width="300" alt="Navegador GPS"> | <img src="docs/screenshots/06-camaras.jpg" width="300" alt="Mural de cámaras"> |
+| **Incidencias oficiales DGT** | **Salpicadero de taxi** |
+| <img src="docs/screenshots/07-alertas-dgt.jpg" width="300" alt="Incidencias DGT"> | <img src="docs/screenshots/08-taxi.jpg" width="300" alt="Salpicadero de taxi"> |
 
 ---
 
@@ -54,7 +42,7 @@ Monitorización simultánea de todas las cámaras de Alicante en una sola pantal
 - **Retenciones estimadas**: no existe un feed público de velocidades en las calles urbanas de Alicante, así que la congestión en cada cámara se **estima** por franja horaria y puntos conflictivos (y la interfaz lo indica). Botón de *Hora Punta* para forzar el escenario de máxima carga.
 - **Cámaras en ruta**: solo las que están sobre el trazado (cerca de la línea o en la misma calle), no las de calles paralelas.
 
-### 📹 2. Red de 159 Cámaras DGT en Tiempo Real
+### 📹 2. Red de 159 Cámaras Municipales en Tiempo Real
 - **Muro multicámara único**: Todas las cámaras de Alicante en una cuadrícula optimizada sin sobrecargar la memoria del navegador.
 - **Ciclo de refresco continuo**: Actualización automática de instantáneas cada 15 segundos con indicador de cuenta atrás.
 - **Modo Picture-in-Picture (PiP)**: Fija cualquier cámara en una ventana flotante para seguir vigilando un cruce mientras navegas por otras pestañas o calculas rutas.
@@ -93,11 +81,11 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
    - Acceso autorizado a los carriles reservados de Alicante (Av. Maisonnave, Alfonso X el Sabio, Rambla Méndez Núñez, Av. Aguilera).
    - El motor de enrutamiento reduce drásticamente la penalización por retención en tramos con carril BUS-TAXI, reflejando el tiempo estimado de llegada para vehículos autorizados (los carriles se detectan por el nombre real de las calles de la ruta).
 
-4. **✈️ Monitor de Demanda en Puntos Críticos (AVE y Aeropuerto)**
-   - Panel de control de afluencia de pasajeros:
-     - Próximas llegadas de trenes de alta velocidad a **Alacant Terminal**.
-     - Picos de afluencia de vuelos en el **Aeropuerto Alicante-Elche (ALC)**.
-     - Atraque de cruceros turísticos en el Puerto de Alicante y eventos en el Auditorio ADDA o Recinto Ferial IFA.
+4. **✈️ Franjas de Demanda en Puntos Críticos (AVE y Aeropuerto)**
+   - Horas punta habituales (datos de referencia, no llegadas en tiempo real) en:
+     - **Alacant Terminal** (AVE / Euromed).
+     - **Aeropuerto Alicante-Elche (ALC)**.
+     - Puerto de Alicante (cruceros) y eventos en el Auditorio ADDA o Recinto Ferial IFA.
 
 5. **📱 Modo Salpicadero / Taxi Dashboard (OLED High Contrast)**
    - Vista especial diseñada para soportes de móvil en el parabrisas:
@@ -128,8 +116,8 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 - **Mapas y Geometría**: [Leaflet](https://leafletjs.com/), OpenStreetMap cartography
 - **Gráficos 3D y WebGL**: [Three.js](https://threejs.org/)
 - **Iconografía**: [Lucide React](https://lucide.dev/)
-- **Backend / Proxy API**: [Express](https://expressjs.com/) sobre Node.js con `tsx`
-- **Inteligencia Artificial (Opcional)**: [@google/genai](https://github.com/google-gemini/generative-ai-js) para análisis semántico del tráfico con modelos Gemini de Google AI Studio.
+- **Sin servidor propio**: sitio estático en GitHub Pages; las incidencias DGT y los edificios se generan en tiempo de build (GitHub Actions).
+- **Inteligencia Artificial (Opcional)**: [@google/genai](https://github.com/google-gemini/generative-ai-js) llamado desde el navegador con la clave Gemini de cada usuario.
 
 ---
 
@@ -150,51 +138,45 @@ cd alicante-traffic-live
 npm install
 ```
 
-### Paso 3: Configurar variables de entorno
-Copia la plantilla de variables de entorno:
-```bash
-cp .env.example .env
-```
-
-*(Opcional)* Si deseas utilizar las funciones asistidas por IA de Gemini, añade tu clave API en el archivo `.env`:
-```env
-GEMINI_API_KEY="tu_clave_api_aqui"
-```
-> **Nota:** La aplicación funciona al 100% sin necesidad de configurar ninguna API key. Los usuarios también pueden introducir su clave de Gemini de forma privada en el modal de ajustes del navegador.
-
-### Paso 4: Iniciar el servidor de desarrollo
+### Paso 3: Arrancar en local
 ```bash
 npm run dev
 ```
-La aplicación se iniciará en `http://localhost:3000`.
+Descarga las incidencias actuales de la DGT a `public/data/alerts.json` y abre la app en `http://localhost:3000`.
 
-### Paso 5: Compilación para producción
+> No hace falta ninguna clave. La clave de Gemini (asesor IA opcional) y la de Google Street View las introduce cada usuario en la propia app y se guardan solo en su navegador.
+
+### Paso 4: Compilación
 ```bash
 npm run build
-npm start
 ```
-`npm run build` genera el frontend en `dist/` y empaqueta el servidor en `server.js`; `npm start` sirve ambos (por defecto en el puerto 3000, configurable con `PORT`).
+Genera el sitio estático en `dist/` (funciona en la raíz de un dominio o en una subcarpeta como la de GitHub Pages).
 
-> El servidor Express es necesario: además del frontend sirve las incidencias de la DGT (`/api/traffic-alerts`), los edificios de OpenStreetMap para el 3D (`/api/buildings`) y el asesor IA opcional. Un alojamiento solo estático (p. ej. GitHub Pages) no basta.
+### Edificios 3D
+Los edificios de OpenStreetMap del área metropolitana de Alicante están pre-generados en `public/buildings/` (teselas pequeñas que el 3D descarga según la ruta). Para actualizarlos:
+```bash
+npm run buildings
+```
+Fuera de esa zona, el 3D los pide en directo a Overpass.
 
 ---
 
 ## 📁 Estructura del Proyecto
 
 ```text
+├── .github/workflows/
+│   └── deploy.yml            # Build y despliegue en GitHub Pages (push a main y cada 15 min)
 ├── docs/
-│   └── screenshots/          # Capturas de pantalla vectoriales (SVG) para documentación
-│       ├── overview.svg      # Vista principal del mapa y planificador
-│       ├── streetview.svg    # Vista Street View panorámico sincronizado
-│       ├── taxidashboard.svg # Modo Salpicadero OLED para taxistas
-│       └── camerawall.svg    # Muro interactivo de 159 cámaras DGT
+│   └── screenshots/          # Capturas reales de la app en móvil
 ├── public/                   # Activos estáticos, iconos PWA y manifiesto
+│   ├── buildings/            # Edificios OSM pre-generados en teselas (npm run buildings)
 │   ├── manifest.json         # Configuración PWA
 │   ├── sw.js                 # Service Worker (solo cachea recursos propios)
 │   └── icono.png             # Icono de la aplicación
-├── server/
-│   ├── dgtIncidents.ts       # Lector del feed DATEX II de la DGT (incidencias en Alicante)
-│   └── osmBuildings.ts       # Edificios de OpenStreetMap vía Overpass, con caché
+├── scripts/
+│   ├── update-dgt-alerts.ts  # Descarga el feed DATEX II de la DGT → public/data/alerts.json
+│   ├── dgtIncidents.ts       # Parser de incidencias DGT (área de Alicante)
+│   └── build-buildings.ts    # Genera public/buildings desde Overpass
 ├── src/
 │   ├── components/           # Componentes modulares de interfaz de usuario
 │   │   ├── InteractiveMap.tsx          # Mapa Leaflet con capas y marcadores
@@ -218,12 +200,13 @@ npm start
 │   ├── services/
 │   │   ├── routing.ts         # Rutas OSRM, cámaras en ruta, estimación de retenciones e incidencias
 │   │   ├── geometry.ts        # Distancias, proyección sobre la ruta y simplificación
-│   │   └── navigationManeuvers.ts # Maniobras en español a partir de los pasos de OSRM
+│   │   ├── navigationManeuvers.ts # Maniobras en español a partir de los pasos de OSRM
+│   │   ├── osmBuildings.ts    # Edificios: teselas estáticas u Overpass en directo
+│   │   └── gemini.ts          # Asesor IA opcional (Gemini desde el navegador)
 │   ├── three/
 │   │   └── RouteScene.ts      # Motor 3D compartido (ortofoto, edificios OSM, ruta, coche)
 │   ├── App.tsx                # Componente raíz y orquestador de estado
 │   └── main.tsx               # Entrada de la aplicación React
-├── server.ts                  # Servidor Express: API (DGT, edificios, IA) y frontend
 ├── package.json               # Dependencias y scripts del proyecto
 ├── tsconfig.json              # Configuración de TypeScript
 └── vite.config.ts             # Configuración de Vite con Tailwind CSS
@@ -231,15 +214,15 @@ npm start
 
 ---
 
-## 🌐 Opciones de Despliegue en la Nube
+## 🌐 Despliegue en GitHub Pages
 
-El proyecto está preparado para exportarse y desplegarse en cualquier plataforma moderna:
+El workflow `.github/workflows/deploy.yml` compila y publica la app en GitHub Pages:
 
-| Plataforma | Tipo | Comando de Build | Comando de Inicio |
-| :--- | :--- | :--- | :--- |
-| **Render** | Web Service | `npm install && npm run build` | `npm start` |
-| **Railway** | Web Service | `npm run build` | `npm start` |
-| **Google Cloud Run** | Contenedor / Buildpacks | `npm run build` | `npm start` |
+- en cada push a `main`,
+- cada 15 minutos (programado), para refrescar las incidencias de la DGT, cuyo servidor no admite peticiones desde el navegador,
+- y a mano desde la pestaña *Actions* (*Run workflow*).
+
+Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub puede retrasar unos minutos las ejecuciones programadas y las pausa si el repositorio pasa 60 días sin actividad (se reactivan desde *Actions*).
 
 ---
 
@@ -248,7 +231,7 @@ El proyecto está preparado para exportarse y desplegarse en cualquier plataform
 - **Cámaras de Tráfico**: imágenes del Centro de Control de Tráfico del Ayuntamiento de Alicante (movilidad.alicante.es).
 - **Incidencias**: DGT, Punto de Acceso Nacional de tráfico (nap.dgt.es), feed DATEX II de situaciones.
 - **Rutas**: OSRM sobre datos de OpenStreetMap (router.project-osrm.org y routing.openstreetmap.de de FOSSGIS).
-- **3D**: ortofoto y rótulos © Esri; edificios © colaboradores de OpenStreetMap vía Overpass API.
+- **3D**: ortofoto y rótulos © Esri; edificios © colaboradores de OpenStreetMap (ODbL) vía Overpass API.
 - **Tarifas Oficiales de Taxi**: Reguladas por el Ayuntamiento de Alicante y la Conselleria de Medio Ambiente, Agua, Infraestructuras y Territorio (Generalitat Valenciana).
 - **Cartografía**: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
 

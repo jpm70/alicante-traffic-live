@@ -180,11 +180,11 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
       className="fixed inset-0 z-[99999] bg-black text-white flex flex-col justify-between p-3 sm:p-6 select-none font-sans overflow-hidden"
     >
       {/* Top Bar: Taxi Header & Status */}
-      <div className="flex items-center justify-between border-b border-amber-500/40 pb-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 pb-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
           <div className="px-3 py-1 bg-amber-400 text-black font-black text-sm rounded-lg flex items-center gap-2 shadow-lg">
             <span>🚖</span>
-            <span>TAXI ALICANTE · SALPICADERO</span>
+            <span><span className="hidden sm:inline">TAXI ALICANTE · </span>SALPICADERO</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={() => setIsVoiceActive(!isVoiceActive)}
             className={`p-2.5 rounded-xl border text-xs font-bold transition-all ${

@@ -260,6 +260,11 @@ const OSRM_PROVIDERS = [
 
 const OSRM_TIMEOUT_MS = 8000;
 
+// index.html sends no Referer at all (the municipal camera server rejects foreign
+// referers), but the OpenStreetMap services (Overpass, Nominatim) reject anonymous
+// browser requests without one. For them we send just our origin.
+export const OSM_REQUEST_INIT: RequestInit = { referrerPolicy: 'strict-origin-when-cross-origin' };
+
 // AbortSignal.timeout() does not exist on Safari < 16 and some car browsers; this works everywhere.
 export async function fetchWithTimeout(url: string, timeoutMs: number, init: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();

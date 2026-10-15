@@ -4,7 +4,7 @@
 // map tiles, traffic cameras, Google) go straight to the network: intercepting them
 // used to answer a failed routing request with the cached index.html, which the app
 // then could not parse and drew the route as a straight line.
-const CACHE_NAME = 'alicante-trafico-v2';
+const CACHE_NAME = 'alicante-trafico-v3';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
@@ -37,7 +37,6 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // let the browser handle it
-  if (url.pathname.startsWith('/api/')) return; // dynamic data, never cached
 
   // Page navigations: network first, cached app shell when offline
   if (request.mode === 'navigate') {

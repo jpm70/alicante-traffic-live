@@ -1,29 +1,29 @@
 {
-  "id": "/",
+  "id": "./",
   "name": "Alicante Tráfico en Vivo - Rutas y Cámaras",
   "short_name": "Tráfico ALC",
-  "description": "Cálculo de ruta más rápida con 159 cámaras en vivo de Alicante, modo GPS para coche, Android Auto y HUD nocturno.",
-  "start_url": "/",
-  "scope": "/",
+  "description": "Rutas reales por Alicante con incidencias oficiales de la DGT, 159 cámaras municipales en vivo, tour 3D y navegador GPS para móvil y coche.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0b0f17",
   "theme_color": "#0b0f17",
   "icons": [
     {
-      "src": "/pwa-192x192.png",
+      "src": "pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-512x512.png",
+      "src": "pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pwa-maskable-512x512.png",
+      "src": "pwa-maskable-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -34,15 +34,25 @@
       "name": "Planificador de Ruta",
       "short_name": "Rutas",
       "description": "Calcular la ruta más rápida analizando el tráfico",
-      "url": "/?tab=map",
-      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+      "url": "?tab=map",
+      "icons": [
+        {
+          "src": "pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Mural de Cámaras",
       "short_name": "Cámaras",
       "description": "Ver las 159 cámaras de tráfico de Alicante",
-      "url": "/?tab=wall",
-      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+      "url": "?tab=wall",
+      "icons": [
+        {
+          "src": "pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

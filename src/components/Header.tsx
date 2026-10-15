@@ -175,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right controls: GPS Nav, Tour Button, Rush Hour switch & Refresh Countdown */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 max-w-full">
         {/* GPS Navigator Quick Launch Button */}
         {hasActiveRoute && onStartGpsNavigation && (
           <button
