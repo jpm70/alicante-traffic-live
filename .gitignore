@@ -9,3 +9,5 @@ coverage/
 public/data/
 package-lock.json
 .cache/
+test-results/
+playwright-report/

@@ -14,6 +14,7 @@ import {
   RoutePoint,
 } from './services/routing';
 import { TrafficAlert, TrafficAlertsResponse, withDisplayTimes } from './data/trafficAlerts';
+import { Radar, loadRadars } from './services/radars';
 import { Header } from './components/Header';
 import { RouteSelector } from './components/RouteSelector';
 import { RouteComparisonPanel } from './components/RouteComparisonPanel';
@@ -234,6 +235,12 @@ export default function App() {
   const [countdown, setCountdown] = useState<number>(15);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [cacheBuster, setCacheBuster] = useState<number>(Date.now());
+
+  // Official DGT speed cameras (inventory changes a few times a year: load once)
+  const [radars, setRadars] = useState<Radar[]>([]);
+  useEffect(() => {
+    loadRadars().then(setRadars);
+  }, []);
 
   // Official DGT incidents (static file published with the site)
   const alertsRef = React.useRef<TrafficAlert[]>([]);
@@ -616,6 +623,7 @@ export default function App() {
                     isPublicTransportMode={isPublicTransportMode}
                     onOpenTaxiFareModal={() => setIsTaxiFareModalOpen(true)}
                     onOpenTaxiDashboardModal={() => setIsTaxiDashboardModalOpen(true)}
+                    radars={radars}
                   />
                 </>
               ) : (
@@ -679,6 +687,7 @@ export default function App() {
                 isModalOpen={isAnyModalActive}
                 isPublicTransportMode={isPublicTransportMode}
                 showTaxiStands={showTaxiStandsOnMap}
+                radars={radars}
               />
             </section>
           </div>
@@ -737,6 +746,7 @@ export default function App() {
                   onAlertClick={handleSelectAlert}
                   onCancelPickMode={() => setIsPickOnMapActive(null)}
                   isModalOpen={isAnyModalActive}
+                  radars={radars}
                 />
               </div>
             </div>
@@ -790,6 +800,7 @@ export default function App() {
                 onAlertClick={handleSelectAlert}
                 onCancelPickMode={() => setIsPickOnMapActive(null)}
                 isModalOpen={isAnyModalActive}
+                radars={radars}
               />
             </section>
           </div>
@@ -843,6 +854,7 @@ export default function App() {
           cacheBuster={cacheBuster}
           onClose={() => setGpsModalRoute(null)}
           onReroute={handleGpsReroute}
+          radars={radars}
         />
         </Suspense>
       )}
