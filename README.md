@@ -35,15 +35,6 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 
 <img src="docs/screenshots/06-modo-coche.jpg" width="640" alt="Modo coche en una pantalla de coche">
 
----: | :---: |
-| <img src="docs/screenshots/01-ruta.jpg" width="300" alt="Ruta recomendada"> | <img src="docs/screenshots/02-mapa.jpg" width="300" alt="Mapa de Alicante con la ruta"> |
-| **Vuelo 3D** (ortofoto + edificios OSM) | **Conducción 3D** (vista conductor) |
-| <img src="docs/screenshots/03-vuelo-3d.jpg" width="300" alt="Vuelo 3D"> | <img src="docs/screenshots/04-conduccion-3d.jpg" width="300" alt="Conducción 3D"> |
-| **Navegador GPS** con cámara próxima | **Mural de cámaras** de la ruta |
-| <img src="docs/screenshots/05-gps.jpg" width="300" alt="Navegador GPS"> | <img src="docs/screenshots/06-camaras.jpg" width="300" alt="Mural de cámaras"> |
-| **Incidencias oficiales DGT** | **Salpicadero de taxi** |
-| <img src="docs/screenshots/07-alertas-dgt.jpg" width="300" alt="Incidencias DGT"> | <img src="docs/screenshots/08-taxi.jpg" width="300" alt="Salpicadero de taxi"> |
-
 ---
 
 ## 🌟 Características Principales
@@ -72,6 +63,7 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 
 ### 🛰️ 4. Navegador GPS Turn-by-Turn
 - **Modo coche**: desde *Android Auto / Coche → Abrir en modo coche* (o simplemente girando el móvil o en la pantalla del coche), el navegador pasa a pantalla completa con GPS real y una disposición para el soporte del coche: mapa a un lado y, al otro, la maniobra, los avisos (radar, tráfico lento), la velocidad y la hora de llegada en letra grande, con botones grandes. El zoom del mapa se abre al ir rápido.
+- **Orientación del mapa**: con el botón de brújula se elige entre *norte arriba* (por defecto: el mapa queda fijo y gira la flecha) y *rumbo arriba* (el mapa gira para que la carretera siga siempre hacia arriba). La elección se recuerda en el dispositivo.
 - **Modo Real** (por defecto en móviles y pantallas de coche): la posición del GPS se proyecta sobre la ruta para saber qué maniobra viene, cuánto falta y la hora de llegada; si te sales más de 50 m durante varias lecturas, **recalcula la ruta** desde donde estás.
 - **Modo Simulador**: recorre la ruta a su velocidad media en cámara rápida para revisar el paso a paso antes de salir.
 - **Tráfico lento medido delante**: si un detector de la DGT en tu ruta mide retención o tráfico denso en los próximos 2,5 km, aviso visual y por voz con la velocidad real.
@@ -136,7 +128,7 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 - **Gráficos 3D y WebGL**: [Three.js](https://threejs.org/)
 - **Iconografía**: [Lucide React](https://lucide.dev/)
 - **Sin servidor propio**: sitio estático en GitHub Pages; los datos de la DGT se generan en cada despliegue y los edificios cada mes (GitHub Actions).
-- **Inteligencia Artificial (Opcional)**: [@google/genai](https://github.com/google-gemini/generative-ai-js) llamado desde el navegador con la clave Gemini de cada usuario.
+- **Inteligencia Artificial (Opcional)**: [@google/genai](https://github.com/google-gemini/generative-ai-js) llamado desde el navegador con la clave Gemini de cada usuario. Usa un modelo fijado (`gemini-3.8-flash`); si Google lo retira, pasa solo al alias `gemini-flash-latest` o al Flash más reciente de la lista de modelos de Google, y lo recuerda. Un workflow semanal (`gemini-check.yml`) avisa cuando el modelo fijado desaparece; necesita el secreto opcional `GEMINI_API_KEY` en el repositorio y, sin él, no hace nada.
 
 ---
 
@@ -195,6 +187,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 ├── .github/workflows/
 │   ├── deploy.yml            # Build y despliegue en GitHub Pages (push a main y cada 15 min)
 │   ├── buildings.yml         # Regenera los edificios OSM el día 1 de cada mes
+│   ├── gemini-check.yml      # Comprueba cada lunes que el modelo de Gemini sigue existiendo
 │   └── ci.yml                # Tests en cada pull request
 ├── docs/
 │   └── screenshots/          # Capturas reales de la app (móvil y pantalla de coche)
@@ -213,7 +206,8 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   ├── dgtRadars.ts          # Parser del inventario de radares DGT (provincia de Alicante)
 │   ├── dgtDetectors.ts       # Detectores DGT: velocidad, intensidad y ocupación por punto y sentido
 │   ├── trafficHistory.ts     # Histórico de velocidad por franja de 15 min (data/history.json)
-│   └── build-buildings.ts    # Genera public/buildings desde Overpass
+│   ├── build-buildings.ts    # Genera public/buildings desde Overpass
+│   └── check-gemini.ts       # Comprobación del modelo de Gemini fijado
 ├── src/
 │   ├── components/           # Componentes modulares de interfaz de usuario
 │   │   ├── InteractiveMap.tsx          # Mapa Leaflet con capas y marcadores
@@ -242,7 +236,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   │   ├── radars.ts          # Radares DGT a lo largo de la ruta
 │   │   ├── liveTraffic.ts     # Velocidad medida por los detectores DGT en la ruta
 │   │   ├── trafficHistory.ts  # Velocidad habitual vs actual de los tramos medidos de la ruta
-│   │   └── gemini.ts          # Asesor IA opcional (Gemini desde el navegador)
+│   │   └── gemini.ts          # Asesor IA opcional (Gemini desde el navegador, con modelo de reserva)
 │   ├── three/
 │   │   └── RouteScene.ts      # Motor 3D compartido (ortofoto, edificios OSM, ruta, coche)
 │   ├── App.tsx                # Componente raíz y orquestador de estado
