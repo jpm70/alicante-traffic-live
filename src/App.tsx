@@ -15,6 +15,7 @@ import {
 } from './services/routing';
 import { TrafficAlert, TrafficAlertsResponse, withDisplayTimes } from './data/trafficAlerts';
 import { Radar, loadRadars } from './services/radars';
+import { LiveStation, loadLiveTraffic } from './services/liveTraffic';
 import { Header } from './components/Header';
 import { RouteSelector } from './components/RouteSelector';
 import { RouteComparisonPanel } from './components/RouteComparisonPanel';
@@ -139,8 +140,15 @@ export default function App() {
   const [alerts, setAlerts] = useState<TrafficAlert[]>([]);
   const [alertsMeta, setAlertsMeta] = useState<{ source: string; updatedAt: string; error?: string } | null>(null);
 
-  // Routes with the latest official incidents applied (no new routing request needed)
-  const routes = useMemo(() => applyIncidents(baseRoutes, alerts), [baseRoutes, alerts]);
+  // Speeds measured by the DGT road detectors (A-70, A-31), refreshed with the alerts
+  const [liveStations, setLiveStations] = useState<LiveStation[]>([]);
+  const [liveUpdatedAt, setLiveUpdatedAt] = useState<string | null>(null);
+  const liveStationsRef = React.useRef<LiveStation[]>([]);
+  liveStationsRef.current = liveStations;
+
+  // Routes with the latest official incidents and measured speeds applied
+  // (no new routing request needed)
+  const routes = useMemo(() => applyIncidents(baseRoutes, alerts, liveStations), [baseRoutes, alerts, liveStations]);
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
   const [isAlertsLoading, setIsAlertsLoading] = useState<boolean>(false);
 
@@ -266,12 +274,24 @@ export default function App() {
     }
   }, []);
 
-  // Initial alerts fetch + periodic refresh
+  const handleFetchLiveTraffic = useCallback(async () => {
+    const data = await loadLiveTraffic();
+    if (data) {
+      setLiveStations(data.success ? data.stations : []);
+      setLiveUpdatedAt(data.success ? data.updatedAt : null);
+    }
+  }, []);
+
+  // Initial fetch + periodic refresh of the DGT data files
   useEffect(() => {
     handleFetchAlerts();
-    const id = setInterval(handleFetchAlerts, ALERTS_REFRESH_MS);
+    handleFetchLiveTraffic();
+    const id = setInterval(() => {
+      handleFetchAlerts();
+      handleFetchLiveTraffic();
+    }, ALERTS_REFRESH_MS);
     return () => clearInterval(id);
-  }, [handleFetchAlerts]);
+  }, [handleFetchAlerts, handleFetchLiveTraffic]);
 
   // Only the latest calculation may update the UI: when the user changes origin,
   // destination or options quickly, slower earlier answers must not overwrite it.
@@ -322,7 +342,8 @@ export default function App() {
         incidents: alertsRef.current,
         quick: true,
       });
-      const best = calculated.find((r) => r.isFastest) || calculated[0];
+      const applied = applyIncidents(calculated, alertsRef.current, liveStationsRef.current);
+      const best = applied.find((r) => r.isFastest) || applied[0];
       return best && !best.isApproximate ? best : null;
     },
     [destination, rushHourActive, isPublicTransportMode, busTaxiLaneActive]
@@ -624,6 +645,7 @@ export default function App() {
                     onOpenTaxiFareModal={() => setIsTaxiFareModalOpen(true)}
                     onOpenTaxiDashboardModal={() => setIsTaxiDashboardModalOpen(true)}
                     radars={radars}
+                    liveUpdatedAt={liveUpdatedAt}
                   />
                 </>
               ) : (
@@ -688,6 +710,7 @@ export default function App() {
                 isPublicTransportMode={isPublicTransportMode}
                 showTaxiStands={showTaxiStandsOnMap}
                 radars={radars}
+                liveStations={liveStations}
               />
             </section>
           </div>
@@ -747,6 +770,7 @@ export default function App() {
                   onCancelPickMode={() => setIsPickOnMapActive(null)}
                   isModalOpen={isAnyModalActive}
                   radars={radars}
+                  liveStations={liveStations}
                 />
               </div>
             </div>
@@ -801,6 +825,7 @@ export default function App() {
                 onCancelPickMode={() => setIsPickOnMapActive(null)}
                 isModalOpen={isAnyModalActive}
                 radars={radars}
+                liveStations={liveStations}
               />
             </section>
           </div>

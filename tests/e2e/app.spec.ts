@@ -38,6 +38,14 @@ test('muestra las incidencias y los radares oficiales de la DGT', async ({ page 
   await expect(page.locator('.dgt-radar-icon')).toHaveCount(radars);
 });
 
+test('muestra la velocidad medida por los detectores de la DGT', async ({ page }) => {
+  await openApp(page);
+  const traffic = await page.evaluate(async () => (await (await fetch('data/traffic.json')).json()));
+  expect(Array.isArray(traffic.stations)).toBe(true);
+  // One label per measuring point, showing its speed (or "–" without vehicles)
+  await expect(page.locator('.dgt-live-station')).toHaveCount(traffic.stations.length);
+});
+
 test('el vuelo 3D arranca (o avisa si el dispositivo no tiene WebGL)', async ({ page }) => {
   await openApp(page);
   const hasWebGL = await page.evaluate(() => {

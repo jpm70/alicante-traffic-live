@@ -87,6 +87,8 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   const routeRadars = useMemo(() => radarsAlongRoute(activeRoute, radars, routeIndex), [activeRoute, radars, routeIndex]);
   const [radarWarning, setRadarWarning] = useState<{ text: string; distance: number; inSection: boolean } | null>(null);
   const radarAnnouncementsRef = useRef<Set<string>>(new Set());
+  const [slowTraffic, setSlowTraffic] = useState<{ text: string; distance: number; speed: number; jam: boolean } | null>(null);
+  const slowAnnouncementsRef = useRef<Set<string>>(new Set());
 
   // Mode: Real Device GPS vs Simulation
   const [isSimulating, setIsSimulating] = useState<boolean>(() => !prefersRealGps());
@@ -447,9 +449,34 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     }
   }, [alongMeters, routeRadars, speakInstruction, playAlertChime]);
 
+  // 3c. SLOW TRAFFIC MEASURED AHEAD (DGT detectors on the motorway stretches of the route)
+  useEffect(() => {
+    const ahead = (activeRoute.liveStations || []).find(
+      (s) =>
+        (s.status === 'retencion' || s.status === 'denso') &&
+        s.alongMeters > alongMeters &&
+        s.alongMeters - alongMeters <= 2500
+    );
+    if (!ahead || ahead.station.speed === null) {
+      setSlowTraffic(null);
+      return;
+    }
+    const distance = Math.round(ahead.alongMeters - alongMeters);
+    const jam = ahead.status === 'retencion';
+    setSlowTraffic({ text: `${ahead.station.road} km ${String(ahead.station.km).replace('.', ',')}`, distance, speed: ahead.station.speed, jam });
+    if (distance <= 1500 && !slowAnnouncementsRef.current.has(ahead.station.id)) {
+      slowAnnouncementsRef.current.add(ahead.station.id);
+      playAlertChime();
+      speakInstruction(
+        `${jam ? 'Retención' : 'Tráfico lento'} a ${distance >= 1000 ? 'un kilómetro y medio' : Math.round(distance / 100) * 100 + ' metros'}: ${ahead.station.speed} kilómetros por hora en la ${ahead.station.road}.`
+      );
+    }
+  }, [alongMeters, activeRoute, speakInstruction, playAlertChime]);
+
   // Re-routing starts a new route: allow announcing its cameras again
   useEffect(() => {
     radarAnnouncementsRef.current = new Set();
+    slowAnnouncementsRef.current = new Set();
   }, [activeRoute]);
 
   // 4. LEAFLET MAP INITIALIZATION & SYNC
@@ -732,6 +759,18 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         <div ref={containerRef} className="w-full h-full" />
 
         {/* Navigation status: GPS problems, off-route and re-routing */}
+        {/* Slow traffic measured ahead by the DGT detectors */}
+        {slowTraffic && (
+          <div className={`absolute ${radarWarning ? 'bottom-[5.5rem]' : 'bottom-4'} left-3 z-[400] pointer-events-none`}>
+            <div className={`px-3 py-2 rounded-xl border shadow-2xl ${slowTraffic.jam ? 'bg-red-950/95 border-red-500/70' : 'bg-amber-950/95 border-amber-500/70'}`}>
+              <div className="text-sm font-black text-white leading-tight">
+                {slowTraffic.jam ? 'Retención' : 'Tráfico lento'} a {slowTraffic.distance} m · {slowTraffic.speed} km/h
+              </div>
+              <div className="text-[11px] text-slate-200 leading-tight">Medido por la DGT · {slowTraffic.text}</div>
+            </div>
+          </div>
+        )}
+
         {/* Speed camera ahead (always visible, independent of other banners) */}
         {radarWarning && (
           <div className="absolute bottom-4 left-3 z-[400] pointer-events-none">

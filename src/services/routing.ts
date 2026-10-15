@@ -1,6 +1,8 @@
 import { TrafficCamera, CAMERAS } from '../data/cameras';
 import { TrafficAlert } from '../data/trafficAlerts';
 import { BUS_TAXI_STREET_KEYWORDS } from '../data/publicTransport';
+import type { LiveStation, RouteLiveStation } from './liveTraffic';
+import { stationsAlongRoute } from './liveTraffic';
 import {
   LatLng,
   getDistanceMeters,
@@ -64,6 +66,9 @@ export interface CalculatedRoute {
   // Official DGT incidents located on this route
   incidents: TrafficAlert[];
   incidentDelayMinutes: number;
+  // Speeds measured by the DGT detectors on this route (motorway stretches)
+  liveStations?: RouteLiveStation[];
+  liveDelayMinutes?: number;
 }
 
 export interface RouteCalculationOptions {
@@ -538,19 +543,24 @@ export async function calculateAlternativeRoutes(
   return applyIncidents(results, incidents);
 }
 
-// Attach official incidents to each route and recompute delays, status and the
-// fastest route. Pure function, so the app can re-apply fresh DGT data without
-// asking the routing server again.
-export function applyIncidents(routes: CalculatedRoute[], incidents: TrafficAlert[]): CalculatedRoute[] {
+// Attach official incidents and the speeds measured by the DGT detectors to each route,
+// and recompute delays, status and the fastest route. Pure function, so the app can
+// re-apply fresh DGT data without asking the routing server again.
+export function applyIncidents(routes: CalculatedRoute[], incidents: TrafficAlert[], stations: LiveStation[] = []): CalculatedRoute[] {
   const results = routes.map((route) => {
     const routeIncidents = route.coordinates.length >= 2 && !route.isApproximate
       ? incidents.filter((a) => distanceToPolyline(a.lat, a.lng, route.coordinates) <= 80)
       : [];
     const incidentDelay = routeIncidents.reduce((sum, a) => sum + (a.delayMin || 0), 0);
-    const trafficDelayMinutes = route.cameraDelayMinutes + incidentDelay;
+    // Measured speeds of the DGT detectors on the motorway stretches of the route
+    const liveStations = stationsAlongRoute(route, stations);
+    const liveDelay = Math.round(liveStations.reduce((sum, s) => sum + s.delayMinutes, 0));
+    const trafficDelayMinutes = route.cameraDelayMinutes + incidentDelay + liveDelay;
 
-    const redCount = route.cameras.filter((x) => x.status === 'retencion').length;
-    const yellowCount = route.cameras.filter((x) => x.status === 'denso').length;
+    const redCount =
+      route.cameras.filter((x) => x.status === 'retencion').length + liveStations.filter((x) => x.status === 'retencion').length;
+    const yellowCount =
+      route.cameras.filter((x) => x.status === 'denso').length + liveStations.filter((x) => x.status === 'denso').length;
     const severeIncident = routeIncidents.some((a) => a.severity === 'alta');
 
     let status: CalculatedRoute['status'] = 'fluido';
@@ -562,6 +572,8 @@ export function applyIncidents(routes: CalculatedRoute[], incidents: TrafficAler
       ...route,
       incidents: routeIncidents,
       incidentDelayMinutes: incidentDelay,
+      liveStations,
+      liveDelayMinutes: liveDelay,
       trafficDelayMinutes,
       totalMinutes: Math.max(route.baseMinutes + trafficDelayMinutes, 1),
       status,

@@ -53,9 +53,9 @@ const normRoad = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
 // With turn-by-turn steps we also require that the route really uses the camera's road
 // (OSRM gives the road number in `ref`, e.g. "A-70"): a cabin on a motorway must not
 // warn a driver on a side street or a roundabout a few meters away.
-function usesRoad(route: Pick<CalculatedRoute, 'steps'>, radar: Radar, lat: number, lng: number): boolean {
+export function routeUsesRoad(route: Partial<Pick<CalculatedRoute, 'steps'>>, roadNumber: string, lat: number, lng: number): boolean {
   if (!route.steps || route.steps.length === 0) return true;
-  const road = normRoad(radar.road);
+  const road = normRoad(roadNumber);
   if (!road) return true;
   return route.steps.some((step) => {
     const refs = `${step.ref || ''};${step.name || ''}`.split(/[;,/]/).map(normRoad);
@@ -70,7 +70,7 @@ export function radarsAlongRoute(route: Pick<CalculatedRoute, 'coordinates' | 'i
   for (const radar of radars) {
     const start = projectOnRoute(idx, radar.lat, radar.lng);
     if (start.offsetMeters > ON_ROUTE_METERS) continue;
-    if (!usesRoad(route as Pick<CalculatedRoute, 'steps'>, radar, radar.lat, radar.lng)) continue;
+    if (!routeUsesRoad(route, radar.road, radar.lat, radar.lng)) continue;
     if (radar.type === 'tramo' && radar.endLat !== undefined && radar.endLng !== undefined) {
       const end = projectOnRoute(idx, radar.endLat, radar.endLng);
       // The section counts only if the route also reaches its end, after its start
