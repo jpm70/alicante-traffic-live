@@ -274,6 +274,9 @@ export const OSM_REQUEST_INIT: RequestInit = { referrerPolicy: 'strict-origin-wh
 export async function fetchWithTimeout(url: string, timeoutMs: number, init: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  // A caller's own signal (e.g. a search superseded by more typing) also cancels it
+  init.signal?.addEventListener('abort', () => controller.abort());
+  if (init.signal?.aborted) controller.abort();
   try {
     // Only CORS-safelisted headers here: a custom header (e.g. User-Agent) triggers a
     // preflight that OSRM rejects, which broke routing completely in Firefox.

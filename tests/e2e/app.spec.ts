@@ -19,6 +19,34 @@ test('calcula una ruta real por calles (no una línea recta)', async ({ page }) 
   expect(vertices).toBeGreaterThan(10);
 });
 
+test('busca el destino escribiendo la calle (en castellano o en valenciano)', async ({ page }) => {
+  await openApp(page);
+  // Longest line on the map: the route
+  const routeLine = () =>
+    page.locator('.leaflet-overlay-pane path').evaluateAll((paths) =>
+      paths.map((p) => p.getAttribute('d') || '').sort((a, b) => b.length - a.length)[0]
+    );
+  const before = await routeLine();
+  const destination = page.getByRole('combobox', { name: 'Punto de Llegada (Destino)' });
+  await destination.click();
+  await destination.fill('alfons el savi');
+  const option = page.getByRole('option', { name: /Avenida Alfonso El Sabio.*Alicante/ }).first();
+  await expect(option).toBeVisible({ timeout: 20_000 });
+
+  // On a phone the search is full screen, so the map cannot cover the list
+  const listbox = page.getByRole('listbox');
+  const box = await listbox.boundingBox();
+  const viewport = page.viewportSize()!;
+  if (viewport.width < 1024) expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+
+  await option.click();
+  await expect(listbox).toHaveCount(0);
+  await expect(destination).toHaveValue('Avenida Alfonso El Sabio, Alicante');
+  // The route is calculated again to the new destination
+  await expect.poll(routeLine, { timeout: 45_000 }).not.toBe(before);
+  await expect(page.getByText(/Tiempo base: motor de rutas/)).toBeVisible({ timeout: 45_000 });
+});
+
 test('la página cabe en el ancho del móvil', async ({ page }) => {
   await openApp(page);
   const { scrollWidth, innerWidth } = await page.evaluate(() => ({
