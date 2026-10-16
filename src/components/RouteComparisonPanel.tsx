@@ -204,7 +204,7 @@ ${advice}`;
   return (
     <div className="space-y-3.5">
       {/* Top Winner Card: Fastest Route */}
-      <div className="bg-gradient-to-br from-emerald-950/60 via-slate-900 to-slate-900 border-2 border-emerald-500/60 rounded-xl p-4 shadow-xl relative overflow-hidden">
+      <div data-tour="route-summary" className="bg-gradient-to-br from-emerald-950/60 via-slate-900 to-slate-900 border-2 border-emerald-500/60 rounded-xl p-4 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
@@ -359,7 +359,7 @@ ${advice}`;
         )}
 
         {/* Action Buttons: GPS Navigator, View on wall & Tour 3D / Cameras */}
-        <div className="space-y-2">
+        <div className="space-y-2" data-tour="route-actions">
           {/* NAVIGATION BUTTONS GRID (In-Car Navigation & Android Auto) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <button
