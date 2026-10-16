@@ -169,7 +169,7 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
         </div>
       )}
 
-      <div className="space-y-2.5 relative">
+      <div className="space-y-2.5 relative" data-tour="planner-points">
         {/* Origin Selector */}
         <PlaceSearchInput
           label="Punto de Partida (Origen)"
@@ -246,33 +246,35 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
         </PlaceSearchInput>
       </div>
 
-      {/* Calculate Button */}
-      <button
-        onClick={onCalculateRoute}
-        disabled={isCalculating}
-        className="w-full mt-3 py-2.5 px-4 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
-      >
-        <Compass className={`w-4 h-4 ${isCalculating ? 'animate-spin' : ''}`} />
-        <span>{isCalculating ? 'Analizando Cámaras y Tráfico...' : 'Calcular Camino Más Rápido'}</span>
-      </button>
+      <div data-tour="planner-presets">
+        {/* Calculate Button */}
+        <button
+          onClick={onCalculateRoute}
+          disabled={isCalculating}
+          className="w-full mt-3 py-2.5 px-4 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+        >
+          <Compass className={`w-4 h-4 ${isCalculating ? 'animate-spin' : ''}`} />
+          <span>{isCalculating ? 'Analizando Cámaras y Tráfico...' : 'Calcular Camino Más Rápido'}</span>
+        </button>
 
-      {/* Presets Tray */}
-      <div className="mt-3.5 pt-3 border-t border-slate-800">
-        <div className="text-[10px] font-mono uppercase text-slate-400 tracking-wider mb-2 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-cyan-400" />
-          <span>Trayectos Habituales de Alicante:</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {PRESET_JOURNEYS.map((p, idx) => (
-            <button
-              key={idx}
-              onClick={() => applyPreset(p)}
-              className="text-[11px] px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-800 hover:border-cyan-500/40 transition-colors truncate max-w-full"
-              title={`${p.title} (${p.desc})`}
-            >
-              {p.title}
-            </button>
-          ))}
+        {/* Presets Tray */}
+        <div className="mt-3.5 pt-3 border-t border-slate-800">
+          <div className="text-[10px] font-mono uppercase text-slate-400 tracking-wider mb-2 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <span>Trayectos Habituales de Alicante:</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESET_JOURNEYS.map((p, idx) => (
+              <button
+                key={idx}
+                onClick={() => applyPreset(p)}
+                className="text-[11px] px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-800 hover:border-cyan-500/40 transition-colors truncate max-w-full"
+                title={`${p.title} (${p.desc})`}
+              >
+                {p.title}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

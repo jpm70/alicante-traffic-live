@@ -39,6 +39,8 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 
 ## 🌟 Características Principales
 
+> **¿Primera vez?** Al abrir la app se ofrece un **tour guiado opcional** (menos de un minuto) que resalta cada zona de la pantalla: origen y destino, cálculo de la ruta, resumen con tráfico real, GPS / 3D / cámaras, el mapa, las vistas y las herramientas rápidas. Se puede saltar, se maneja con el teclado (← → Esc) y se repite cuando quieras con el botón **?** (*Ayuda*) de la cabecera. Nunca aparece sobre el navegador GPS, el modo coche ni el salpicadero de taxi.
+
 ### 🗺️ 1. Planificador de Rutas en Alicante
 - **Buscador de calles y lugares**: en el origen y el destino basta con escribir. Las sugerencias salen al instante del callejero de OpenStreetMap del área metropolitana (unas 4.700 calles de Alicante, San Vicente, San Juan, Mutxamel, El Campello…), en castellano o en valenciano, sin tildes y sin escribir el tipo de vía («maisonnave», «alfons el savi», «plaza luceros»). Con un número detrás («alfonso el sabio 10») se busca el portal; si OpenStreetMap no lo tiene, se avisa y se usa un punto de la calle. También aparecen lugares (hospitales, centros comerciales…) gracias a [Photon](https://photon.komoot.io). En el móvil la búsqueda se abre a pantalla completa, así ni el teclado ni el mapa tapan los resultados.
 - **Rutas reales por calles**: trazado, distancia, tiempo base e indicaciones giro a giro con nombres de calle del motor [OSRM](https://project-osrm.org/) (servidor público y espejo FOSSGIS como respaldo). Si ningún servidor responde, la app lo dice y dibuja una línea punteada marcada como *trazado aproximado*, nunca una recta disfrazada de ruta.

@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Sparkles,
   Key,
+  HelpCircle,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -35,6 +36,7 @@ interface HeaderProps {
   hasUserAiKey?: boolean;
   isPublicTransportMode?: boolean;
   onTogglePublicTransportMode?: () => void;
+  onOpenHelp?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -55,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
   hasUserAiKey = false,
   isPublicTransportMode = false,
   onTogglePublicTransportMode,
+  onOpenHelp,
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 text-slate-100 px-3 sm:px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 shadow-lg">
@@ -102,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Center: View Switcher */}
-      <div className="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800">
+      <div className="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800" data-tour="view-switcher">
         <button
           onClick={() => setActiveTab('map')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
@@ -175,7 +178,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right controls: GPS Nav, Tour Button, Rush Hour switch & Refresh Countdown */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3 max-w-full">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 max-w-full" data-tour="header-tools">
         {/* GPS Navigator Quick Launch Button */}
         {hasActiveRoute && onStartGpsNavigation && (
           <button
@@ -254,6 +257,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* PWA Install Button for mobile / Android Auto */}
         <PWAInstallButton />
+
+        {/* Guided tour of the app */}
+        {onOpenHelp && (
+          <button
+            onClick={onOpenHelp}
+            data-tour="help-button"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border bg-slate-900 border-slate-800 text-slate-400 hover:text-cyan-300 hover:border-cyan-500/50 transition-all"
+            title="Ver el tour: cómo funciona la app"
+            aria-label="Ver el tour de cómo funciona la app"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden lg:inline">Ayuda</span>
+          </button>
+        )}
 
         {/* Auto-refresh timer */}
         <div className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 px-2.5 py-1.5 rounded-md text-xs font-mono text-slate-300">

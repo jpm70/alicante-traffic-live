@@ -741,6 +741,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   return (
     <div
+      data-tour="map"
       className={`relative w-full h-full min-h-[420px] rounded-xl overflow-hidden border border-slate-800 shadow-2xl ${
         isModalOpen ? 'hidden pointer-events-none' : ''
       }`}

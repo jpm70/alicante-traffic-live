@@ -1,5 +1,11 @@
 import { expect, test, Page } from '@playwright/test';
 
+// The first-visit welcome covers the page: these checks start as a returning visitor
+// (the onboarding itself is covered in onboarding.spec.ts)
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('alicante_onboarding_v1', 'done'));
+});
+
 // Waits until the route panel shows a calculated route
 async function openApp(page: Page) {
   await page.goto('./');

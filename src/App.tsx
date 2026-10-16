@@ -33,6 +33,7 @@ import { DemandRadarModal } from './components/DemandRadarModal';
 import { TaxiDashboardModal } from './components/TaxiDashboardModal';
 import { LocalClosuresModal } from './components/LocalClosuresModal';
 import { TaxiStand } from './data/publicTransport';
+import { OnboardingTour, OnboardingWelcome, hasSeenOnboarding, ONBOARDING_STORAGE_KEY } from './components/OnboardingTour';
 import { ShieldAlert, Navigation, ChevronRight, Share2, X, Check, Compass, ExternalLink } from 'lucide-react';
 
 // Heavy views loaded on demand: the 3D tour pulls in three.js (~600 kB), which phones
@@ -228,6 +229,38 @@ export default function App() {
   );
 
   const [gpsCarMode, setGpsCarMode] = useState<boolean>(false);
+
+  // Onboarding: optional welcome on the first visit and a guided tour (also from the "?" button)
+  const [showWelcome, setShowWelcome] = useState<boolean>(false);
+  const [isTourActive, setIsTourActive] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (hasSeenOnboarding()) return;
+    // Let the first route render before offering the tour
+    const id = window.setTimeout(() => setShowWelcome(true), 1200);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const handleStartTour = useCallback(() => {
+    setShowWelcome(false);
+    setIsTourActive(true);
+  }, []);
+
+  const handleDismissWelcome = useCallback(() => {
+    setShowWelcome(false);
+    try {
+      localStorage.setItem(ONBOARDING_STORAGE_KEY, 'dismissed');
+    } catch {
+      // Storage blocked
+    }
+  }, []);
+
+  // Every tour step lives in the map view, with the route planner open
+  const handlePrepareTourStep = useCallback(() => {
+    setActiveTab('map');
+    setSidebarTab('planner');
+    setIsPickOnMapActive(null);
+  }, []);
 
   const handleStartGpsNavigation = useCallback(
     (routeToNavigate?: CalculatedRoute, options?: { carMode?: boolean }) => {
@@ -507,6 +540,7 @@ export default function App() {
         hasUserAiKey={hasUserAiKey}
         isPublicTransportMode={isPublicTransportMode}
         onTogglePublicTransportMode={() => setIsPublicTransportMode(!isPublicTransportMode)}
+        onOpenHelp={handleStartTour}
       />
 
       {/* Public Transport & Taxi Suite Controller (Only shown in Public Transport Mode) */}
@@ -931,6 +965,14 @@ export default function App() {
             handleMapClickSetPoint({ lat: stand.lat, lng: stand.lng }, 'destination');
           }}
         />
+      )}
+
+      {/* Onboarding: first-visit welcome and guided tour (never over the GPS, 3D or other modals) */}
+      {showWelcome && !isTourActive && !isAnyModalActive && (
+        <OnboardingWelcome onStart={handleStartTour} onDismiss={handleDismissWelcome} />
+      )}
+      {isTourActive && !isAnyModalActive && (
+        <OnboardingTour onPrepareStep={handlePrepareTourStep} onClose={() => setIsTourActive(false)} />
       )}
 
       {/* Public Transport: Local Closures and Alicante Fiestas Modal */}
