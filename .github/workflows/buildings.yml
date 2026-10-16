@@ -1,6 +1,7 @@
 name: Update OpenStreetMap buildings
 
-# Monthly refresh of the 3D buildings (public/buildings) from OpenStreetMap.
+# Monthly refresh of the 3D buildings (public/buildings) and of the street index for the
+# address search (public/geo/streets.json) from OpenStreetMap.
 # Overpass is often busy, so the job is slow and long; parts that do not answer keep
 # the buildings already published. If anything changed it is committed to main, and
 # the next scheduled deploy (every 15 min) publishes it.
@@ -33,15 +34,29 @@ jobs:
       - name: Download buildings from Overpass
         run: bun scripts/build-buildings.ts
 
-      - name: Commit if the buildings changed
+      # A failure keeps the published index and must not stop the buildings commit
+      - name: Download the street index from Overpass
+        run: bun scripts/build-streets.ts
+        continue-on-error: true
+
+      - name: Commit if the buildings or the streets changed
         run: |
+          # The index files carry the generation date: only real changes count
           if git diff --quiet -- public/buildings/15 && [ -z "$(git ls-files --others --exclude-standard public/buildings)" ]; then
-            echo "Sin cambios en los edificios."
             git checkout -- public/buildings
+          fi
+          if ! git diff --quiet -- public/geo/streets.json; then
+            git show HEAD:public/geo/streets.json > "$RUNNER_TEMP/streets-old.json"
+            if node -e 'const f = (p) => JSON.stringify(JSON.parse(require("fs").readFileSync(p, "utf8")).streets); process.exit(f(process.argv[1]) === f(process.argv[2]) ? 0 : 1)' "$RUNNER_TEMP/streets-old.json" public/geo/streets.json; then
+              git checkout -- public/geo/streets.json
+            fi
+          fi
+          if [ -z "$(git status --porcelain -- public/buildings public/geo)" ]; then
+            echo "Sin cambios en los edificios ni en el callejero."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/buildings
-          git commit -m "chore: actualizar edificios de OpenStreetMap ($(date -u +%Y-%m))"
+          git add public/buildings public/geo
+          git commit -m "chore: actualizar edificios y callejero de OpenStreetMap ($(date -u +%Y-%m))"
           git push

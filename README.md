@@ -40,6 +40,7 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 ## 🌟 Características Principales
 
 ### 🗺️ 1. Planificador de Rutas en Alicante
+- **Buscador de calles y lugares**: en el origen y el destino basta con escribir. Las sugerencias salen al instante del callejero de OpenStreetMap del área metropolitana (unas 4.700 calles de Alicante, San Vicente, San Juan, Mutxamel, El Campello…), en castellano o en valenciano, sin tildes y sin escribir el tipo de vía («maisonnave», «alfons el savi», «plaza luceros»). Con un número detrás («alfonso el sabio 10») se busca el portal; si OpenStreetMap no lo tiene, se avisa y se usa un punto de la calle. También aparecen lugares (hospitales, centros comerciales…) gracias a [Photon](https://photon.komoot.io). En el móvil la búsqueda se abre a pantalla completa, así ni el teclado ni el mapa tapan los resultados.
 - **Rutas reales por calles**: trazado, distancia, tiempo base e indicaciones giro a giro con nombres de calle del motor [OSRM](https://project-osrm.org/) (servidor público y espejo FOSSGIS como respaldo). Si ningún servidor responde, la app lo dice y dibuja una línea punteada marcada como *trazado aproximado*, nunca una recta disfrazada de ruta.
 - **Rutas alternativas**: alternativas del propio motor más corredores de Alicante (Litoral, Gran Vía, Vía Parque) cuando el desvío es razonable; se descartan las que repiten el mismo trazado.
 - **Radares DGT** en el mapa y en el resumen de la ruta (carretera y punto kilométrico).
@@ -172,7 +173,9 @@ npm run test:e2e    # la app compilada en un móvil (Chromium) y en Firefox
 ```
 Los tests e2e usan los servicios públicos reales (OSRM, mapas, OpenStreetMap). En GitHub se ejecutan en cada pull request (`.github/workflows/ci.yml`); el despliegue solo publica si pasan la comprobación de tipos y los tests unitarios.
 
-### Edificios 3D
+### Edificios 3D y callejero
+El callejero del buscador (`public/geo/streets.json`, `npm run streets`) se regenera en el mismo workflow mensual y solo se publica si cambia alguna calle.
+
 Los edificios de OpenStreetMap del área metropolitana de Alicante están pre-generados en `public/buildings/` (teselas pequeñas que el 3D descarga según la ruta). Se regeneran solos el día 1 de cada mes (`.github/workflows/buildings.yml`, también se puede lanzar a mano desde *Actions*): si algo cambió en OpenStreetMap, el workflow hace commit en `main` y el siguiente despliegue lo publica. Overpass suele ir saturado, así que las zonas que no responden conservan los edificios ya publicados, y si no responde ninguna no se toca nada. Para regenerarlos en local:
 ```bash
 npm run buildings
@@ -186,7 +189,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 ```text
 ├── .github/workflows/
 │   ├── deploy.yml            # Build y despliegue en GitHub Pages (push a main y cada 15 min)
-│   ├── buildings.yml         # Regenera los edificios OSM el día 1 de cada mes
+│   ├── buildings.yml         # Regenera los edificios y el callejero OSM el día 1 de cada mes
 │   ├── gemini-check.yml      # Comprueba cada lunes que el modelo de Gemini sigue existiendo
 │   └── ci.yml                # Tests en cada pull request
 ├── docs/
@@ -197,6 +200,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   └── fixtures/             # Extractos reales de los feeds DATEX II de la DGT
 ├── public/                   # Activos estáticos, iconos PWA y manifiesto
 │   ├── buildings/            # Edificios OSM pre-generados en teselas (mensual)
+│   ├── geo/streets.json      # Callejero para el buscador de direcciones (mensual)
 │   ├── manifest.json         # Configuración PWA
 │   ├── sw.js                 # Service Worker (solo cachea recursos propios)
 │   └── icono.png             # Icono de la aplicación
@@ -207,11 +211,13 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   ├── dgtDetectors.ts       # Detectores DGT: velocidad, intensidad y ocupación por punto y sentido
 │   ├── trafficHistory.ts     # Histórico de velocidad por franja de 15 min (data/history.json)
 │   ├── build-buildings.ts    # Genera public/buildings desde Overpass
+│   ├── build-streets.ts      # Genera el callejero del buscador (public/geo/streets.json)
 │   └── check-gemini.ts       # Comprobación del modelo de Gemini fijado
 ├── src/
 │   ├── components/           # Componentes modulares de interfaz de usuario
 │   │   ├── InteractiveMap.tsx          # Mapa Leaflet con capas y marcadores
 │   │   ├── RouteSelector.tsx           # Selección de puntos de origen y destino
+│   │   ├── PlaceSearchInput.tsx        # Buscador con sugerencias de calles y lugares
 │   │   ├── RouteComparisonPanel.tsx    # Comparativa de rutas y taxímetro
 │   │   ├── RouteTourModal.tsx          # Modal contenedor del tour virtual
 │   │   ├── StreetViewTourView.tsx      # Visor Street View con HUD y minimapa
@@ -231,6 +237,8 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   ├── services/
 │   │   ├── routing.ts         # Rutas OSRM, cámaras en ruta, estimación de retenciones e incidencias
 │   │   ├── geometry.ts        # Distancias, proyección sobre la ruta y simplificación
+│   │   ├── addressSearch.ts   # Buscador: callejero propio + Photon (lugares y portales)
+│   │   ├── mapOrientation.ts  # Mapa del GPS con norte o rumbo arriba
 │   │   ├── navigationManeuvers.ts # Maniobras en español a partir de los pasos de OSRM
 │   │   ├── osmBuildings.ts    # Edificios: teselas estáticas u Overpass en directo
 │   │   ├── radars.ts          # Radares DGT a lo largo de la ruta
@@ -270,6 +278,7 @@ Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub puede ret
 - **Velocidad medida**: DGT, detectores de tráfico (nap.dgt.es, DATEX II MeasuredDataPublication).
 - **Rutas**: OSRM sobre datos de OpenStreetMap (router.project-osrm.org y routing.openstreetmap.de de FOSSGIS).
 - **3D**: ortofoto y rótulos © Esri; edificios © colaboradores de OpenStreetMap (ODbL) vía Overpass API.
+- **Buscador de direcciones**: callejero © colaboradores de OpenStreetMap (ODbL) vía Overpass API; lugares y números de portal con [Photon](https://photon.komoot.io) (Komoot, datos de OpenStreetMap).
 - **Tarifas Oficiales de Taxi**: Reguladas por el Ayuntamiento de Alicante y la Conselleria de Medio Ambiente, Agua, Infraestructuras y Territorio (Generalitat Valenciana).
 - **Cartografía**: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
 

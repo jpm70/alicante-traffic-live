@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { ALICANTE_LANDMARKS, Landmark } from '../data/cameras';
+import { ALICANTE_LANDMARKS } from '../data/cameras';
+import { PlaceSearchInput } from './PlaceSearchInput';
 import { RoutePoint, fetchWithTimeout, OSM_REQUEST_INIT } from '../services/routing';
 import {
   ArrowDownUp,
   MapPin,
   Navigation,
   Compass,
-  Search,
   Sparkles,
   Crosshair,
   Loader2,
@@ -69,10 +69,6 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
   isPickOnMapActive,
   setIsPickOnMapActive,
 }) => {
-  const [originSearch, setOriginSearch] = useState('');
-  const [destSearch, setDestSearch] = useState('');
-  const [showOriginDropdown, setShowOriginDropdown] = useState(false);
-  const [showDestDropdown, setShowDestDropdown] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [locationSuccess, setLocationSuccess] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -141,28 +137,6 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
     );
   };
 
-  const filteredOriginLandmarks = ALICANTE_LANDMARKS.filter((l) =>
-    l.name.toLowerCase().includes(originSearch.toLowerCase()) ||
-    l.zone.toLowerCase().includes(originSearch.toLowerCase())
-  );
-
-  const filteredDestLandmarks = ALICANTE_LANDMARKS.filter((l) =>
-    l.name.toLowerCase().includes(destSearch.toLowerCase()) ||
-    l.zone.toLowerCase().includes(destSearch.toLowerCase())
-  );
-
-  const selectOrigin = (l: Landmark) => {
-    onOriginChange({ lat: l.lat, lng: l.lng, name: l.name });
-    setShowOriginDropdown(false);
-    setOriginSearch('');
-  };
-
-  const selectDest = (l: Landmark) => {
-    onDestinationChange({ lat: l.lat, lng: l.lng, name: l.name });
-    setShowDestDropdown(false);
-    setDestSearch('');
-  };
-
   const applyPreset = (preset: typeof PRESET_JOURNEYS[0]) => {
     onOriginChange({ lat: preset.origin.lat, lng: preset.origin.lng, name: preset.origin.name });
     onDestinationChange({ lat: preset.dest.lat, lng: preset.dest.lng, name: preset.dest.name });
@@ -197,89 +171,46 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
 
       <div className="space-y-2.5 relative">
         {/* Origin Selector */}
-        <div className="relative">
-          <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 focus-within:border-emerald-500/70 rounded-lg px-3 py-2 transition-all">
-            <span className="flex-shrink-0 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20" />
-            <div className="flex-1 min-w-0">
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400">
-                Punto de Partida (Origen)
-              </label>
-              <input
-                type="text"
-                value={showOriginDropdown ? originSearch : origin.name}
-                onFocus={() => {
-                  setShowOriginDropdown(true);
-                  setOriginSearch('');
-                }}
-                onChange={(e) => setOriginSearch(e.target.value)}
-                placeholder="Seleccionar o escribir ubicación en Alicante..."
-                className="w-full bg-transparent text-sm font-semibold text-white focus:outline-none placeholder-slate-500 truncate"
-              />
-            </div>
+        <PlaceSearchInput
+          label="Punto de Partida (Origen)"
+          value={origin.name}
+          placeholder="Escribe una calle o un lugar de Alicante..."
+          accent="emerald"
+          onSelect={onOriginChange}
+        >
+          {/* GPS Detect My Location Button */}
+          <button
+            onClick={handleDetectLocation}
+            disabled={isLocating}
+            className={`p-1.5 rounded-md border text-xs transition-all flex items-center gap-1 ${
+              isLocating
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-bold'
+                : 'bg-slate-800/80 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 border-slate-700'
+            }`}
+            title="Detectar mi ubicación actual como punto de partida (GPS)"
+            aria-label="Usar mi ubicación como origen"
+          >
+            {isLocating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+            ) : (
+              <Crosshair className="w-3.5 h-3.5" />
+            )}
+          </button>
 
-            {/* GPS Detect My Location Button */}
-            <button
-              onClick={handleDetectLocation}
-              disabled={isLocating}
-              className={`p-1.5 rounded-md border text-xs transition-all flex items-center gap-1 ${
-                isLocating
-                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-bold'
-                  : 'bg-slate-800/80 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 border-slate-700'
-              }`}
-              title="Detectar mi ubicación actual como punto de partida (GPS)"
-            >
-              {isLocating ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
-              ) : (
-                <Crosshair className="w-3.5 h-3.5" />
-              )}
-            </button>
-
-            {/* Pick on Map Button */}
-            <button
-              onClick={() => setIsPickOnMapActive(isPickOnMapActive === 'origin' ? null : 'origin')}
-              className={`p-1.5 rounded-md border text-xs transition-colors ${
-                isPickOnMapActive === 'origin'
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
-                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700'
-              }`}
-              title="Seleccionar punto directamente en el mapa de Alicante"
-            >
-              <MapPin className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Origin Dropdown Autocomplete */}
-          {showOriginDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-[#1e293b] border border-slate-700 rounded-lg shadow-2xl max-h-56 overflow-y-auto divide-y divide-slate-800">
-              <div className="p-2 text-[11px] text-slate-400 font-medium bg-slate-900/60 flex items-center justify-between">
-                <span>Lugares populares de Alicante</span>
-                <button
-                  onClick={() => setShowOriginDropdown(false)}
-                  className="text-slate-400 hover:text-white text-xs px-1"
-                >
-                  ✕ Cerrar
-                </button>
-              </div>
-              {filteredOriginLandmarks.length > 0 ? (
-                filteredOriginLandmarks.map((l) => (
-                  <button
-                    key={l.name}
-                    onClick={() => selectOrigin(l)}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800/90 flex items-center justify-between transition-colors"
-                  >
-                    <span className="font-medium text-slate-200">{l.name}</span>
-                    <span className="text-[10px] text-slate-400 font-mono bg-slate-800 px-1.5 py-0.5 rounded">
-                      {l.zone}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <div className="p-3 text-xs text-slate-400 text-center">No se encontraron ubicaciones</div>
-              )}
-            </div>
-          )}
-        </div>
+          {/* Pick on Map Button */}
+          <button
+            onClick={() => setIsPickOnMapActive(isPickOnMapActive === 'origin' ? null : 'origin')}
+            className={`p-1.5 rounded-md border text-xs transition-colors ${
+              isPickOnMapActive === 'origin'
+                ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
+                : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700'
+            }`}
+            title="Seleccionar punto directamente en el mapa de Alicante"
+            aria-label="Marcar el origen en el mapa"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+          </button>
+        </PlaceSearchInput>
 
         {/* Swap Button Divider */}
         <div className="flex items-center justify-center -my-1 z-10 relative">
@@ -293,69 +224,26 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
         </div>
 
         {/* Destination Selector */}
-        <div className="relative">
-          <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 focus-within:border-rose-500/70 rounded-lg px-3 py-2 transition-all">
-            <span className="flex-shrink-0 w-3 h-3 rounded-full bg-rose-500 ring-4 ring-rose-500/20" />
-            <div className="flex-1 min-w-0">
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400">
-                Punto de Llegada (Destino)
-              </label>
-              <input
-                type="text"
-                value={showDestDropdown ? destSearch : destination.name}
-                onFocus={() => {
-                  setShowDestDropdown(true);
-                  setDestSearch('');
-                }}
-                onChange={(e) => setDestSearch(e.target.value)}
-                placeholder="Seleccionar o escribir destino en Alicante..."
-                className="w-full bg-transparent text-sm font-semibold text-white focus:outline-none placeholder-slate-500 truncate"
-              />
-            </div>
-            <button
-              onClick={() => setIsPickOnMapActive(isPickOnMapActive === 'destination' ? null : 'destination')}
-              className={`p-1.5 rounded-md border text-xs transition-colors ${
-                isPickOnMapActive === 'destination'
-                  ? 'bg-rose-500 text-white border-rose-400 font-bold'
-                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700'
-              }`}
-              title="Seleccionar destino directamente en el mapa"
-            >
-              <MapPin className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Destination Dropdown Autocomplete */}
-          {showDestDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-[#1e293b] border border-slate-700 rounded-lg shadow-2xl max-h-56 overflow-y-auto divide-y divide-slate-800">
-              <div className="p-2 text-[11px] text-slate-400 font-medium bg-slate-900/60 flex items-center justify-between">
-                <span>Lugares populares de Alicante</span>
-                <button
-                  onClick={() => setShowDestDropdown(false)}
-                  className="text-slate-400 hover:text-white text-xs px-1"
-                >
-                  ✕ Cerrar
-                </button>
-              </div>
-              {filteredDestLandmarks.length > 0 ? (
-                filteredDestLandmarks.map((l) => (
-                  <button
-                    key={l.name}
-                    onClick={() => selectDest(l)}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-slate-800/90 flex items-center justify-between transition-colors"
-                  >
-                    <span className="font-medium text-slate-200">{l.name}</span>
-                    <span className="text-[10px] text-slate-400 font-mono bg-slate-800 px-1.5 py-0.5 rounded">
-                      {l.zone}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <div className="p-3 text-xs text-slate-400 text-center">No se encontraron ubicaciones</div>
-              )}
-            </div>
-          )}
-        </div>
+        <PlaceSearchInput
+          label="Punto de Llegada (Destino)"
+          value={destination.name}
+          placeholder="Escribe una calle o un lugar de destino..."
+          accent="rose"
+          onSelect={onDestinationChange}
+        >
+          <button
+            onClick={() => setIsPickOnMapActive(isPickOnMapActive === 'destination' ? null : 'destination')}
+            className={`p-1.5 rounded-md border text-xs transition-colors ${
+              isPickOnMapActive === 'destination'
+                ? 'bg-rose-500 text-white border-rose-400 font-bold'
+                : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-slate-700'
+            }`}
+            title="Seleccionar destino directamente en el mapa"
+            aria-label="Marcar el destino en el mapa"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+          </button>
+        </PlaceSearchInput>
       </div>
 
       {/* Calculate Button */}
