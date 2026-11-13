@@ -5,6 +5,7 @@ import { CalculatedRoute, RoutePoint } from '../services/routing';
 import { TrafficAlert } from '../data/trafficAlerts';
 import { Radar, describeRadar } from '../services/radars';
 import { LiveStation, liveStatus, describeStation } from '../services/liveTraffic';
+import { escapeHtml } from '../services/dataAge';
 import { ALICANTE_TAXI_STANDS, TaxiStand, ALICANTE_LOCAL_CLOSURES } from '../data/publicTransport';
 
 type MapStyle = 'dark' | 'streets' | 'satellite';
@@ -256,10 +257,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
 
     const mOrigin = L.marker([origin.lat, origin.lng], { icon: originIcon }).addTo(map);
-    mOrigin.bindTooltip(`<b>${isMyLocation ? 'Tu Ubicación Actual' : 'Origen'}:</b><br/>${origin.name}`, { direction: 'top', offset: [0, -10] });
+    mOrigin.bindTooltip(`<b>${isMyLocation ? 'Tu Ubicación Actual' : 'Origen'}:</b><br/>${escapeHtml(origin.name)}`, { direction: 'top', offset: [0, -10] });
 
     const mDest = L.marker([destination.lat, destination.lng], { icon: destIcon }).addTo(map);
-    mDest.bindTooltip(`<b>Destino:</b><br/>${destination.name}`, { direction: 'top', offset: [0, -10] });
+    mDest.bindTooltip(`<b>Destino:</b><br/>${escapeHtml(destination.name)}`, { direction: 'top', offset: [0, -10] });
 
     pinMarkersRef.current = [mOrigin, mDest];
 
@@ -305,7 +306,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       poly.on('click', () => onSelectRoute(route.id));
 
       poly.bindTooltip(
-        `<b>${route.name}</b><br/>${route.isApproximate ? 'Trazado aproximado · ' : ''}${route.totalMinutes} min · ${route.distanceKm} km · ${route.cameras.length} cámaras`,
+        `<b>${escapeHtml(route.name)}</b><br/>${route.isApproximate ? 'Trazado aproximado · ' : ''}${route.totalMinutes} min · ${route.distanceKm} km · ${route.cameras.length} cámaras`,
         { sticky: true }
       );
 
@@ -474,28 +475,28 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <div style="min-width: 230px; font-family: system-ui, sans-serif; line-height: 1.4;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
             <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: ${iconBg}; color: white; padding: 2px 6px; border-radius: 4px; font-family: monospace;">
-              ${alert.type.toUpperCase()} · ${alert.severity.toUpperCase()}
+              ${escapeHtml(alert.type.toUpperCase())} · ${escapeHtml(alert.severity.toUpperCase())}
             </span>
             <span style="font-size: 11px; font-weight: 800; color: #f59e0b; font-family: monospace;">
-              +${alert.delayMin} min
+              +${Number(alert.delayMin) || 0} min
             </span>
           </div>
 
           <div style="font-weight: 800; font-size: 13px; color: #f8fafc; margin-bottom: 4px;">
-            ${alert.title}
+            ${escapeHtml(alert.title)}
           </div>
 
           <div style="font-size: 11px; color: #38bdf8; font-weight: 600; margin-bottom: 6px;">
-            📍 ${alert.street}
+            📍 ${escapeHtml(alert.street)}
           </div>
 
           <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(51, 65, 85, 0.8); border-radius: 6px; padding: 6px 8px; font-size: 11px; color: #cbd5e1; margin-bottom: 6px;">
-            ${alert.description}
+            ${escapeHtml(alert.description)}
           </div>
 
           <div style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: #94a3b8; font-family: monospace;">
-            <span>${alert.source}</span>
-            <span>${alert.timestamp}</span>
+            <span>${escapeHtml(alert.source)}</span>
+            <span>${escapeHtml(alert.timestamp)}</span>
           </div>
         </div>
       `;
@@ -554,7 +555,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     radars.forEach((radar) => {
       const marker = L.marker([radar.lat, radar.lng], { icon: radarIcon, zIndexOffset: 400 }).addTo(map);
-      marker.bindTooltip(`<b>${describeRadar(radar)}</b><br/><span style="font-size:11px">Inventario oficial DGT</span>`, { direction: 'top', offset: [0, -8] });
+      marker.bindTooltip(`<b>${escapeHtml(describeRadar(radar))}</b><br/><span style="font-size:11px">Inventario oficial DGT</span>`, { direction: 'top', offset: [0, -8] });
       radarLayersRef.current.push(marker);
       if (radar.type === 'tramo' && radar.endLat !== undefined && radar.endLng !== undefined) {
         const line = L.polyline([[radar.lat, radar.lng], [radar.endLat, radar.endLng]], { color: '#dc2626', weight: 3, dashArray: '4, 6', opacity: 0.8 }).addTo(map);
@@ -575,7 +576,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const marker = L.marker([st.lat, st.lng], {
         icon: L.divIcon({
           className: 'dgt-live-station',
-          html: `<div style="min-width:30px;height:18px;padding:0 4px;border-radius:9px;background:${colors[status]};border:2px solid #0f172a;color:#0f172a;font:700 10px/14px monospace;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.5)">${st.speed ?? '–'}</div>`,
+          html: `<div style="min-width:30px;height:18px;padding:0 4px;border-radius:9px;background:${colors[status]};border:2px solid #0f172a;color:#0f172a;font:700 10px/14px monospace;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.5)">${st.speed !== null ? Number(st.speed) : '–'}</div>`,
           iconSize: [34, 18],
           iconAnchor: [17, 9],
         }),
@@ -583,9 +584,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       }).addTo(map);
       const time = st.time ? new Date(st.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
       marker.bindTooltip(
-        `<b>${describeStation(st)}</b> (sentido ${st.dir === '+' ? 'km creciente' : st.dir === '-' ? 'km decreciente' : '—'})<br/>` +
-          (st.speed !== null ? `Velocidad media medida: <b>${st.speed} km/h</b><br/>` : 'Sin vehículos en la última medida<br/>') +
-          (st.flow !== null ? `Intensidad: ${st.flow} veh/h · ocupación ${st.occupancy ?? '–'} %<br/>` : '') +
+        `<b>${escapeHtml(describeStation(st))}</b> (sentido ${st.dir === '+' ? 'km creciente' : st.dir === '-' ? 'km decreciente' : '—'})<br/>` +
+          (st.stale
+            ? 'Medida antigua: no se muestra la velocidad<br/>'
+            : st.speed !== null
+              ? `Velocidad media medida: <b>${Number(st.speed)} km/h</b><br/>`
+              : 'Sin vehículos en la última medida<br/>') +
+          (st.flow !== null ? `Intensidad: ${Number(st.flow)} veh/h · ocupación ${st.occupancy !== null ? Number(st.occupancy) : '–'} %<br/>` : '') +
           `<span style="font-size:11px">Detector DGT${time ? ' · ' + time : ''}</span>`,
         { direction: 'top', offset: [0, -8] }
       );

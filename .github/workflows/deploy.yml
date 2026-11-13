@@ -1,9 +1,12 @@
 name: Deploy to GitHub Pages
 
 # Publishes the app and refreshes the official DGT incidents (data/alerts.json).
-# The DGT feed does not allow browser requests, so it is downloaded here every
-# 15 minutes and published with the site. GitHub may delay scheduled runs a few
-# minutes, and pauses them after 60 days without activity in the repository.
+# The DGT feed does not allow browser requests, so it is downloaded here and published
+# with the site. The cron asks for a run every 15 minutes, but GitHub gives scheduled
+# runs low priority: in practice this repository gets one every 3 to 9 hours. The app
+# shows the age of the data and ignores measured speeds that are too old.
+# GitHub also disables scheduled workflows after 60 days without activity in the
+# repository; the "keepalive" job below resets that count.
 on:
   push:
     branches: [main]
@@ -51,6 +54,26 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+
+  # GitHub disables every scheduled workflow of a public repository after 60 days without
+  # activity. Enabling a workflow through the API (even one that is already enabled)
+  # restarts that count, so the data keeps being refreshed with no commits.
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      actions: write
+    steps:
+      - name: Keep the scheduled workflows enabled
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for workflow in deploy.yml buildings.yml gemini-check.yml; do
+            gh api --silent -X PUT "repos/${{ github.repository }}/actions/workflows/$workflow/enable" \
+              && echo "$workflow: enabled" || echo "::warning::could not re-enable $workflow"
+          done
 
   deploy:
     needs: build

@@ -18,6 +18,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 
+import { describeAge } from '../services/dataAge';
 interface HeaderProps {
   activeTab: 'map' | 'wall' | 'split' | 'alerts';
   setActiveTab: (tab: 'map' | 'wall' | 'split' | 'alerts') => void;
@@ -29,6 +30,8 @@ interface HeaderProps {
   rushHourActive: boolean;
   setRushHourActive: (val: boolean) => void;
   alertsCount?: number;
+  // Minutes since the DGT published the data on screen, only when it is old (else null)
+  staleDataAgeMinutes?: number | null;
   onOpenTour?: () => void;
   onStartGpsNavigation?: () => void;
   hasActiveRoute?: boolean;
@@ -50,6 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   rushHourActive,
   setRushHourActive,
   alertsCount = 0,
+  staleDataAgeMinutes = null,
   onOpenTour,
   onStartGpsNavigation,
   hasActiveRoute = false,
@@ -97,6 +101,15 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               EN VIVO
             </span>
+            {staleDataAgeMinutes !== null && (
+              <span
+                data-testid="stale-data-badge"
+                title={`Las incidencias y las velocidades de la DGT que ves se publicaron ${describeAge(staleDataAgeMinutes)}. Las cámaras municipales sí son actuales.`}
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/40 whitespace-nowrap"
+              >
+                DGT {describeAge(staleDataAgeMinutes)}
+              </span>
+            )}
           </div>
           <p className="text-[10px] sm:text-[11px] text-slate-400 hidden sm:block">
             {totalCameras} cámaras · {alertsCount} alertas activas · Detección de ruta más rápida

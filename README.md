@@ -47,7 +47,7 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 - **Rutas alternativas**: alternativas del propio motor más corredores de Alicante (Litoral, Gran Vía, Vía Parque) cuando el desvío es razonable; se descartan las que repiten el mismo trazado.
 - **Radares DGT** en el mapa y en el resumen de la ruta (carretera y punto kilométrico).
 - **Incidencias oficiales en la ruta**: accidentes, cortes, obras y retenciones del feed DATEX II de la DGT que caen sobre el trazado suman tiempo y cambian el estado de la ruta.
-- **Histórico real**: cada 15 minutos se guarda la velocidad medida por los detectores en un perfil por franja horaria (laborables y fines de semana). En rutas con detectores, la gráfica compara la velocidad de ahora con la habitual a esa hora; en rutas solo urbanas muestra el patrón estimado, marcado como *estimación*.
+- **Histórico real**: en cada actualización de los datos se guarda la velocidad medida por los detectores en un perfil por franja horaria (laborables y fines de semana). En rutas con detectores, la gráfica compara la velocidad de ahora con la habitual a esa hora; en rutas solo urbanas muestra el patrón estimado, marcado como *estimación*.
 - **Velocidad real en la ronda y los accesos**: los detectores de tráfico de la DGT (A-70 y A-31) miden velocidad, intensidad y ocupación cada pocos minutos. En esos tramos la ruta usa la velocidad **medida** en el sentido en que circulas, y el mapa la muestra en cada punto de medida.
 - **Retenciones estimadas en la ciudad**: las calles urbanas no tienen un feed público de velocidades, así que allí la congestión en cada cámara se **estima** por franja horaria y puntos conflictivos (y la interfaz lo indica). Botón de *Hora Punta* para forzar el escenario de máxima carga.
 - **Cámaras en ruta**: solo las que están sobre el trazado (cerca de la línea o en la misma calle), no las de calles paralelas.
@@ -190,7 +190,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 
 ```text
 ├── .github/workflows/
-│   ├── deploy.yml            # Build y despliegue en GitHub Pages (push a main y cada 15 min)
+│   ├── deploy.yml            # Build y despliegue en GitHub Pages (push a main y programado) 
 │   ├── buildings.yml         # Regenera los edificios y el callejero OSM el día 1 de cada mes
 │   ├── gemini-check.yml      # Comprueba cada lunes que el modelo de Gemini sigue existiendo
 │   └── ci.yml                # Tests en cada pull request
@@ -263,12 +263,14 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 El workflow `.github/workflows/deploy.yml` compila y publica la app en GitHub Pages:
 
 - en cada push a `main`,
-- cada 15 minutos (programado), para refrescar las incidencias, los radares y la velocidad medida de la DGT, cuyo servidor no admite peticiones desde el navegador,
+- de forma programada, para refrescar las incidencias, los radares y la velocidad medida de la DGT, cuyo servidor no admite peticiones desde el navegador (se pide cada 15 minutos, pero GitHub da poca prioridad a las tareas programadas y en la práctica lo ejecuta cada 3 a 9 horas),
 - y a mano desde la pestaña *Actions* (*Run workflow*).
 
 El histórico de velocidades (`data/history.json`) continúa en cada ejecución a partir de la copia ya publicada, sin hacer commits; si esa copia no se puede leer, la ejecución falla y la web anterior sigue publicada, para no perder el histórico.
 
-Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub puede retrasar unos minutos las ejecuciones programadas y las pausa si el repositorio pasa 60 días sin actividad (se reactivan desde *Actions*).
+Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub pausa las tareas programadas si el repositorio pasa 60 días sin actividad; el propio workflow lo evita (trabajo `keepalive`), y si aun así se pararan se reactivan desde *Actions*.
+
+Como los datos de la DGT pueden tener horas, la app indica su antigüedad: si las incidencias superan los 90 minutos aparece un aviso «DGT hace X h» en la cabecera y en el panel de alertas, y las velocidades medidas con más de 45 minutos dejan de aplicarse al tiempo de la ruta.
 
 ---
 

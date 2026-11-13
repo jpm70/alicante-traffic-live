@@ -38,6 +38,7 @@ import {
 import { CarNavigationLauncherModal } from './CarNavigationLauncherModal';
 import { calculateAlicanteTaxiFare, isNightOrHolidayAlicante } from '../data/publicTransport';
 
+import { ageMinutes, describeAge, formatUpdatedAt } from '../services/dataAge';
 interface RouteComparisonPanelProps {
   routes: CalculatedRoute[];
   selectedRouteId: string;
@@ -56,6 +57,8 @@ interface RouteComparisonPanelProps {
   onOpenTaxiDashboardModal?: () => void;
   radars?: Radar[];
   liveUpdatedAt?: string | null;
+  // The measured speeds are too old and have not been applied to the route times
+  liveStale?: boolean;
   trafficHistory?: TrafficHistory | null;
 }
 
@@ -77,6 +80,7 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
   onOpenTaxiDashboardModal,
   radars = [],
   liveUpdatedAt = null,
+  liveStale = false,
   trafficHistory = null,
 }) => {
   const originName = origin.name;
@@ -296,9 +300,16 @@ ${advice}`;
           {fastestRoute.incidents.length > 0
             ? ` + ${fastestRoute.incidents.length} incidencia${fastestRoute.incidents.length > 1 ? 's' : ''} oficial${fastestRoute.incidents.length > 1 ? 'es' : ''} DGT.`
             : '; sin incidencias oficiales DGT en el trazado.'}
+          {(fastestRoute.liveStations?.length ?? 0) > 0 && liveStale && (
+            <span data-testid="stale-speeds-note" className="text-amber-300/90">
+              {' '}Las últimas velocidades medidas por la DGT en esta ruta son de {describeAge(ageMinutes(liveUpdatedAt) ?? 0)}
+              {liveUpdatedAt ? ` (${formatUpdatedAt(liveUpdatedAt)})` : ''} y no se aplican al tiempo del trayecto.
+            </span>
+          )}
           {(fastestRoute.liveStations?.length ?? 0) > 0 &&
+            !liveStale &&
             ` Velocidad real medida por la DGT${
-              liveUpdatedAt ? ` (${new Date(liveUpdatedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })})` : ''
+              liveUpdatedAt ? ` (${formatUpdatedAt(liveUpdatedAt)})` : ''
             }: ${fastestRoute.liveStations!
               .filter((s) => s.station.speed !== null)
               .map((s) => `${s.station.road} km ${String(s.station.km).replace('.', ',')} ${s.station.speed} km/h`)
