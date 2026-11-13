@@ -43,10 +43,17 @@ export function dayTypeOf(date: Date): DayType {
   return d === 0 || d === 6 ? 'weekend' : 'weekday';
 }
 
+// An hour is a reference only with at least this many measurements per measuring point.
+// The data workflow runs a few times a day at irregular times, so many hours have one or
+// two measurements for weeks: enough to draw a point, not to call it "the usual speed".
+export const MIN_SAMPLES_PER_STATION = 3;
+
 export interface HourPoint {
   hour: number;
   typical: number | null; // typical speed on the route's measured stretches (km/h)
   samples: number;
+  // Enough measurements to be used as a reference (see MIN_SAMPLES_PER_STATION)
+  reliable: boolean;
 }
 
 export interface RouteHistory {
@@ -56,6 +63,8 @@ export interface RouteHistory {
   // Current measured speed (mean of the route's stations) and the typical one now
   current: number | null;
   typicalNow: number | null;
+  // The typical speed of this hour has enough measurements behind it
+  typicalNowReliable: boolean;
   since: string;
 }
 
@@ -92,6 +101,7 @@ export function routeHistory(liveStations: RouteLiveStation[] | undefined, histo
       hour: h,
       typical: perStation.length ? Math.round(perStation.reduce((a, b) => a + b, 0) / perStation.length) : null,
       samples,
+      reliable: perStation.length > 0 && samples / perStation.length >= MIN_SAMPLES_PER_STATION,
     });
   }
 
@@ -102,6 +112,7 @@ export function routeHistory(liveStations: RouteLiveStation[] | undefined, histo
     stations: profiles.length,
     current: speeds.length ? Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length) : null,
     typicalNow: hours[now.getHours()].typical,
+    typicalNowReliable: hours[now.getHours()].reliable,
     since: history.since,
   };
 }

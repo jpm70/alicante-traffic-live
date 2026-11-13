@@ -294,11 +294,13 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
 
   const nowHour = new Date().getHours();
   const label = (h: number) => `${String(h).padStart(2, '0')}:00`;
-  const chartData = data.hours.map((p) => ({ hour: label(p.hour), typical: p.typical, samples: p.samples }));
-  const withData = data.hours.filter((p) => p.typical !== null);
-  const best = withData.length ? withData.reduce((a, b) => (b.typical! > a.typical! ? b : a)) : null;
-  const worst = withData.length ? withData.reduce((a, b) => (b.typical! < a.typical! ? b : a)) : null;
-  const diff = data.current !== null && data.typicalNow !== null ? data.current - data.typicalNow : null;
+  const chartData = data.hours.map((p) => ({ hour: label(p.hour), typical: p.typical, samples: p.samples, reliable: p.reliable }));
+  // Slowest and fastest hour, and the comparison with now, only from hours with enough
+  // measurements: one reading at 8:00 is not "the slowest hour"
+  const reliableHours = data.hours.filter((p) => p.typical !== null && p.reliable);
+  const best = reliableHours.length ? reliableHours.reduce((a, b) => (b.typical! > a.typical! ? b : a)) : null;
+  const worst = reliableHours.length ? reliableHours.reduce((a, b) => (b.typical! < a.typical! ? b : a)) : null;
+  const diff = data.current !== null && data.typicalNow !== null && data.typicalNowReliable ? data.current - data.typicalNow : null;
   const diffPct = diff !== null && data.typicalNow ? Math.round((diff / data.typicalNow) * 100) : null;
   const sinceLabel = new Date(data.since).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
@@ -348,13 +350,19 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
         <div>
           <span className="block text-[10px] uppercase font-mono text-slate-400">Habitual a esta hora</span>
           <span className="text-base font-black font-mono text-slate-200">
+            {data.typicalNow !== null && !data.typicalNowReliable ? '~' : ''}
             {data.typicalNow ?? '–'} <span className="text-[10px] font-normal text-slate-400">km/h</span>
           </span>
+          {data.typicalNow !== null && !data.typicalNowReliable && (
+            <span className="block text-[9px] text-amber-300/90 font-mono">pocas medidas</span>
+          )}
         </div>
         <div>
           <span className="block text-[10px] uppercase font-mono text-slate-400">Diferencia</span>
           {diff === null ? (
-            <span className="text-xs font-bold text-slate-400 font-mono">Sin referencia aún</span>
+            <span className="text-xs font-bold text-slate-400 font-mono">
+              {data.current === null ? 'Sin medida actual' : 'Sin referencia aún'}
+            </span>
           ) : diff >= -3 ? (
             <span className="text-xs font-bold text-emerald-400 font-mono flex items-center justify-center gap-0.5">
               <TrendingUp className="w-3 h-3" />
@@ -370,17 +378,18 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
         <div>
           <span className="block text-[10px] uppercase font-mono text-slate-400">Hora más lenta</span>
           <span className="text-xs font-bold text-amber-400 font-mono">
-            {worst ? `${label(worst.hour)} (${worst.typical} km/h)` : '–'}
+            {worst ? `${label(worst.hour)} (${worst.typical} km/h)` : 'Faltan medidas'}
           </span>
         </div>
       </div>
 
-      {withData.length < 6 && (
-        <div className="text-[11px] p-2 rounded bg-slate-900/80 border border-slate-800/80 text-slate-300 flex items-center gap-1.5">
+      {reliableHours.length < 24 && (
+        <div data-testid="history-building" className="text-[11px] p-2 rounded bg-slate-900/80 border border-slate-800/80 text-slate-300 flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
           <span>
-            Recopilando histórico: {withData.length} de 24 horas con datos ({dayType === 'weekday' ? 'laborables' : 'fines de semana'}).
-            Se completa con unas 24 h de medidas y gana precisión con las semanas.
+            Histórico en formación: {reliableHours.length} de 24 horas tienen medidas suficientes en{' '}
+            {dayType === 'weekday' ? 'laborables' : 'fines de semana'}. Las demás (puntos huecos) son orientativas: se guardan
+            pocas medidas al día y la referencia mejora con las semanas.
           </span>
         </div>
       )}
@@ -402,7 +411,10 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
                       <div className="text-cyan-300">
                         {p.typical !== null ? `${p.typical} km/h habitual` : 'Sin datos todavía'}
                       </div>
-                      <div className="text-[10px] text-slate-400">{p.samples} medidas</div>
+                      <div className="text-[10px] text-slate-400">
+                        {p.samples} {p.samples === 1 ? 'medida' : 'medidas'}
+                        {p.typical !== null && !p.reliable ? ' · orientativo' : ''}
+                      </div>
                     </div>
                   );
                 }}
@@ -411,12 +423,28 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
               {data.current !== null && (
                 <ReferenceDot x={label(nowHour)} y={data.current} r={6} fill="#10b981" stroke="#ffffff" strokeWidth={2} />
               )}
-              <Line type="monotone" dataKey="typical" stroke="#06b6d4" strokeWidth={2.5} dot={{ r: 2, fill: '#06b6d4' }} connectNulls={false} name="Velocidad habitual" />
+              <Line type="monotone" dataKey="typical" stroke="#06b6d4" strokeWidth={2.5} 
+                dot={(props: { cx?: number; cy?: number; index?: number; payload?: { typical: number | null; reliable: boolean } }) => {
+                  const { cx, cy, index, payload } = props;
+                  if (cx == null || cy == null || !payload || payload.typical === null) return <g key={index} />;
+                  // Hollow point: too few measurements to be a reference
+                  return payload.reliable ? (
+                    <circle key={index} cx={cx} cy={cy} r={2.5} fill="#06b6d4" />
+                  ) : (
+                    <circle key={index} cx={cx} cy={cy} r={3} fill="#111827" stroke="#06b6d4" strokeWidth={1.2} strokeOpacity={0.7} />
+                  );
+                }}
+                connectNulls={false}
+                name="Velocidad habitual"
+              />
             </LineChart>
           </ResponsiveContainer>
           <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-cyan-400 inline-block" />Habitual (km/h)</span>
+              {reliableHours.length < 24 && (
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full border border-cyan-400/70 inline-block" />Pocas medidas</span>
+              )}
               <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white/60 inline-block" /><span className="text-emerald-400 font-bold">Ahora</span></span>
             </div>
             <span>{best ? `Más fluida: ${label(best.hour)}` : 'Medido por la DGT'}</span>

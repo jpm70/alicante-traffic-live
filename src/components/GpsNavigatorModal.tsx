@@ -6,6 +6,7 @@ import { generateRouteManeuvers, NavigationManeuver, nextManeuverIndex, currentS
 import { buildRouteIndex, pointAtDistance, projectOnRoute } from '../services/geometry';
 import { Radar, radarsAlongRoute, describeRadar } from '../services/radars';
 import { escapeHtml } from '../services/dataAge';
+import { CAMERA_STATUS_TEXT_CLASS, CameraStatus, cameraStatusLabel } from '../services/text';
 import { MapOrientation, loadMapOrientation, saveMapOrientation, unwrapRotation, rotatedCoverSide } from '../services/mapOrientation';
 import {
   X,
@@ -559,7 +560,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         weight: 1.5,
         fillOpacity: 0.9,
       }).addTo(map);
-      m.bindTooltip(`<b>Cámara ${cam.name}</b><br/>Tráfico ${cam.status} (estimado)`, { direction: 'top' });
+      m.bindTooltip(`<b>Cámara ${cam.name}</b><br/>Tráfico ${cameraStatusLabel(cam.status)} (estimado)`, { direction: 'top' });
       camMarkers.push(m);
     });
     cameraMarkersRef.current = camMarkers;
@@ -607,7 +608,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     cameraMarkersRef.current = activeRoute.cameras.map((cam) => {
       const color = cam.status === 'fluido' ? '#10b981' : cam.status === 'denso' ? '#f59e0b' : '#ef4444';
       return L.circleMarker([cam.lat, cam.lng], { radius: 6, fillColor: color, color: '#ffffff', weight: 1.5, fillOpacity: 0.9 })
-        .bindTooltip(`<b>Cámara ${cam.name}</b><br/>Tráfico ${cam.status} (estimado)`, { direction: 'top' })
+        .bindTooltip(`<b>Cámara ${cam.name}</b><br/>Tráfico ${cameraStatusLabel(cam.status)} (estimado)`, { direction: 'top' })
         .addTo(map);
     });
     announcedCameraIdsRef.current = new Set();
@@ -1121,8 +1122,8 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                 <span className="text-[11px] font-bold text-white block truncate">
                   {upcomingCamera.name}
                 </span>
-                <span className="text-[10px] text-emerald-400 capitalize font-mono">
-                  Tráfico {upcomingCamera.status === 'retencion' ? 'con retención' : upcomingCamera.status} (estimado) · {upcomingCamera.zona}
+                <span className={`text-[10px] font-mono ${CAMERA_STATUS_TEXT_CLASS[upcomingCamera.status as CameraStatus] ?? 'text-emerald-400'}`}>
+                  Tráfico {cameraStatusLabel(upcomingCamera.status)} (estimado) · {upcomingCamera.zona}
                 </span>
               </div>
             </div>

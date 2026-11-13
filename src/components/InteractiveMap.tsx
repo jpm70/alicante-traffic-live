@@ -6,6 +6,7 @@ import { TrafficAlert } from '../data/trafficAlerts';
 import { Radar, describeRadar } from '../services/radars';
 import { LiveStation, liveStatus, describeStation } from '../services/liveTraffic';
 import { escapeHtml } from '../services/dataAge';
+import { countLabel } from '../services/text';
 import { ALICANTE_TAXI_STANDS, TaxiStand, ALICANTE_LOCAL_CLOSURES } from '../data/publicTransport';
 
 type MapStyle = 'dark' | 'streets' | 'satellite';
@@ -306,7 +307,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       poly.on('click', () => onSelectRoute(route.id));
 
       poly.bindTooltip(
-        `<b>${escapeHtml(route.name)}</b><br/>${route.isApproximate ? 'Trazado aproximado · ' : ''}${route.totalMinutes} min · ${route.distanceKm} km · ${route.cameras.length} cámaras`,
+        `<b>${escapeHtml(route.name)}</b><br/>${route.isApproximate ? 'Trazado aproximado · ' : ''}${route.totalMinutes} min · ${route.distanceKm} km · ${countLabel(route.cameras.length, 'cámara', 'cámaras')}`,
         { sticky: true }
       );
 

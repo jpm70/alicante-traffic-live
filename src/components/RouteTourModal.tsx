@@ -26,6 +26,7 @@ import {
 
 import { StreetViewTourView } from './StreetViewTourView';
 
+import { cameraStatusLabel } from '../services/text';
 interface RouteTourModalProps {
   route: CalculatedRoute;
   origin: RoutePoint & { name: string };
@@ -375,7 +376,7 @@ const Flythrough3DView: React.FC<Flythrough3DViewProps> = ({ route, cacheBuster 
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent p-1.5">
               <p className="text-[11px] font-bold text-white truncate leading-tight">{nearestCamera.name}</p>
               <p className="text-[9px] text-slate-300 font-mono">
-                Tráfico {nearestCamera.status} (estimado) · {nearestCamera.zona}
+                Tráfico {cameraStatusLabel(nearestCamera.status)} (estimado) · {nearestCamera.zona}
               </p>
             </div>
           </div>
@@ -668,7 +669,7 @@ const LiveCamerasTourViewProps: React.FC<LiveCamerasTourViewProps> = ({
                         : 'bg-red-400'
                     }`}
                   />
-                  {activeCam.status}
+                  {activeCam.status === 'retencion' ? 'retención' : activeCam.status}
                 </span>
               </div>
 
