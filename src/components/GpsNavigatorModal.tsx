@@ -5,6 +5,7 @@ import { CalculatedRoute, RoutePoint, getDistanceMeters } from '../services/rout
 import { generateRouteManeuvers, NavigationManeuver, nextManeuverIndex, currentStreetName } from '../services/navigationManeuvers';
 import { buildRouteIndex, pointAtDistance, projectOnRoute } from '../services/geometry';
 import { Radar, radarsAlongRoute, describeRadar } from '../services/radars';
+import { escapeHtml } from '../services/dataAge';
 import { MapOrientation, loadMapOrientation, saveMapOrientation, unwrapRotation, rotatedCoverSide } from '../services/mapOrientation';
 import {
   X,
@@ -566,7 +567,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
     // Official speed cameras
     radars.forEach((radar) => {
       L.circleMarker([radar.lat, radar.lng], { radius: 7, fillColor: '#dc2626', color: '#ffffff', weight: 2, fillOpacity: 1 })
-        .bindTooltip(`<b>${describeRadar(radar)}</b>`, { direction: 'top' })
+        .bindTooltip(`<b>${escapeHtml(describeRadar(radar))}</b>`, { direction: 'top' })
         .addTo(map);
     });
 

@@ -26,6 +26,7 @@ const TYPE_LABELS: Record<AlertType, string> = {
   evento: 'Incidencia',
 };
 
+import { describeAge, formatUpdatedAt } from '../services/dataAge';
 interface TrafficAlertsProps {
   alerts: TrafficAlert[];
   isLoading: boolean;
@@ -34,6 +35,8 @@ interface TrafficAlertsProps {
   selectedAlertId: string | null;
   activeRoute: CalculatedRoute | null;
   alertsMeta?: { source: string; updatedAt: string; error?: string } | null;
+  // Minutes since the DGT published this list, only when it is old (else null)
+  staleAgeMinutes?: number | null;
 }
 
 export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
@@ -44,6 +47,7 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
   selectedAlertId,
   activeRoute,
   alertsMeta,
+  staleAgeMinutes = null,
 }) => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'route' | AlertType>('all');
 
@@ -134,9 +138,14 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
             <p className="text-[10px] text-slate-400">
               Fuente oficial: DGT (vías interurbanas y accesos)
               {alertsMeta?.updatedAt && !alertsMeta.error && (
-                <> · act. {new Date(alertsMeta.updatedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</>
+                <> · act. {formatUpdatedAt(alertsMeta.updatedAt)}</>
               )}
             </p>
+            {staleAgeMinutes !== null && (
+              <p data-testid="stale-alerts-note" className="text-[10px] text-amber-300 mt-0.5">
+                Datos de {describeAge(staleAgeMinutes)}: puede haber incidencias nuevas o ya resueltas.
+              </p>
+            )}
           </div>
         </div>
 

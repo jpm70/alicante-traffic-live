@@ -5,6 +5,7 @@ import type { CalculatedRoute } from './routing';
 import { RouteIndex, buildRouteIndex, projectOnRoute } from './geometry';
 import { fetchWithTimeout } from './routing';
 import { routeUsesRoad } from './radars';
+import { LIVE_SPEED_MAX_AGE_MIN, isOlderThan } from './dataAge';
 
 export interface LiveStation {
   id: string;
@@ -17,6 +18,8 @@ export interface LiveStation {
   flow: number | null; // vehicles/hour
   occupancy: number | null; // %
   time: string | null;
+  // Measurement too old to describe the road now: its speed has been removed
+  stale?: boolean;
 }
 
 export interface LiveTrafficResponse {
@@ -46,6 +49,14 @@ export async function loadLiveTraffic(): Promise<LiveTrafficResponse | null> {
   } catch {
     return null;
   }
+}
+
+// The data file can be hours old (see dataAge.ts). Old measurements keep their place on
+// the map and in the route's history, but without a speed: they add no delay and do not
+// colour the route.
+export function withoutStaleSpeeds(stations: LiveStation[], updatedAt: string | null, now: number = Date.now()): LiveStation[] {
+  if (!isOlderThan(updatedAt, LIVE_SPEED_MAX_AGE_MIN, now)) return stations;
+  return stations.map((s) => ({ ...s, speed: null, flow: null, occupancy: null, stale: true }));
 }
 
 // Thresholds for the motorways the detectors are on (A-70, A-31: 80-120 km/h limits)

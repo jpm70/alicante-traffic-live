@@ -149,3 +149,53 @@ test('histórico real de velocidad en una ruta con detectores DGT', async ({ pag
   await expect(page.getByTestId('real-history')).toBeVisible();
   await expect(page.getByText('Velocidad real: habitual vs ahora')).toBeVisible();
 });
+
+test('un nombre de lugar con HTML en el enlace compartido no ejecuta código', async ({ page }) => {
+  const payload = '<img src=x onerror="window.__xss=1">';
+  await page.goto(`./?oLat=38.3453&oLng=-0.4891&dLat=38.375&dLng=-0.422&dName=Playa&oName=${encodeURIComponent(payload)}`);
+  await expect(page.getByText(/Tiempo base: motor de rutas/)).toBeVisible({ timeout: 45_000 });
+
+  // Open the tooltip of every marker (origin and destination included)
+  const tooltips = await page.evaluate(async () => {
+    const seen: string[] = [];
+    for (const marker of Array.from(document.querySelectorAll('.leaflet-marker-icon'))) {
+      marker.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 30));
+      document.querySelectorAll('.leaflet-tooltip').forEach((t) => seen.push(t.innerHTML));
+      marker.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    }
+    return seen;
+  });
+  const origin = tooltips.find((html) => html.includes('Origen'));
+  expect(origin).toBeTruthy();
+  // The name is shown as text, not turned into an element
+  expect(origin).toContain('&lt;img');
+  expect(origin).not.toContain('<img');
+  expect(await page.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined();
+});
+
+test('avisa cuando los datos de la DGT son antiguos y no usa esas velocidades', async ({ page }) => {
+  // The published files as they are, but dated six hours ago
+  const old = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
+  for (const file of ['alerts', 'traffic']) {
+    await page.route(new RegExp(`data/${file}\\.json`), async (route) => {
+      const response = await route.fetch();
+      const data = await response.json();
+      await route.fulfill({ response, json: { ...data, success: true, updatedAt: old } });
+    });
+  }
+  await page.goto(A70_ROUTE);
+  await expect(page.getByText(/Tiempo base: motor de rutas/)).toBeVisible({ timeout: 45_000 });
+
+  await expect(page.getByTestId('stale-data-badge')).toHaveText(/DGT hace 6 h/);
+  const stations = await page.evaluate(async () => (await (await fetch('data/traffic.json')).json()).stations.length);
+  if (stations > 0) {
+    // Every measuring point stays on the map, without a speed
+    await expect(page.locator('.dgt-live-station')).toHaveCount(stations);
+    expect(await page.locator('.dgt-live-station').allTextContents()).toEqual(new Array(stations).fill('–'));
+    await expect(page.getByTestId('stale-speeds-note').first()).toContainText('no se aplican al tiempo del trayecto');
+    await expect(page.getByText(/Velocidad real medida por la DGT/)).toHaveCount(0);
+  }
+  await page.getByRole('button', { name: /Alertas e Incidencias/ }).first().click();
+  await expect(page.getByTestId('stale-alerts-note')).toContainText('Datos de hace 6 h');
+});
