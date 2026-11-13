@@ -48,7 +48,7 @@ export function generateRouteGpx(
      xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
   <metadata>
     <name>${escapeXml(route.name)}</name>
-    <desc>Ruta optimizada en Alicante (${route.distanceKm} km, ~${route.totalMinutes} min) con ${route.cameras.length} cámaras de tráfico</desc>
+    <desc>Ruta optimizada en Alicante (${route.distanceKm} km, ~${route.totalMinutes} min) con ${route.cameras.length} ${route.cameras.length === 1 ? 'cámara' : 'cámaras'} de tráfico</desc>
     <author>
       <name>Alicante Tráfico en Vivo</name>
       <link href="https://www.unfantasmaenelsistema.com/" />

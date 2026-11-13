@@ -39,6 +39,7 @@ import { CarNavigationLauncherModal } from './CarNavigationLauncherModal';
 import { calculateAlicanteTaxiFare, isNightOrHolidayAlicante } from '../data/publicTransport';
 
 import { ageMinutes, describeAge, formatUpdatedAt } from '../services/dataAge';
+import { ROUTE_STATUS_LABEL, ROUTE_STATUS_STYLE, cameraStatusLabel, countLabel } from '../services/text';
 interface RouteComparisonPanelProps {
   routes: CalculatedRoute[];
   selectedRouteId: string;
@@ -135,7 +136,7 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
 
       const pointsOfAttention =
         congestedCams.length > 0
-          ? congestedCams.map((c) => `• ${c.name} (${c.zona}): tráfico ${c.status}`).join('\n')
+          ? congestedCams.map((c) => `• ${c.name} (${c.zona}): tráfico ${cameraStatusLabel(c.status)}`).join('\n')
           : '• Sin incidencias graves: los puntos de control en este corredor presentan circulación continua y fluida.';
 
       const advice =
@@ -277,14 +278,18 @@ ${advice}`;
         <div className="grid grid-cols-3 gap-2 my-3 py-2 px-3 bg-slate-950/60 rounded-lg border border-slate-800/80 text-center">
           <div>
             <span className="block text-[10px] text-slate-400 uppercase font-mono">Estado Tráfico</span>
-            <span className="text-xs font-bold capitalize text-emerald-400 flex items-center justify-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              {fastestRoute.status}
+            <span
+              data-testid="route-status"
+              data-status={fastestRoute.status}
+              className={`text-xs font-bold flex items-center justify-center gap-1 ${ROUTE_STATUS_STYLE[fastestRoute.status].text}`}
+            >
+              <span className={`w-2 h-2 rounded-full animate-pulse ${ROUTE_STATUS_STYLE[fastestRoute.status].dot}`} />
+              {ROUTE_STATUS_LABEL[fastestRoute.status]}
             </span>
           </div>
           <div>
             <span className="block text-[10px] text-slate-400 uppercase font-mono">Cámaras en Ruta</span>
-            <span className="text-xs font-bold text-cyan-400 font-mono">{fastestRoute.cameras.length} activas</span>
+            <span className="text-xs font-bold text-cyan-400 font-mono">{countLabel(fastestRoute.cameras.length, 'activa', 'activas')}</span>
           </div>
           <div>
             <span className="block text-[10px] text-slate-400 uppercase font-mono">Velocidad Med.</span>
@@ -400,7 +405,9 @@ ${advice}`;
             className="w-full py-2 px-3 rounded-lg bg-slate-800/90 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <LayoutGrid className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Ver {fastestRoute.cameras.length} cámaras en una pantalla</span>
+            <span>
+              {fastestRoute.cameras.length === 1 ? 'Ver la cámara de la ruta' : `Ver ${fastestRoute.cameras.length} cámaras en una pantalla`}
+            </span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
 
@@ -509,19 +516,13 @@ ${advice}`;
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1 text-slate-400">
                       <Video className="w-3 h-3 text-cyan-400" />
-                      <span>{route.cameras.length} cámaras</span>
+                      <span>{countLabel(route.cameras.length, 'cámara', 'cámaras')}</span>
                     </span>
                     <span className="flex items-center gap-1 text-slate-400">
                       <span
-                        className={`w-2 h-2 rounded-full ${
-                          route.status === 'fluido'
-                            ? 'bg-emerald-400'
-                            : route.status === 'moderado'
-                            ? 'bg-amber-400'
-                            : 'bg-rose-500'
-                        }`}
+                        className={`w-2 h-2 rounded-full ${ROUTE_STATUS_STYLE[route.status].dot}`}
                       />
-                      <span className="capitalize">{route.status}</span>
+                      <span>{ROUTE_STATUS_LABEL[route.status]}</span>
                     </span>
                   </div>
 
@@ -706,7 +707,7 @@ ${advice}`;
                   <span className="font-semibold text-white">Ruta activa:</span>{' '}
                   <span className="text-emerald-300 font-semibold">{currentSelectedRoute.name}</span>{' '}
                   ({currentSelectedRoute.totalMinutes} min · {currentSelectedRoute.distanceKm} km ·{' '}
-                  {currentSelectedRoute.cameras.length} cámaras)
+                  {countLabel(currentSelectedRoute.cameras.length, 'cámara', 'cámaras')})
                 </div>
               </div>
 

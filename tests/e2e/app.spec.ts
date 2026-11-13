@@ -199,3 +199,24 @@ test('avisa cuando los datos de la DGT son antiguos y no usa esas velocidades', 
   await page.getByRole('button', { name: /Alertas e Incidencias/ }).first().click();
   await expect(page.getByTestId('stale-alerts-note')).toContainText('Datos de hace 6 h');
 });
+
+test('el estado del tráfico se escribe bien y con su color, y los plurales concuerdan', async ({ page }) => {
+  await page.goto(A70_ROUTE);
+  await expect(page.getByText(/Tiempo base: motor de rutas/)).toBeVisible({ timeout: 45_000 });
+
+  const status = page.getByTestId('route-status').first();
+  const value = await status.getAttribute('data-status');
+  const expected: Record<string, { label: string; color: string }> = {
+    fluido: { label: 'Fluido', color: 'emerald' },
+    moderado: { label: 'Moderado', color: 'amber' },
+    concurrido: { label: 'Concurrido', color: 'orange' },
+    critico: { label: 'Crítico', color: 'rose' },
+  };
+  await expect(status).toHaveText(expected[value!].label);
+  await expect(status).toHaveClass(new RegExp(`text-${expected[value!].color}-400`));
+
+  const text = await page.locator('main').innerText();
+  expect(text).not.toMatch(/\b1 cámaras\b/i);
+  expect(text).not.toMatch(/\b1 activas\b/i);
+  expect(text).not.toMatch(/Critico|Retencion\b/);
+});

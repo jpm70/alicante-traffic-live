@@ -72,4 +72,22 @@ describe('route history', () => {
     expect(routeHistory([], history, 'weekday')).toBeNull();
     expect(routeHistory(live, null, 'weekday')).toBeNull();
   });
+
+  it('marks as reliable only the hours with enough measurements per point', () => {
+    let h = emptyHistory('2026-10-01T00:00:00Z');
+    // 08:00 measured on three different days, 17:00 only once
+    for (const day of ['13', '14', '15']) {
+      h = updateHistory(h, [sample(90, `2026-10-${day}T08:00:00+02:00`)], `2026-10-${day}T08:01:00+02:00`, 'x');
+    }
+    h = updateHistory(h, [sample(40, '2026-10-15T17:00:00+02:00')], '2026-10-15T17:01:00+02:00', 'x');
+    const live = [onRoute(station(20.6, 60))];
+    const morning = routeHistory(live, h as unknown as TrafficHistory, 'weekday', new Date('2026-10-16T08:10:00'))!;
+    expect(morning.hours[8]).toMatchObject({ typical: 90, samples: 3, reliable: true });
+    expect(morning.hours[17]).toMatchObject({ typical: 40, samples: 1, reliable: false });
+    expect(morning.hours[3].reliable).toBe(false);
+    expect(morning.typicalNowReliable).toBe(true);
+    const evening = routeHistory(live, h as unknown as TrafficHistory, 'weekday', new Date('2026-10-16T17:10:00'))!;
+    expect(evening.typicalNow).toBe(40);
+    expect(evening.typicalNowReliable).toBe(false);
+  });
 });
