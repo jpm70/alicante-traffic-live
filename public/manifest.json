@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Alicante Tráfico en Vivo - Rutas y Cámaras",
   "short_name": "Tráfico ALC",
-  "description": "Rutas reales por Alicante con incidencias oficiales de la DGT, 159 cámaras municipales en vivo, tour 3D y navegador GPS para móvil y coche.",
+  "description": "Rutas reales por Alicante con incidencias oficiales de la DGT, 172 cámaras municipales en vivo, tour 3D y navegador GPS para móvil y coche.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -45,7 +45,7 @@
     {
       "name": "Mural de Cámaras",
       "short_name": "Cámaras",
-      "description": "Ver las 159 cámaras de tráfico de Alicante",
+      "description": "Ver las 172 cámaras de tráfico de Alicante",
       "url": "?tab=wall",
       "icons": [
         {

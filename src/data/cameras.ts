@@ -1457,20 +1457,138 @@ export const CAMERAS: TrafficCamera[] = [
     "lat": 38.342274,
     "lng": -0.550758,
     "index": 158
+  },
+  {
+    "id": "C04F2",
+    "name": "Avda. de Denia",
+    "zona": "Avda. Denia",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C04F2.jpg?itok=LnWIaOqd",
+    "lat": 38.368352,
+    "lng": -0.458285,
+    "index": 159
+  },
+  {
+    "id": "C06M3",
+    "name": "Avda. Padre Esplá",
+    "zona": "Vía Parque · Norte",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C06M3.jpg?itok=G2KMEudZ",
+    "lat": 38.357845,
+    "lng": -0.469522,
+    "index": 160
+  },
+  {
+    "id": "C06M4",
+    "name": "Avda. Denia",
+    "zona": "Vía Parque · Norte",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C06M4.jpg?itok=JG12rolu",
+    "lat": 38.357845,
+    "lng": -0.469522,
+    "index": 161
+  },
+  {
+    "id": "C14M2",
+    "name": "Avda. Pintor Xavier Soler",
+    "zona": "Avda. Denia",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C14M2.jpg?itok=ZR5d3AgV",
+    "lat": 38.361334,
+    "lng": -0.465179,
+    "index": 162
+  },
+  {
+    "id": "C14M3",
+    "name": "Avda. Denia",
+    "zona": "Avda. Denia",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C14M3.jpg?itok=A_X3fRcT",
+    "lat": 38.361334,
+    "lng": -0.465179,
+    "index": 163
+  },
+  {
+    "id": "C18M3",
+    "name": "Avda. Elche - N 332",
+    "zona": "Avda. Elche",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C18M3.jpg?itok=XR4KHo21",
+    "lat": 38.333726,
+    "lng": -0.505336,
+    "index": 164
+  },
+  {
+    "id": "C26F2",
+    "name": "Entrada Ciudad",
+    "zona": "Puerto · Postiguet",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C26F2.jpg?itok=OKPhiuP_",
+    "lat": 38.352588,
+    "lng": -0.473277,
+    "index": 165
+  },
+  {
+    "id": "C26F3",
+    "name": "Salida Ciudad",
+    "zona": "Puerto · Postiguet",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C26F3.jpg?itok=DcLbOvcl",
+    "lat": 38.352588,
+    "lng": -0.473277,
+    "index": 166
+  },
+  {
+    "id": "C31F2",
+    "name": "Avda. Elche",
+    "zona": "Avda. Elche",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C31F2.jpg?itok=z7COG0ET",
+    "lat": 38.338466,
+    "lng": -0.493392,
+    "index": 167
+  },
+  {
+    "id": "C37F4",
+    "name": "Avda. Universidad",
+    "zona": "Vía Parque · Norte",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C37F4.jpg?itok=5hfmDvX9",
+    "lat": 38.365132,
+    "lng": -0.500032,
+    "index": 168
+  },
+  {
+    "id": "C48M1",
+    "name": "Avda. de Denia - Santa Faz",
+    "zona": "Avda. Denia",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C48M1.jpg?itok=wK6rhew2",
+    "lat": 38.382522,
+    "lng": -0.450995,
+    "index": 169
+  },
+  {
+    "id": "C48M2",
+    "name": "Avda. Denia - Acceso A-70",
+    "zona": "Avda. Denia",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C48M2.jpg?itok=YTdkNCGO",
+    "lat": 38.382522,
+    "lng": -0.450995,
+    "index": 170
+  },
+  {
+    "id": "C67M1",
+    "name": "Rot. C/ Arco Iris - C/ Guillermo Stewart",
+    "zona": "Polígonos Industriales",
+    "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C67M1.jpg?itok=M5DoWme2",
+    "lat": 38.346973,
+    "lng": -0.553088,
+    "index": 171
   }
 ];
 
+// The number of cameras of each zone is counted from the list above
 export const ZONES: AlicanteZone[] = [
-  { name: "Gran Vía", count: 36, color: "#38bdf8" },
-  { name: "Centro Ciudad", count: 32, color: "#f59e0b" },
-  { name: "Vía Parque · Norte", count: 39, color: "#a855f7" },
-  { name: "Litoral", count: 3, color: "#06b6d4" },
-  { name: "Avda. Denia", count: 8, color: "#ec4899" },
-  { name: "Avda. Elche", count: 10, color: "#eab308" },
-  { name: "Puerto · Postiguet", count: 6, color: "#14b8a6" },
-  { name: "Albufereta · Playa San Juan", count: 14, color: "#10b981" },
-  { name: "Polígonos Industriales", count: 11, color: "#f97316" }
-];
+  { name: "Gran Vía", color: "#38bdf8" },
+  { name: "Centro Ciudad", color: "#f59e0b" },
+  { name: "Vía Parque · Norte", color: "#a855f7" },
+  { name: "Litoral", color: "#06b6d4" },
+  { name: "Avda. Denia", color: "#ec4899" },
+  { name: "Avda. Elche", color: "#eab308" },
+  { name: "Puerto · Postiguet", color: "#14b8a6" },
+  { name: "Albufereta · Playa San Juan", color: "#10b981" },
+  { name: "Polígonos Industriales", color: "#f97316" }
+].map((zone) => ({ ...zone, count: CAMERAS.filter((cam) => cam.zona === zone.name).length }));
 
 export const PRESET_ROUTES: Record<string, { label: string; icon: string; cameraIds: string[] }> = {
   playa: {

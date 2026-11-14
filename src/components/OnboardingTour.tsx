@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, X } from 'lucide-react';
+import { CAMERAS } from '../data/cameras';
 
 /** localStorage key: 'done' (tour finished) or 'dismissed' (welcome declined) */
 export const ONBOARDING_STORAGE_KEY = 'alicante_onboarding_v1';
@@ -189,7 +190,7 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({ onStart, o
           Bienvenido a Alicante Tráfico en Vivo
         </h2>
         <p className="mt-1.5 text-sm text-slate-300 leading-relaxed">
-          Rutas con el tráfico real de la DGT, 159 cámaras en directo, GPS paso a paso, recorridos en 3D y herramientas
+          Rutas con el tráfico real de la DGT, {CAMERAS.length} cámaras en directo, GPS paso a paso, recorridos en 3D y herramientas
           para taxistas. ¿Te enseño lo básico? Es <b className="text-white">menos de un minuto</b>.
         </p>
         <div className="mt-5 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
