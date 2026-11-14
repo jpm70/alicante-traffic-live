@@ -3,6 +3,7 @@ import { Key, Sparkles, CheckCircle2, AlertTriangle, Eye, EyeOff, Trash2, Extern
 
 import { GEMINI_API_KEY_STORAGE_KEY, testGeminiKey, explainGeminiError } from '../services/gemini';
 
+import { useDialog } from '../hooks/useDialog';
 export { GEMINI_API_KEY_STORAGE_KEY };
 
 interface AiApiKeyModalProps {
@@ -27,6 +28,8 @@ export const AiApiKeyModal: React.FC<AiApiKeyModalProps> = ({ isOpen, onClose, o
       setSaveSuccess(false);
     }
   }, [isOpen]);
+
+  const dialog = useDialog(onClose, { label: 'Clave de IA de Gemini', active: isOpen });
 
   if (!isOpen) return null;
 
@@ -83,7 +86,8 @@ export const AiApiKeyModal: React.FC<AiApiKeyModalProps> = ({ isOpen, onClose, o
 
   return (
     <div
-      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+      {...dialog}
+      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 outline-none"
       onClick={onClose}
     >
       <div
@@ -100,7 +104,7 @@ export const AiApiKeyModal: React.FC<AiApiKeyModalProps> = ({ isOpen, onClose, o
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <span>Configurar Clave API de IA (Gemini)</span>
                 {hasStoredKey && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                     ACTIVA
                   </span>
                 )}

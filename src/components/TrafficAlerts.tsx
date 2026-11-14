@@ -101,19 +101,19 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
     switch (severity) {
       case 'alta':
         return (
-          <span className="text-[10px] font-bold uppercase font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40">
+          <span className="text-[11px] font-bold uppercase font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40">
             Crítica
           </span>
         );
       case 'media':
         return (
-          <span className="text-[10px] font-bold uppercase font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">
+          <span className="text-[11px] font-bold uppercase font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">
             Moderada
           </span>
         );
       default:
         return (
-          <span className="text-[10px] font-bold uppercase font-mono px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 border border-blue-500/40">
+          <span className="text-[11px] font-bold uppercase font-mono px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 border border-blue-500/40">
             Leve
           </span>
         );
@@ -131,18 +131,18 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
           <div>
             <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <span>Alertas e Incidencias en Alicante</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 {alerts.length}
               </span>
             </h3>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[11px] text-slate-400">
               Fuente oficial: DGT (vías interurbanas y accesos)
               {alertsMeta?.updatedAt && !alertsMeta.error && (
                 <> · act. {formatUpdatedAt(alertsMeta.updatedAt)}</>
               )}
             </p>
             {staleAgeMinutes !== null && (
-              <p data-testid="stale-alerts-note" className="text-[10px] text-amber-300 mt-0.5">
+              <p data-testid="stale-alerts-note" className="text-[11px] text-amber-300 mt-0.5">
                 Datos de {describeAge(staleAgeMinutes)}: puede haber incidencias nuevas o ya resueltas.
               </p>
             )}
@@ -272,7 +272,7 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span
-                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono border ${getAlertBadgeColor(
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono border ${getAlertBadgeColor(
                         alert.type
                       )}`}
                     >
@@ -282,7 +282,7 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
                     {getSeverityBadge(alert.severity)}
                   </div>
 
-                  <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-950/40 border border-amber-800/40 px-1.5 py-0.2 rounded">
+                  <span className="text-[11px] text-amber-400 font-mono font-bold bg-amber-950/40 border border-amber-800/40 px-1.5 py-0.2 rounded">
                     +{alert.delayMin} min
                   </span>
                 </div>
@@ -301,7 +301,7 @@ export const TrafficAlerts: React.FC<TrafficAlertsProps> = ({
                   {alert.description}
                 </p>
 
-                <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400 font-mono">
                   <span>
                     {alert.source} · {alert.timestamp}
                     {alert.durationEstimate ? ` · ${alert.durationEstimate}` : ''}

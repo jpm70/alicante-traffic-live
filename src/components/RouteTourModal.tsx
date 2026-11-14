@@ -27,6 +27,7 @@ import {
 import { StreetViewTourView } from './StreetViewTourView';
 
 import { cameraStatusLabel } from '../services/text';
+import { useDialog } from '../hooks/useDialog';
 interface RouteTourModalProps {
   route: CalculatedRoute;
   origin: RoutePoint & { name: string };
@@ -52,6 +53,7 @@ export const RouteTourModal: React.FC<RouteTourModalProps> = ({
   // Fullscreen state
   const modalContainerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const dialog = useDialog(onClose, { label: 'Recorrido de la ruta', ref: modalContainerRef, closeOnEscape: false });
 
   // Keyboard shortcut: Escape to close
   useEffect(() => {
@@ -78,8 +80,8 @@ export const RouteTourModal: React.FC<RouteTourModalProps> = ({
 
   return (
     <div
-      ref={modalContainerRef}
-      className="fixed inset-0 z-[99999] flex flex-col bg-[#0b0f19] overflow-hidden"
+      {...dialog}
+      className="fixed inset-0 z-[99999] flex flex-col bg-[#0b0f19] overflow-hidden outline-none"
     >
       <div className="relative w-full h-full bg-[#0b0f19] flex flex-col overflow-hidden animate-in fade-in duration-150">
         {/* Top Header Bar */}
@@ -295,9 +297,9 @@ const Flythrough3DView: React.FC<Flythrough3DViewProps> = ({ route, cacheBuster 
             <Gauge className="w-5 h-5 text-cyan-400" />
             <div>
               <div className="text-xl font-black font-mono text-cyan-400 leading-none">
-                {telemetry?.speedKmH ?? 0} <span className="text-[10px] text-slate-400 font-normal">km/h</span>
+                {telemetry?.speedKmH ?? 0} <span className="text-[11px] text-slate-400 font-normal">km/h</span>
               </div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase">Velocidad sim.</div>
+              <div className="text-[11px] font-mono text-slate-400 uppercase">Velocidad sim.</div>
             </div>
           </div>
           <div className="h-8 w-px bg-slate-800" />
@@ -308,24 +310,24 @@ const Flythrough3DView: React.FC<Flythrough3DViewProps> = ({ route, cacheBuster 
                 {bearingLabel(telemetry?.bearingDeg ?? 0)}{' '}
                 <span className="text-[11px] text-slate-400 font-normal">({telemetry?.bearingDeg ?? 0}°)</span>
               </div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase">Rumbo</div>
+              <div className="text-[11px] font-mono text-slate-400 uppercase">Rumbo</div>
             </div>
           </div>
           <div className="h-8 w-px bg-slate-800 hidden sm:block" />
           <div className="hidden sm:block">
             <div className="text-base font-bold font-mono text-slate-200 leading-none">
-              {coveredKm} <span className="text-[10px] text-slate-400 font-normal">/ {totalKm} km</span>
+              {coveredKm} <span className="text-[11px] text-slate-400 font-normal">/ {totalKm} km</span>
             </div>
-            <div className="text-[10px] font-mono text-slate-400 uppercase">Recorrido</div>
+            <div className="text-[11px] font-mono text-slate-400 uppercase">Recorrido</div>
           </div>
         </div>
         {telemetry?.buildingsStatus === 'loading' && (
-          <span className="self-start text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700 text-slate-300">
+          <span className="self-start text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700 text-slate-300">
             Cargando edificios de OpenStreetMap…
           </span>
         )}
         {route.isApproximate && (
-          <span className="self-start text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/90 border border-amber-600/60 text-amber-200">
+          <span className="self-start text-[11px] font-mono px-2 py-0.5 rounded bg-amber-950/90 border border-amber-600/60 text-amber-200">
             Trazado aproximado: sin datos del servidor de rutas
           </span>
         )}
@@ -342,19 +344,19 @@ const Flythrough3DView: React.FC<Flythrough3DViewProps> = ({ route, cacheBuster 
           <span className="text-[11px] font-mono text-emerald-400 font-bold truncate max-w-[120px] sm:max-w-[160px]">
             {nearestCamera.name}
           </span>
-          <span className="text-[10px] text-slate-400">({nearestCamera.distanceMeters} m)</span>
+          <span className="text-[11px] text-slate-400">({nearestCamera.distanceMeters} m)</span>
         </button>
       )}
 
       {nearestCamera && showLiveCamPip && (
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 w-56 sm:w-72 bg-slate-900/95 backdrop-blur-md border border-emerald-500/60 rounded-xl p-2.5 shadow-2xl animate-in fade-in duration-200">
           <div className="flex items-center justify-between gap-1 mb-1.5">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 truncate">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-emerald-400 truncate">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Cámara en este tramo
             </span>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] font-mono text-slate-400">{nearestCamera.distanceMeters} m</span>
+              <span className="text-[11px] font-mono text-slate-400">{nearestCamera.distanceMeters} m</span>
               <button
                 onClick={() => setShowLiveCamPip(false)}
                 className="text-slate-400 hover:text-white p-1.5 rounded hover:bg-slate-800 transition-colors"
@@ -375,7 +377,7 @@ const Flythrough3DView: React.FC<Flythrough3DViewProps> = ({ route, cacheBuster 
             />
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent p-1.5">
               <p className="text-[11px] font-bold text-white truncate leading-tight">{nearestCamera.name}</p>
-              <p className="text-[9px] text-slate-300 font-mono">
+              <p className="text-[11px] text-slate-300 font-mono">
                 Tráfico {cameraStatusLabel(nearestCamera.status)} (estimado) · {nearestCamera.zona}
               </p>
             </div>
@@ -404,7 +406,7 @@ const Flythrough3DView: React.FC<Flythrough3DViewProps> = ({ route, cacheBuster 
         ))}
       </div>
 
-      <div className="absolute left-2 bottom-[7.5rem] sm:bottom-24 z-10 text-[9px] text-slate-400/80 font-mono pointer-events-none">
+      <div className="absolute left-2 bottom-[7.5rem] sm:bottom-24 z-10 text-[11px] text-slate-400/80 font-mono pointer-events-none">
         Mapa © Esri · Edificios © OpenStreetMap
       </div>
 
@@ -447,7 +449,7 @@ const Flythrough3DView: React.FC<Flythrough3DViewProps> = ({ route, cacheBuster 
           </div>
 
           <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-lg text-xs">
-            <span className="text-[10px] text-slate-400 uppercase font-mono px-1" title="Cámara rápida: segundos simulados por segundo real">
+            <span className="text-[11px] text-slate-400 uppercase font-mono px-1" title="Cámara rápida: segundos simulados por segundo real">
               Tiempo
             </span>
             {SPEED_OPTIONS.map((s) => (
@@ -640,7 +642,7 @@ const LiveCamerasTourViewProps: React.FC<LiveCamerasTourViewProps> = ({
         <div className="flex-[2] min-h-0 p-4 sm:p-5 flex flex-col justify-between overflow-y-auto bg-[#0b0f19] space-y-4">
           <div className="space-y-4">
             <div>
-              <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">
+              <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">
                 Tramo {currentIndex + 1} del itinerario
               </span>
               <h3 className="text-lg font-bold text-white tracking-tight">{activeCam.name}</h3>
@@ -675,13 +677,13 @@ const LiveCamerasTourViewProps: React.FC<LiveCamerasTourViewProps> = ({
 
               <div className="grid grid-cols-2 gap-2 text-center pt-1 border-t border-slate-800/80">
                 <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono block">Velocidad</span>
+                  <span className="text-[11px] text-slate-400 uppercase font-mono block">Velocidad</span>
                   <span className="text-sm font-bold font-mono text-cyan-400">
                     {activeCam.speedKmH} km/h
                   </span>
                 </div>
                 <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono block">Retardo estimado</span>
+                  <span className="text-[11px] text-slate-400 uppercase font-mono block">Retardo estimado</span>
                   <span className="text-sm font-bold font-mono text-slate-200">
                     {activeCam.delayContributionMin > 0 ? `+${activeCam.delayContributionMin} min` : '0 min'}
                   </span>
@@ -727,7 +729,7 @@ const LiveCamerasTourViewProps: React.FC<LiveCamerasTourViewProps> = ({
 
       {/* Bottom Thumbnail Strip (Quick Jump to any camera) */}
       <div className="bg-[#0f172a] border-t border-slate-800 p-2.5 flex items-center gap-2 overflow-x-auto flex-shrink-0">
-        <span className="text-[10px] font-mono uppercase text-slate-400 px-2 flex-shrink-0">
+        <span className="text-[11px] font-mono uppercase text-slate-400 px-2 flex-shrink-0">
           Secuencia ({cameras.length}):
         </span>
         {cameras.map((c, i) => (
@@ -754,7 +756,7 @@ const LiveCamerasTourViewProps: React.FC<LiveCamerasTourViewProps> = ({
                   CAMERA_UNAVAILABLE_IMG;
               }}
             />
-            <div className="absolute top-1 left-1 bg-slate-950/80 px-1 py-0.2 rounded text-[9px] font-mono text-white font-bold">
+            <div className="absolute top-1 left-1 bg-slate-950/80 px-1 py-0.2 rounded text-[11px] font-mono text-white font-bold">
               {i + 1}
             </div>
           </button>

@@ -8,6 +8,17 @@
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
+
+  /* Icon buttons widened to the touch size keep their icon centred. In the base layer,
+     so a button that sets its own alignment (justify-between...) keeps it. */
+  @media (pointer: coarse) {
+    button {
+      justify-content: center;
+      /* The fixed minimum width below replaces the automatic one that keeps a button as
+         wide as its text inside a row; without this, rows of buttons would squeeze them */
+      flex-shrink: 0;
+    }
+  }
 }
 
 /* Custom scrollbar for tactical traffic panels */
@@ -86,4 +97,37 @@
 
 .radar-live {
   animation: radar-pulse 2s infinite;
+}
+
+/* Touch screens (phones, tablets, car head units): every control is at least 44 px in
+   both directions, the size recommended for a finger. With a mouse nothing changes. */
+@media (pointer: coarse) {
+  button,
+  select,
+  [role='button'],
+  [role='option'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Links drawn as buttons (WhatsApp, Telegram, open in the car's navigator...) */
+  a[class*='rounded-'][class*='flex'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .leaflet-touch .leaflet-control-zoom a,
+  .leaflet-control-zoom a {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    font-size: 22px !important;
+  }
+
+  .leaflet-container a.leaflet-popup-close-button {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    font-size: 22px !important;
+  }
 }

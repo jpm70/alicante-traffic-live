@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { TrafficCamera } from '../data/cameras';
 import { X, ExternalLink, MapPin, Video, CheckSquare, Square, ChevronLeft, ChevronRight, Radio } from 'lucide-react';
 
+import { useDialog } from '../hooks/useDialog';
 interface CameraLightboxProps {
   camera: TrafficCamera | null;
   onClose: () => void;
@@ -33,6 +34,8 @@ export const CameraLightbox: React.FC<CameraLightboxProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, onPrev, onNext]);
 
+  const dialog = useDialog(onClose, { label: camera ? `Cámara ${camera.name}` : 'Cámara', active: Boolean(camera), closeOnEscape: false });
+
   if (!camera) return null;
 
   const timestamp = new Date().toLocaleTimeString('es-ES', {
@@ -43,7 +46,8 @@ export const CameraLightbox: React.FC<CameraLightboxProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
+      {...dialog}
+      className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 outline-none"
       onClick={onClose}
     >
       <div

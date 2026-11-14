@@ -17,6 +17,7 @@ import {
   Compass,
 } from 'lucide-react';
 
+import { useDialog } from '../hooks/useDialog';
 interface CarNavigationLauncherModalProps {
   route: CalculatedRoute;
   origin: RoutePoint & { name: string };
@@ -32,6 +33,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
   onClose,
   onStartBuiltInGps,
 }) => {
+  const dialog = useDialog(onClose, { label: 'Abrir la ruta en el navegador del coche' });
   // Android Auto / Google Maps URLs
   const androidAutoIntent = `google.navigation:q=${destination.lat},${destination.lng}&mode=d`;
   const googleMapsWebUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&travelmode=driving`;
@@ -76,7 +78,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+    <div {...dialog} className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150 outline-none">
       <div className="relative w-full max-w-lg rounded-2xl bg-[#0f172a] border border-cyan-500/40 p-4 sm:p-6 shadow-2xl text-slate-100 flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -87,7 +89,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-1.5">
                 <span>Navegación en Coche</span>
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
                   Android Auto
                 </span>
               </h2>
@@ -107,7 +109,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
 
         {/* 1. Proyección Directa a Android Auto / Google Maps / Waze */}
         <div className="space-y-2">
-          <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block font-bold">
+          <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest block font-bold">
             1. Proyección a la Pantalla del Salpicadero
           </span>
 
@@ -124,7 +126,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
                 </span>
                 <ExternalLink className="w-3.5 h-3.5 text-white/80 group-hover:translate-x-0.5 transition-transform" />
               </div>
-              <p className="text-[10px] text-blue-100 font-normal leading-tight">
+              <p className="text-[11px] text-blue-100 font-normal leading-tight">
                 Lanza navegación guiada directamente en la pantalla central de tu coche
               </p>
             </button>
@@ -141,7 +143,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
                 </span>
                 <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
-              <p className="text-[10px] text-slate-400 font-normal leading-tight">
+              <p className="text-[11px] text-slate-400 font-normal leading-tight">
                 Navegar con avisos comunitarios de radar y tráfico en Waze
               </p>
             </button>
@@ -150,7 +152,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
 
         {/* 2. Modo Conducción en Soporte (Navegador Integrado con Cámaras en Vivo) */}
         <div className="space-y-2">
-          <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest block font-bold">
+          <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-widest block font-bold">
             2. Modo coche (móvil en soporte o navegador del coche)
           </span>
 
@@ -180,7 +182,7 @@ export const CarNavigationLauncherModal: React.FC<CarNavigationLauncherModalProp
 
         {/* 3. Exportación GPX y KML */}
         <div className="space-y-2 border-t border-slate-800 pt-3">
-          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block font-bold">
+          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest block font-bold">
             3. Exportación para GPS Externos (Garmin, OsmAnd, TomTom)
           </span>
 

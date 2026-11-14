@@ -10,7 +10,7 @@ export const PWAInstallButton: React.FC = () => {
   // If already running inside installed standalone PWA, hide
   if (isInstalled) {
     return (
-      <span className="hidden xl:inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-mono text-cyan-300 bg-cyan-950/40 border border-cyan-800/40">
+      <span className="hidden xl:inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-mono text-cyan-300 bg-cyan-950/40 border border-cyan-800/40">
         <Check className="w-3 h-3 text-cyan-400" />
         <span>PWA Instalada</span>
       </span>

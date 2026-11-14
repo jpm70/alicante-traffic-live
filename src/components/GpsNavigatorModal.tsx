@@ -37,6 +37,7 @@ import {
   Camera,
 } from 'lucide-react';
 
+import { useDialog } from '../hooks/useDialog';
 interface GpsNavigatorModalProps {
   route: CalculatedRoute;
   origin: RoutePoint & { name: string };
@@ -98,6 +99,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   const routeRadars = useMemo(() => radarsAlongRoute(activeRoute, radars, routeIndex), [activeRoute, radars, routeIndex]);
   const [radarWarning, setRadarWarning] = useState<{ text: string; distance: number; inSection: boolean } | null>(null);
   const radarAnnouncementsRef = useRef<Set<string>>(new Set());
+  const dialog = useDialog(onClose, { label: 'Navegador GPS' });
   const [slowTraffic, setSlowTraffic] = useState<{ text: string; distance: number; speed: number; jam: boolean } | null>(null);
   const slowAnnouncementsRef = useRef<Set<string>>(new Set());
 
@@ -771,7 +773,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 z-50 bg-[#090d16] flex ${carLayout ? 'flex-row' : 'flex-col'} overflow-hidden select-none animate-in fade-in duration-200`}>
+    <div {...dialog} className={`fixed inset-0 z-50 bg-[#090d16] flex ${carLayout ? 'flex-row' : 'flex-col'} overflow-hidden select-none animate-in fade-in duration-200 outline-none`}>
       {carLayout ? (
         // ------------------------------------------------------------------
         // CAR MODE (landscape): everything the driver needs in one column,
@@ -1099,11 +1101,11 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
         {upcomingCamera && (
           <div className={`absolute top-4 right-4 z-[400] ${carLayout ? 'max-w-[220px]' : 'max-w-[290px]'} bg-slate-950/95 backdrop-blur-md border border-cyan-500/50 rounded-2xl p-3 shadow-2xl animate-in slide-in-from-top duration-200`}>
             <div className="flex items-center justify-between gap-1 mb-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                 Cámara Próxima en Ruta
               </span>
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-[11px] font-mono text-slate-400">
                 a {upcomingCamera.distanceMeters} m
               </span>
             </div>
@@ -1122,7 +1124,7 @@ export const GpsNavigatorModal: React.FC<GpsNavigatorModalProps> = ({
                 <span className="text-[11px] font-bold text-white block truncate">
                   {upcomingCamera.name}
                 </span>
-                <span className={`text-[10px] font-mono ${CAMERA_STATUS_TEXT_CLASS[upcomingCamera.status as CameraStatus] ?? 'text-emerald-400'}`}>
+                <span className={`text-[11px] font-mono ${CAMERA_STATUS_TEXT_CLASS[upcomingCamera.status as CameraStatus] ?? 'text-emerald-400'}`}>
                   Tráfico {cameraStatusLabel(upcomingCamera.status)} (estimado) · {upcomingCamera.zona}
                 </span>
               </div>

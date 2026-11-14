@@ -622,10 +622,10 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold">
+                        <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-400 font-bold">
                           ALICANTE · STREET VIEW
                         </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
                           {activeWaypoint.speedLimit} km/h
                         </span>
                       </div>
@@ -666,7 +666,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                   <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-xl shadow-2xl pointer-events-auto flex items-center gap-2">
                     <Gauge className="w-4 h-4 text-emerald-400" />
                     <div>
-                      <span className="text-[9px] text-slate-400 uppercase font-mono block">Límite orientativo</span>
+                      <span className="text-[11px] text-slate-400 uppercase font-mono block">Límite orientativo</span>
                       <span className="text-xs font-mono font-bold text-emerald-400">
                         {activeWaypoint.speedLimit} km/h
                       </span>
@@ -677,7 +677,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                   <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 px-3.5 py-1.5 rounded-xl shadow-2xl pointer-events-auto flex items-center gap-2">
                     <Compass className="w-4 h-4 text-cyan-400" />
                     <div className="text-center">
-                      <span className="text-[9px] text-slate-400 uppercase font-mono block">Rumbo Calzada</span>
+                      <span className="text-[11px] text-slate-400 uppercase font-mono block">Rumbo Calzada</span>
                       <span className="text-xs font-mono font-bold text-cyan-300">
                         {currentHeading}°
                       </span>
@@ -688,7 +688,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                   <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-xl shadow-2xl pointer-events-auto flex items-center gap-2">
                     <Navigation className="w-4 h-4 text-blue-400" />
                     <div className="text-right">
-                      <span className="text-[9px] text-slate-400 uppercase font-mono block">Recorrido</span>
+                      <span className="text-[11px] text-slate-400 uppercase font-mono block">Recorrido</span>
                       <span className="text-xs font-mono font-bold text-slate-200">
                         {activeWaypoint.distanceMeters} m
                       </span>
@@ -756,7 +756,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                     <div className="flex items-center justify-between px-2 py-1 bg-slate-900 border-b border-slate-800">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[10px] font-mono font-bold text-emerald-400 truncate">
+                        <span className="text-[11px] font-mono font-bold text-emerald-400 truncate">
                           CÁMARA DGT EN CRUCE
                         </span>
                       </div>
@@ -778,7 +778,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                             CAMERA_UNAVAILABLE_IMG;
                         }}
                       />
-                      <div className="absolute bottom-1 left-1 right-1 bg-slate-950/85 px-1.5 py-0.5 rounded text-[9px] text-slate-200 font-mono truncate">
+                      <div className="absolute bottom-1 left-1 right-1 bg-slate-950/85 px-1.5 py-0.5 rounded text-[11px] text-slate-200 font-mono truncate">
                         {activeWaypoint.nearbyCamera.name} ({activeWaypoint.nearbyCamera.distanceMeters}m)
                       </div>
                     </div>
@@ -788,7 +788,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                 {/* Interactive Inset Mini-Map with Moving FOV Car Marker */}
                 {showMiniMap && (
                   <div className="absolute bottom-3 right-3 w-32 h-32 sm:w-40 sm:h-40 bg-slate-950/90 border border-slate-700/80 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md z-20 p-1 flex flex-col pointer-events-auto">
-                    <div className="flex items-center justify-between px-1.5 py-0.5 text-[9px] font-mono text-slate-400">
+                    <div className="flex items-center justify-between px-1.5 py-0.5 text-[11px] font-mono text-slate-400">
                       <span>TRAZADO RUTA</span>
                       <button
                         onClick={() => setShowMiniMap(false)}
@@ -907,12 +907,12 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
               </div>
 
               {route.isApproximate && (
-                <div className="absolute top-20 left-3 z-10 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/90 border border-amber-600/60 text-amber-200">
+                <div className="absolute top-20 left-3 z-10 text-[11px] font-mono px-2 py-0.5 rounded bg-amber-950/90 border border-amber-600/60 text-amber-200">
                   Trazado aproximado: sin datos del servidor de rutas
                 </div>
               )}
 
-              <div className="absolute bottom-2 left-3 z-10 text-[9px] font-mono text-white/80 bg-black/40 px-1.5 py-0.5 rounded pointer-events-none">
+              <div className="absolute bottom-2 left-3 z-10 text-[11px] font-mono text-white/80 bg-black/40 px-1.5 py-0.5 rounded pointer-events-none">
                 Ortofoto © Esri · Edificios © OpenStreetMap
               </div>
             </div>
@@ -972,10 +972,10 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
             {/* Header info */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-bold">
+                <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest font-bold">
                   Progreso: {activeWaypoint.progressPercent}% de la ruta
                 </span>
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
+                <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
                   Punto {currentIndex + 1}/{waypoints.length}
                 </span>
               </div>
@@ -990,7 +990,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
             {/* Key Telemetry Cards */}
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Rumbo Calzada</span>
+                <span className="text-[11px] text-slate-400 uppercase font-mono block">Rumbo Calzada</span>
                 <span className="text-sm font-bold font-mono text-cyan-400 flex items-center gap-1 mt-0.5">
                   <Compass className="w-3.5 h-3.5" />
                   {currentHeading}°
@@ -998,7 +998,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
               </div>
 
               <div className="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Distancia Recorrida</span>
+                <span className="text-[11px] text-slate-400 uppercase font-mono block">Distancia Recorrida</span>
                 <span className="text-sm font-bold font-mono text-slate-200 flex items-center gap-1 mt-0.5">
                   <Navigation className="w-3.5 h-3.5 text-emerald-400" />
                   {activeWaypoint.distanceMeters} m
@@ -1014,7 +1014,7 @@ export const StreetViewTourView: React.FC<StreetViewTourViewProps> = ({
                     <Video className="w-3.5 h-3.5 text-emerald-400" />
                     Cámara DGT en este tramo
                   </span>
-                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="text-[11px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     {activeWaypoint.nearbyCamera.status}
                   </span>
                 </div>

@@ -259,7 +259,7 @@ export const RouteSelector: React.FC<RouteSelectorProps> = ({
 
         {/* Presets Tray */}
         <div className="mt-3.5 pt-3 border-t border-slate-800">
-          <div className="text-[10px] font-mono uppercase text-slate-400 tracking-wider mb-2 flex items-center gap-1">
+          <div className="text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-2 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-cyan-400" />
             <span>Trayectos Habituales de Alicante:</span>
           </div>

@@ -23,6 +23,7 @@ import {
   TaxiFareEstimate,
 } from '../data/publicTransport';
 
+import { useDialog } from '../hooks/useDialog';
 interface TaxiFareModalProps {
   route: CalculatedRoute;
   origin: RoutePoint & { name: string };
@@ -40,6 +41,7 @@ export const TaxiFareModal: React.FC<TaxiFareModalProps> = ({
   const [extraLuggage, setExtraLuggage] = useState<boolean>(false);
   const [extraSpecialNight, setExtraSpecialNight] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
+  const dialog = useDialog(onClose, { label: 'Calculadora de tarifa de taxi' });
 
   const effectiveRate = selectedRateOverride === 'auto' ? undefined : selectedRateOverride;
 
@@ -91,7 +93,8 @@ TOTAL ESTIMADO: ${finalTotal.toFixed(2)} € (Rango: ${finalRangeMin.toFixed(2)}
 
   return (
     <div
-      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+      {...dialog}
+      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 outline-none"
       onClick={onClose}
     >
       <div
@@ -109,7 +112,7 @@ TOTAL ESTIMADO: ${finalTotal.toFixed(2)} € (Rango: ${finalRangeMin.toFixed(2)}
                 <h3 className="text-base sm:text-lg font-black text-white">
                   Estimador de Taxímetro Oficial
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
                   ALICANTE
                 </span>
               </div>
@@ -288,7 +291,7 @@ TOTAL ESTIMADO: ${finalTotal.toFixed(2)} € (Rango: ${finalRangeMin.toFixed(2)}
           </button>
         </div>
 
-        <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+        <p className="text-[11px] text-slate-500 text-center leading-relaxed">
           *Estimación calculada según el cuadro tarifario oficial del Área de Prestación Conjunta de Alicante. El importe real puede variar ligeramente en función de la velocidad y tiempos reales de semáforo.
         </p>
       </div>

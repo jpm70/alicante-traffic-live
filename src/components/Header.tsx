@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenHelp,
 }) => {
   return (
-    <header className="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 text-slate-100 px-3 sm:px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+    <header className="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 text-slate-100 px-2 sm:px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-lg">
       {/* Brand logo, Creator Link & Live Badge */}
       <div className="flex items-center gap-2.5 sm:gap-3.5">
         {/* Creator Logo & Link to unfantasmaenelsistema.com (without distortion) */}
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
             <GhostLogo className="w-full h-full object-contain aspect-square select-none group-hover:scale-105 transition-transform" />
           </div>
           <div className="hidden sm:flex flex-col pr-1 text-left select-none">
-            <span className="text-[9px] font-mono uppercase tracking-wider text-cyan-400 font-bold leading-none">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 font-bold leading-none">
               Un Fantasma
             </span>
             <span className="text-[11px] font-black text-slate-100 group-hover:text-cyan-300 transition-colors leading-tight">
@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span>ALICANTE</span>
               <span className="text-cyan-400 font-black">TRÁFICO</span>
             </h1>
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               EN VIVO
             </span>
@@ -105,13 +105,13 @@ export const Header: React.FC<HeaderProps> = ({
               <span
                 data-testid="stale-data-badge"
                 title={`Las incidencias y las velocidades de la DGT que ves se publicaron ${describeAge(staleDataAgeMinutes)}. Las cámaras municipales sí son actuales.`}
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/40 whitespace-nowrap"
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/40 whitespace-nowrap"
               >
                 DGT {describeAge(staleDataAgeMinutes)}
               </span>
             )}
           </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-400 hidden sm:block">
+          <p className="text-[11px] sm:text-[11px] text-slate-400 hidden sm:block">
             {totalCameras} cámaras · {alertsCount} alertas activas · Detección de ruta más rápida
           </p>
         </div>
@@ -158,7 +158,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span>Mural</span>
           {selectedCamerasCount > 0 && (
             <span
-              className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+              className={`ml-1 text-[11px] px-1.5 py-0.2 rounded-full font-mono ${
                 activeTab === 'wall' ? 'bg-slate-900 text-cyan-300' : 'bg-cyan-500/20 text-cyan-400'
               }`}
             >
@@ -180,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span>Alertas</span>
           {alertsCount > 0 && (
             <span
-              className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+              className={`ml-1 text-[11px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
                 activeTab === 'alerts' ? 'bg-slate-950 text-amber-300' : 'bg-amber-500/20 text-amber-300'
               }`}
             >
@@ -191,12 +191,15 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right controls: GPS Nav, Tour Button, Rush Hour switch & Refresh Countdown */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3 max-w-full" data-tour="header-tools">
+      <div
+        className="flex flex-nowrap sm:flex-wrap items-center gap-1.5 sm:gap-3 max-w-full overflow-x-auto sm:overflow-visible [scrollbar-width:none]"
+        data-tour="header-tools"
+      >
         {/* GPS Navigator Quick Launch Button */}
         {hasActiveRoute && onStartGpsNavigation && (
           <button
             onClick={onStartGpsNavigation}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md active:scale-95"
+            className="flex flex-shrink-0 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md active:scale-95"
             title="Iniciar modo navegador GPS con guiado paso a paso por voz"
           >
             <Navigation className="w-3.5 h-3.5 fill-slate-950" />
@@ -208,7 +211,7 @@ export const Header: React.FC<HeaderProps> = ({
         {hasActiveRoute && onOpenTour && (
           <button
             onClick={onOpenTour}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-bold bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-200 hover:text-white transition-all shadow-sm active:scale-95"
+            className="flex flex-shrink-0 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-bold bg-slate-900 border border-slate-700 hover:border-cyan-500/50 text-slate-200 hover:text-white transition-all shadow-sm active:scale-95"
             title="Abrir Tour Virtual: Vuelo 3D y Cámaras en Vivo por la ruta"
           >
             <Compass className="w-3.5 h-3.5 text-cyan-400" />
@@ -220,7 +223,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onTogglePublicTransportMode && (
           <button
             onClick={onTogglePublicTransportMode}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border transition-all ${
+            className={`flex flex-shrink-0 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border transition-all ${
               isPublicTransportMode
                 ? 'bg-amber-400 text-slate-950 border-amber-300 font-black shadow-md ring-1 ring-amber-400/40'
                 : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-amber-300 hover:border-amber-400/50'
@@ -238,7 +241,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Rush Hour simulator */}
         <button
           onClick={() => setRushHourActive(!rushHourActive)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border transition-colors ${
+          className={`flex flex-shrink-0 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border transition-colors ${
             rushHourActive
               ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-semibold'
               : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-300'
@@ -253,7 +256,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onOpenAiConfigModal && (
           <button
             onClick={onOpenAiConfigModal}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border transition-all ${
+            className={`flex flex-shrink-0 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border transition-all ${
               hasUserAiKey
                 ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 font-semibold shadow-sm'
                 : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
@@ -276,7 +279,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenHelp}
             data-tour="help-button"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border bg-slate-900 border-slate-800 text-slate-400 hover:text-cyan-300 hover:border-cyan-500/50 transition-all"
+            className="flex flex-shrink-0 items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs border bg-slate-900 border-slate-800 text-slate-400 hover:text-cyan-300 hover:border-cyan-500/50 transition-all"
             title="Ver el tour: cómo funciona la app"
             aria-label="Ver el tour de cómo funciona la app"
           >
@@ -286,8 +289,8 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Auto-refresh timer */}
-        <div className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 px-2.5 py-1.5 rounded-md text-xs font-mono text-slate-300">
-          <span className="text-slate-500 text-[10px]">↻</span>
+        <div className="hidden sm:flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 px-2.5 py-1.5 rounded-md text-xs font-mono text-slate-300">
+          <span className="text-slate-500 text-[11px]">↻</span>
           <span className="w-4 text-center font-bold text-cyan-400">{countdown}s</span>
           <div className="w-10 h-1 bg-slate-800 rounded-full overflow-hidden hidden sm:block">
             <div
@@ -301,10 +304,13 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="flex items-center justify-center p-1.5 sm:px-3 sm:py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all text-xs font-medium active:scale-95 disabled:opacity-50"
+          className="flex flex-shrink-0 items-center justify-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all text-xs font-medium active:scale-95 disabled:opacity-50"
           title="Refrescar fotogramas de cámaras ahora"
+          aria-label={`Refrescar fotogramas de cámaras ahora (se refrescan solos en ${countdown} s)`}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-cyan-400' : ''}`} />
+          {/* On a phone the countdown lives here instead of in its own box */}
+          <span className="sm:hidden w-6 text-center font-mono font-bold text-cyan-400" aria-hidden="true">{countdown}s</span>
           <span className="hidden md:inline ml-1.5">Refrescar</span>
         </button>
       </div>

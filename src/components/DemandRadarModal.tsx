@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ALICANTE_DEMAND_HUBS, DemandHub, ALICANTE_TAXI_STANDS, TaxiStand } from '../data/publicTransport';
 
+import { useDialog } from '../hooks/useDialog';
 interface DemandRadarModalProps {
   onClose: () => void;
   onSelectStandAsDestination: (stand: TaxiStand) => void;
@@ -23,9 +24,11 @@ export const DemandRadarModal: React.FC<DemandRadarModalProps> = ({
   onClose,
   onSelectStandAsDestination,
 }) => {
+  const dialog = useDialog(onClose, { label: 'Radar de demanda de taxi' });
   return (
     <div
-      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+      {...dialog}
+      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 outline-none"
       onClick={onClose}
     >
       <div
@@ -43,7 +46,7 @@ export const DemandRadarModal: React.FC<DemandRadarModalProps> = ({
                 <h3 className="text-base sm:text-lg font-black text-white">
                   Monitor de Demanda de Pasajeros
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">
                   FRANJAS DE REFERENCIA
                 </span>
               </div>
@@ -93,7 +96,7 @@ export const DemandRadarModal: React.FC<DemandRadarModalProps> = ({
                   </div>
 
                   <span
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase shrink-0 border ${
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase shrink-0 border ${
                       hub.demandLevel === 'alta'
                         ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse'
                         : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
