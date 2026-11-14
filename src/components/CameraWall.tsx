@@ -180,7 +180,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
-              <span>Todas (159)</span>
+              <span>Todas ({CAMERAS.length})</span>
             </button>
           </div>
 

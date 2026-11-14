@@ -325,7 +325,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [routes, selectedRouteId]);
 
-  // Update 159 Camera Markers
+  // Update the camera markers
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -849,7 +849,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <div className="font-bold text-slate-200 mb-1.5 flex items-center justify-between gap-3">
             <span>Leyenda</span>
             <span className="text-[11px] text-cyan-400 font-mono">
-              159 cámaras · {alerts.length} incidencias · {radars.length} radares
+              {CAMERAS.length} cámaras · {alerts.length} incidencias · {radars.length} radares
             </span>
             <button onClick={() => setLegendOpen(false)} className="text-slate-400 hover:text-white px-1" aria-label="Ocultar leyenda">
               ✕

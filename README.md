@@ -9,7 +9,7 @@
 [![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=for-the-badge&logo=pwa)](https://web.dev/progressive-web-apps/)
 [![License](https://img.shields.io/badge/License-MIT-green.style=for-the-badge)](LICENSE)
 
-> **Plataforma web y móvil para moverse por Alicante.** Calcula rutas reales por el callejero (OSRM), las compara con las **incidencias oficiales de la DGT** en tiempo real y con una estimación de retenciones por franja horaria, muestra las **159 cámaras municipales de tráfico** en un solo muro, recorre la ruta en **3D sobre ortofoto real con edificios de OpenStreetMap**, guía con **GPS paso a paso** y ofrece una **suite para taxistas y transporte público** de Alicante.
+> **Plataforma web y móvil para moverse por Alicante.** Calcula rutas reales por el callejero (OSRM), las compara con las **incidencias oficiales de la DGT** en tiempo real y con una estimación de retenciones por franja horaria, muestra las **172 cámaras municipales de tráfico** en un solo muro, recorre la ruta en **3D sobre ortofoto real con edificios de OpenStreetMap**, guía con **GPS paso a paso** y ofrece una **suite para taxistas y transporte público** de Alicante.
 
 **👉 Abrir la app: [jpm70.github.io/alicante-traffic-live](https://jpm70.github.io/alicante-traffic-live/)** — pensada para el móvil (se puede instalar como app) y para el navegador del coche.
 
@@ -52,7 +52,7 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 - **Retenciones estimadas en la ciudad**: las calles urbanas no tienen un feed público de velocidades, así que allí la congestión en cada cámara se **estima** por franja horaria y puntos conflictivos (y la interfaz lo indica). Botón de *Hora Punta* para forzar el escenario de máxima carga.
 - **Cámaras en ruta**: las de los cruces por los que pasa el trazado, y de cada cruce las que miran a la calle de la ruta. La posición de cada cruce es la que publica el Ayuntamiento en su mapa de movilidad (`npm run cameras` la actualiza); la retención estimada se cuenta una vez por cruce.
 
-### 📹 2. Red de 159 Cámaras Municipales en Tiempo Real
+### 📹 2. Red de 172 Cámaras Municipales en Tiempo Real
 - **Muro multicámara único**: Todas las cámaras de Alicante en una cuadrícula optimizada sin sobrecargar la memoria del navegador.
 - **Ciclo de refresco continuo**: Actualización automática de instantáneas cada 15 segundos con indicador de cuenta atrás.
 - **Modo Picture-in-Picture (PiP)**: Fija cualquier cámara en una ventana flotante para seguir vigilando un cruce mientras navegas por otras pestañas o calculas rutas.
@@ -224,7 +224,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   │   ├── RouteTourModal.tsx          # Modal contenedor del tour virtual
 │   │   ├── StreetViewTourView.tsx      # Visor Street View con HUD y minimapa
 │   │   ├── GpsNavigatorModal.tsx       # Navegador GPS turn-by-turn con voz
-│   │   ├── CameraWall.tsx              # Cuadrícula de 159 cámaras en vivo
+│   │   ├── CameraWall.tsx              # Cuadrícula de 172 cámaras en vivo
 │   │   ├── CameraLightbox.tsx          # Visor en pantalla completa de cámaras
 │   │   ├── FloatingCameraPip.tsx       # Ventana Picture-in-Picture persistente
 │   │   ├── PublicTransportBar.tsx      # Barra de herramientas de transporte público

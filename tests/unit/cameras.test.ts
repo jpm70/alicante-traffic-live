@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CAMERAS, TrafficCamera } from '../../src/data/cameras';
+import { CAMERAS, PRESET_ROUTES, TrafficCamera, ZONES } from '../../src/data/cameras';
 import { junctionOf, matchCamerasToRoute, namesMatch, RouteStep } from '../../src/services/routing';
 import { spreadSharedPositions } from '../../src/services/cameraLayout';
 import { getDistanceMeters } from '../../src/services/geometry';
@@ -113,6 +113,31 @@ describe('datos de cámaras publicados con la app', () => {
     }
     const coarse = CAMERAS.filter((c) => String(c.lat).split('.')[1].length < 5 && String(c.lng).split('.')[1].length < 5);
     expect(coarse.length).toBeLessThan(5);
+  });
+});
+
+describe('lista de cámaras', () => {
+  it('no repite identificadores, numera en orden y usa la imagen grande de cada cámara', () => {
+    expect(new Set(CAMERAS.map((c) => c.id)).size).toBe(CAMERAS.length);
+    expect(CAMERAS.map((c) => c.index)).toEqual(CAMERAS.map((_, i) => i));
+    for (const c of CAMERAS) {
+      expect(c.url).toContain(`/styles/upload_fotograma_big/public/camara/${c.id}.jpg?itok=`);
+    }
+  });
+
+  it('incluye las cámaras que el Ayuntamiento publica y que usan los ejes principales', () => {
+    const ids = new Set(CAMERAS.map((c) => c.id));
+    for (const id of ['C04F2', 'C06M3', 'C06M4', 'C14M2', 'C14M3', 'C18M3', 'C26F2', 'C26F3', 'C31F2', 'C37F4', 'C48M1', 'C48M2', 'C67M1']) {
+      expect(ids.has(id), id).toBe(true);
+    }
+    // Every camera named by a preset route exists
+    const missing = Object.values(PRESET_ROUTES).flatMap((p) => p.cameraIds).filter((id) => !ids.has(id));
+    expect(missing).toEqual([]);
+  });
+
+  it('el recuento por zona sale de la lista', () => {
+    expect(ZONES.reduce((sum, z) => sum + z.count, 0)).toBe(CAMERAS.length);
+    expect(ZONES.every((z) => z.count > 0)).toBe(true);
   });
 });
 
