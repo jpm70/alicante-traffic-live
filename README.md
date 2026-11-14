@@ -50,7 +50,7 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 - **Histórico real**: en cada actualización de los datos se guarda la velocidad medida por los detectores en un perfil por franja horaria (laborables y fines de semana). En rutas con detectores, la gráfica compara la velocidad de ahora con la habitual a esa hora; en rutas solo urbanas muestra el patrón estimado, marcado como *estimación*.
 - **Velocidad real en la ronda y los accesos**: los detectores de tráfico de la DGT (A-70 y A-31) miden velocidad, intensidad y ocupación cada pocos minutos. En esos tramos la ruta usa la velocidad **medida** en el sentido en que circulas, y el mapa la muestra en cada punto de medida.
 - **Retenciones estimadas en la ciudad**: las calles urbanas no tienen un feed público de velocidades, así que allí la congestión en cada cámara se **estima** por franja horaria y puntos conflictivos (y la interfaz lo indica). Botón de *Hora Punta* para forzar el escenario de máxima carga.
-- **Cámaras en ruta**: solo las que están sobre el trazado (cerca de la línea o en la misma calle), no las de calles paralelas.
+- **Cámaras en ruta**: las de los cruces por los que pasa el trazado, y de cada cruce las que miran a la calle de la ruta. La posición de cada cruce es la que publica el Ayuntamiento en su mapa de movilidad (`npm run cameras` la actualiza); la retención estimada se cuenta una vez por cruce.
 
 ### 📹 2. Red de 159 Cámaras Municipales en Tiempo Real
 - **Muro multicámara único**: Todas las cámaras de Alicante en una cuadrícula optimizada sin sobrecargar la memoria del navegador.
@@ -234,7 +234,7 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   │   ├── LocalClosuresModal.tsx      # Avisos de fiestas y cortes de tráfico
 │   │   └── Header.tsx                  # Cabecera principal con selector de modos
 │   ├── data/
-│   │   ├── cameras.ts         # Base de datos georreferenciada de cámaras DGT
+│   │   ├── cameras.ts         # Cámaras municipales, situadas en su cruce (posición oficial)
 │   │   └── publicTransport.ts # Paradas de taxi, tarifas, carriles y cortes
 │   ├── services/
 │   │   ├── routing.ts         # Rutas OSRM, cámaras en ruta, estimación de retenciones e incidencias
