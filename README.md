@@ -1,15 +1,15 @@
-# 🚦 Alicante Tráfico en Vivo · Rutas, Cámaras DGT y Suite Taxi
+# 🚦 Alicante Tráfico en Vivo · Rutas, Cámaras, Datos DGT y Suite Taxi
 
 [![React](https://img.shields.io/badge/React-19.0-61dafb?style=for-the-badge&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.x-3178c6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646cff?style=for-the-badge&logo=vite)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38bdf8?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?style=for-the-badge&logo=leaflet)](https://leafletjs.com/)
 [![Three.js](https://img.shields.io/badge/Three.js-WebGL-black?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=for-the-badge&logo=pwa)](https://web.dev/progressive-web-apps/)
-[![License](https://img.shields.io/badge/License-MIT-green.style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-> **Plataforma web y móvil para moverse por Alicante.** Calcula rutas reales por el callejero (OSRM), las compara con las **incidencias oficiales de la DGT** en tiempo real y con una estimación de retenciones por franja horaria, muestra las **172 cámaras municipales de tráfico** en un solo muro, recorre la ruta en **3D sobre ortofoto real con edificios de OpenStreetMap**, guía con **GPS paso a paso** y ofrece una **suite para taxistas y transporte público** de Alicante.
+> **Plataforma web y móvil para moverse por Alicante.** Calcula rutas reales por el callejero (OSRM), las compara con las **incidencias y velocidades oficiales de la DGT** (actualizadas cada 15 minutos) y con una estimación de retenciones por franja horaria, muestra las **172 cámaras municipales de tráfico** en un solo muro, recorre la ruta en **3D sobre ortofoto real con edificios de OpenStreetMap**, guía con **GPS paso a paso** y ofrece una **suite para taxistas y transporte público** de Alicante.
 
 **👉 Abrir la app: [jpm70.github.io/alicante-traffic-live](https://jpm70.github.io/alicante-traffic-live/)** — pensada para el móvil (se puede instalar como app) y para el navegador del coche.
 
@@ -19,7 +19,7 @@ Creado por [unfantasmaenelsistema.com](https://www.unfantasmaenelsistema.com/).
 
 ## 📸 Capturas de Pantalla
 
-Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y en la pantalla de un coche (1280 × 600). Rutas: Sant Vicent del Raspeig → El Campello por la A-70 (radares y velocidades medidas por la DGT) y Plaza de los Luceros → Playa de San Juan (3D, cámaras y taxi).
+Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y en la pantalla de un coche (1280 × 600), tomadas en octubre de 2026: desde entonces la red ha pasado de 159 a 172 cámaras y los botones son más grandes en pantallas táctiles. Rutas: Sant Vicent del Raspeig → El Campello por la A-70 (radares y velocidades medidas por la DGT) y Plaza de los Luceros → Playa de San Juan (3D, cámaras y taxi).
 
 | Ruta recomendada con radares DGT | Mapa: velocidades medidas, radares y leyenda |
 | :---: | :---: |
@@ -46,15 +46,18 @@ Capturas reales de la aplicación publicada, en un móvil Android (390 × 844) y
 - **Rutas reales por calles**: trazado, distancia, tiempo base e indicaciones giro a giro con nombres de calle del motor [OSRM](https://project-osrm.org/) (servidor público y espejo FOSSGIS como respaldo). Si ningún servidor responde, la app lo dice y dibuja una línea punteada marcada como *trazado aproximado*, nunca una recta disfrazada de ruta.
 - **Rutas alternativas**: alternativas del propio motor más corredores de Alicante (Litoral, Gran Vía, Vía Parque) cuando el desvío es razonable; se descartan las que repiten el mismo trazado.
 - **Radares DGT** en el mapa y en el resumen de la ruta (carretera y punto kilométrico).
+- **Compartir y exportar**: enlace a la ruta (también por WhatsApp o Telegram) que abre la app con el mismo origen, destino y alternativa; exportación a GPX y KML; y salto a Google Maps o Waze con el destino puesto.
+- **Dictamen IA (opcional)**: con una clave propia de Gemini, un resumen en lenguaje natural de las alternativas y sus puntos críticos.
 - **Incidencias oficiales en la ruta**: accidentes, cortes, obras y retenciones del feed DATEX II de la DGT que caen sobre el trazado suman tiempo y cambian el estado de la ruta.
-- **Histórico real**: en cada actualización de los datos se guarda la velocidad medida por los detectores en un perfil por franja horaria (laborables y fines de semana). En rutas con detectores, la gráfica compara la velocidad de ahora con la habitual a esa hora; en rutas solo urbanas muestra el patrón estimado, marcado como *estimación*.
-- **Velocidad real en la ronda y los accesos**: los detectores de tráfico de la DGT (A-70 y A-31) miden velocidad, intensidad y ocupación cada pocos minutos. En esos tramos la ruta usa la velocidad **medida** en el sentido en que circulas, y el mapa la muestra en cada punto de medida.
+- **Histórico real**: en cada actualización de los datos se guarda la velocidad medida por los detectores en un perfil por franja horaria (laborables y fines de semana). En rutas con detectores, la gráfica compara la velocidad de ahora con la habitual a esa hora; las horas con menos de 3 medidas por punto se dibujan con punto hueco y no se usan como referencia. En rutas solo urbanas muestra el patrón estimado, marcado como *estimación*.
+- **Velocidad real en la ronda y los accesos**: los detectores de tráfico de la DGT (A-70 y A-31) miden velocidad, intensidad y ocupación cada pocos minutos. En esos tramos la ruta usa la velocidad **medida** en el sentido en que circulas, y el mapa la muestra en cada punto de medida. Si la última medida tiene más de 45 minutos deja de aplicarse y la app lo dice.
 - **Retenciones estimadas en la ciudad**: las calles urbanas no tienen un feed público de velocidades, así que allí la congestión en cada cámara se **estima** por franja horaria y puntos conflictivos (y la interfaz lo indica). Botón de *Hora Punta* para forzar el escenario de máxima carga.
-- **Cámaras en ruta**: las de los cruces por los que pasa el trazado, y de cada cruce las que miran a la calle de la ruta. La posición de cada cruce es la que publica el Ayuntamiento en su mapa de movilidad (`npm run cameras` la actualiza); la retención estimada se cuenta una vez por cruce.
+- **Cámaras en ruta**: las de los cruces por los que pasa el trazado, y de cada cruce las que miran a la calle de la ruta (o una sola, si ninguna la nombra). La posición de cada cruce es la que publica el Ayuntamiento en su mapa de movilidad (`npm run cameras` la actualiza); la retención estimada se cuenta una vez por cruce. En el mapa, las cámaras de un mismo cruce se dibujan en un pequeño círculo a su alrededor para poder tocarlas una a una.
 
 ### 📹 2. Red de 172 Cámaras Municipales en Tiempo Real
 - **Muro multicámara único**: Todas las cámaras de Alicante en una cuadrícula optimizada sin sobrecargar la memoria del navegador.
-- **Ciclo de refresco continuo**: Actualización automática de instantáneas cada 15 segundos con indicador de cuenta atrás.
+- **Ciclo de refresco continuo**: Actualización automática de instantáneas cada 15 segundos con indicador de cuenta atrás. Se detiene mientras la pestaña está oculta o el móvil bloqueado, y refresca al volver.
+- **Filtros**: cámaras de la ruta, selección propia, por zonas, por ejes principales (playa, universidad, Avda. de Denia, centro, puerto…) o todas, con buscador por calle o identificador.
 - **Modo Picture-in-Picture (PiP)**: Fija cualquier cámara en una ventana flotante para seguir vigilando un cruce mientras navegas por otras pestañas o calculas rutas.
 - **Lightbox en alta resolución**: Amplía cualquier imagen a pantalla completa con controles de anterior/siguiente.
 
@@ -117,8 +120,13 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 
 ## 📱 Soporte PWA (Progressive Web App)
 - **Instalable directamente**: Puede agregarse a la pantalla de inicio en iPhone, iPad, Android, macOS y Windows como una aplicación nativa.
-- **Funcionamiento Offline**: Service Worker con caché de activos estáticos, interfaz y estilos para arrancar sin conexión.
+- **Funcionamiento sin conexión**: el Service Worker guarda la interfaz, los estilos (incluidos los del mapa) y la última copia de los datos de la DGT. Sin red la app arranca, muestra las últimas incidencias conocidas indicando de cuándo son, y avisa de que la ruta es un trazado aproximado porque no puede consultar el motor de rutas. Las teselas del mapa y las imágenes de las cámaras sí necesitan conexión.
 - **Iconos adaptativos**: Soporte completo para iconos maskable y pantallas retina.
+
+## ♿ Accesibilidad
+- **Pantallas táctiles** (móvil, tableta, coche): todo botón y control mide al menos 44 × 44 px. Con ratón la interfaz conserva su tamaño compacto.
+- **Texto**: ningún texto de la interfaz baja de 11 px.
+- **Diálogos** (GPS, recorrido, visor de cámara, compartir, taxi…): se anuncian como diálogo con nombre, se cierran con Escape y el foco del teclado entra al abrirlos, no sale mientras están abiertos y vuelve al botón que los abrió.
 
 ---
 
@@ -127,10 +135,12 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 - **Frontend Core**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)
 - **Empaquetador y Dev Server**: [Vite 8](https://vitejs.dev/)
 - **Estilos y Diseño**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **Mapas y Geometría**: [Leaflet](https://leafletjs.com/), OpenStreetMap cartography
+- **Mapas y Geometría**: [Leaflet](https://leafletjs.com/), cartografía de OpenStreetMap
+- **Gráficas**: [Recharts](https://recharts.org/) (se carga aparte, cuando hay una ruta en pantalla)
 - **Gráficos 3D y WebGL**: [Three.js](https://threejs.org/)
 - **Iconografía**: [Lucide React](https://lucide.dev/)
 - **Sin servidor propio**: sitio estático en GitHub Pages; los datos de la DGT los publica un workflow ligero en la rama `data` y los edificios se regeneran cada mes (GitHub Actions).
+- **Tests**: [Vitest](https://vitest.dev/) (unitarios) y [Playwright](https://playwright.dev/) (la app compilada en un móvil Chromium y en Firefox).
 - **Inteligencia Artificial (Opcional)**: [@google/genai](https://github.com/google-gemini/generative-ai-js) llamado desde el navegador con la clave Gemini de cada usuario. Usa un modelo fijado (`gemini-3.8-flash`); si Google lo retira, pasa solo al alias `gemini-flash-latest` o al Flash más reciente de la lista de modelos de Google, y lo recuerda. Un workflow semanal (`gemini-check.yml`) avisa cuando el modelo fijado desaparece; necesita el secreto opcional `GEMINI_API_KEY` en el repositorio y, sin él, no hace nada.
 
 ---
@@ -139,7 +149,7 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 
 ### Prerrequisitos
 - **Node.js** v20 o superior instalado en el equipo.
-- Gestor de paquetes `npm` (incluido con Node.js) o `bun`.
+- Gestor de paquetes `npm` (incluido con Node.js) o [`bun`](https://bun.sh/). El repositorio fija las versiones con `bun.lock` y los workflows usan Bun 1.4.4; con `npm` funciona igual, pero resuelve las versiones por su cuenta.
 
 ### Paso 1: Clonar el repositorio
 ```bash
@@ -149,14 +159,14 @@ cd alicante-traffic-live
 
 ### Paso 2: Instalar dependencias
 ```bash
-npm install
+npm install        # o: bun install --frozen-lockfile
 ```
 
 ### Paso 3: Arrancar en local
 ```bash
 npm run dev
 ```
-Descarga las incidencias actuales de la DGT a `public/data/alerts.json` y abre la app en `http://localhost:3000`.
+Descarga los datos actuales de la DGT (incidencias, radares, velocidades e histórico) a `public/data/` y abre la app en `http://localhost:3000`. En local la app solo lee esa copia; no consulta la rama `data`.
 
 > No hace falta ninguna clave. La clave de Gemini (asesor IA opcional) y la de Google Street View las introduce cada usuario en la propia app y se guardan solo en su navegador.
 
@@ -178,11 +188,17 @@ Los tests e2e usan los servicios públicos reales (OSRM, mapas, OpenStreetMap). 
 ### Edificios 3D y callejero
 El callejero del buscador (`public/geo/streets.json`, `npm run streets`) se regenera en el mismo workflow mensual y solo se publica si cambia alguna calle.
 
-Los edificios de OpenStreetMap del área metropolitana de Alicante están pre-generados en `public/buildings/` (teselas pequeñas que el 3D descarga según la ruta). Se regeneran solos el día 1 de cada mes (`.github/workflows/buildings.yml`, también se puede lanzar a mano desde *Actions*): si algo cambió en OpenStreetMap, el workflow hace commit en `main` y el siguiente despliegue lo publica. Overpass suele ir saturado, así que las zonas que no responden conservan los edificios ya publicados, y si no responde ninguna no se toca nada. Para regenerarlos en local:
+Los edificios de OpenStreetMap del área metropolitana de Alicante están pre-generados en `public/buildings/` (teselas pequeñas que el 3D descarga según la ruta). Se regeneran solos el día 1 de cada mes (`.github/workflows/buildings.yml`, también se puede lanzar a mano desde *Actions*): si algo cambió en OpenStreetMap, el workflow hace commit en `main` y lanza el despliegue. Overpass suele ir saturado, así que las zonas que no responden conservan los edificios ya publicados, y si no responde ninguna no se toca nada. Para regenerarlos en local:
 ```bash
 npm run buildings
 ```
 Fuera de esa zona, el 3D los pide en directo a Overpass.
+
+### Posición de las cámaras
+```bash
+npm run cameras
+```
+Descarga el fichero público del mapa de movilidad municipal (`movilidad.alicante.es/asmpois`) y reescribe la posición de cada cámara en `src/data/cameras.ts` con la de su cruce. También lista las cámaras que el Ayuntamiento publica y la app aún no tiene. Se lanza a mano cuando el Ayuntamiento añade o mueve cámaras.
 
 ---
 
@@ -198,21 +214,23 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 ├── docs/
 │   └── screenshots/          # Capturas reales de la app (móvil y pantalla de coche)
 ├── tests/
-│   ├── unit/                 # Vitest: geometría, rutas, maniobras, feeds DGT, radares
+│   ├── unit/                 # Vitest: geometría, rutas, cámaras, feeds DGT, histórico, origen y antigüedad de los datos…
 │   ├── e2e/                  # Playwright: build real en móvil (Chromium) y Firefox
 │   └── fixtures/             # Extractos reales de los feeds DATEX II de la DGT
 ├── public/                   # Activos estáticos, iconos PWA y manifiesto
 │   ├── buildings/            # Edificios OSM pre-generados en teselas (mensual)
 │   ├── geo/streets.json      # Callejero para el buscador de direcciones (mensual)
 │   ├── manifest.json         # Configuración PWA
-│   ├── sw.js                 # Service Worker (solo cachea recursos propios)
+│   ├── og-image.jpg          # Imagen al compartir el enlace
+│   ├── sw.js                 # Service Worker (recursos propios y última copia de los datos de la DGT)
 │   └── icono.png             # Icono de la aplicación
 ├── scripts/
 │   ├── update-dgt-data.ts    # Descarga incidencias, radares y detectores de la DGT → public/data/*.json
 │   ├── dgtIncidents.ts       # Parser de incidencias DGT (área de Alicante)
 │   ├── dgtRadars.ts          # Parser del inventario de radares DGT (provincia de Alicante)
 │   ├── dgtDetectors.ts       # Detectores DGT: velocidad, intensidad y ocupación por punto y sentido
-│   ├── trafficHistory.ts     # Histórico de velocidad por franja de 15 min (data/history.json)
+│   ├── trafficHistory.ts     # Histórico de velocidad por franja de 15 min (history.json)
+│   ├── update-camera-positions.ts  # Posición oficial de las cámaras desde el mapa municipal
 │   ├── build-buildings.ts    # Genera public/buildings desde Overpass
 │   ├── build-streets.ts      # Genera el callejero del buscador (public/geo/streets.json)
 │   └── check-gemini.ts       # Comprobación del modelo de Gemini fijado
@@ -221,10 +239,13 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   │   ├── InteractiveMap.tsx          # Mapa Leaflet con capas y marcadores
 │   │   ├── RouteSelector.tsx           # Selección de puntos de origen y destino
 │   │   ├── PlaceSearchInput.tsx        # Buscador con sugerencias de calles y lugares
-│   │   ├── RouteComparisonPanel.tsx    # Comparativa de rutas y taxímetro
+│   │   ├── RouteComparisonPanel.tsx    # Ruta recomendada, alternativas, compartir y dictamen IA
+│   │   ├── HistoricalTrafficChart.tsx  # Gráfica de velocidad habitual frente a la actual
+│   │   ├── TrafficAlerts.tsx           # Panel de incidencias de la DGT
 │   │   ├── RouteTourModal.tsx          # Modal contenedor del tour virtual
 │   │   ├── StreetViewTourView.tsx      # Visor Street View con HUD y minimapa
 │   │   ├── GpsNavigatorModal.tsx       # Navegador GPS turn-by-turn con voz
+│   │   ├── CarNavigationLauncherModal.tsx  # Modo coche, Google Maps, Waze y exportación GPX/KML
 │   │   ├── CameraWall.tsx              # Cuadrícula de 172 cámaras en vivo
 │   │   ├── CameraLightbox.tsx          # Visor en pantalla completa de cámaras
 │   │   ├── FloatingCameraPip.tsx       # Ventana Picture-in-Picture persistente
@@ -233,12 +254,24 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 │   │   ├── DemandRadarModal.tsx        # Radar de llegadas AVE y vuelos
 │   │   ├── TaxiDashboardModal.tsx      # Salpicadero de alto contraste para coche
 │   │   ├── LocalClosuresModal.tsx      # Avisos de fiestas y cortes de tráfico
+│   │   ├── AiApiKeyModal.tsx           # Clave de Gemini del usuario (se guarda en su navegador)
+│   │   ├── OnboardingTour.tsx          # Bienvenida y tour guiado
+│   │   ├── PWAInstallButton.tsx        # Botón de instalar la app
 │   │   └── Header.tsx                  # Cabecera principal con selector de modos
 │   ├── data/
 │   │   ├── cameras.ts         # Cámaras municipales, situadas en su cruce (posición oficial)
+│   │   ├── trafficAlerts.ts   # Tipos de las incidencias y sus textos de fecha
 │   │   └── publicTransport.ts # Paradas de taxi, tarifas, carriles y cortes
+│   ├── hooks/
+│   │   ├── useDialog.ts       # Diálogos accesibles: rol, Escape y foco
+│   │   └── usePWAInstall.ts   # Instalación como app
 │   ├── services/
 │   │   ├── routing.ts         # Rutas OSRM, cámaras en ruta, estimación de retenciones e incidencias
+│   │   ├── dataSource.ts      # Lee los datos de la DGT: rama `data` y copia de reserva
+│   │   ├── dataAge.ts         # Antigüedad de los datos y escapado de textos del mapa
+│   │   ├── cameraLayout.ts    # Cámaras de un mismo cruce separadas en el mapa
+│   │   ├── routeExport.ts     # Exportación de la ruta a GPX y KML
+│   │   ├── text.ts            # Textos de estado y plurales
 │   │   ├── geometry.ts        # Distancias, proyección sobre la ruta y simplificación
 │   │   ├── addressSearch.ts   # Buscador: callejero propio + Photon (lugares y portales)
 │   │   ├── mapOrientation.ts  # Mapa del GPS con norte o rumbo arriba
@@ -270,17 +303,38 @@ La app lee esos ficheros desde `raw.githubusercontent.com/<usuario>/<repo>/data/
 
 La rama `data` se reescribe en cada ejecución como un solo commit, para que el repositorio no crezca. El histórico de velocidades (`history.json`) continúa a partir de la copia de esa rama; si la rama existe pero no se puede leer, la ejecución falla sin tocar nada, para no perder el histórico.
 
-`data.yml` pide ejecutarse cada 15 minutos, pero GitHub da poca prioridad a las tareas programadas y en la práctica lo lanza cada varias horas. Una ejecución lanzada por la API (`workflow_dispatch`), por ejemplo desde un programador externo, sí arranca al momento.
+### Programador externo
+
+GitHub da poca prioridad a las tareas programadas: aunque se pida una ejecución cada pocos minutos, en la práctica lanza una cada varias horas. Las ejecuciones pedidas por la API (`workflow_dispatch`) sí arrancan al momento, así que `data.yml` se lanza desde fuera:
+
+- **Cada 15 minutos**, un servicio de cron externo (por ejemplo [cron-job.org](https://cron-job.org)) hace esta llamada:
+
+  ```text
+  POST https://api.github.com/repos/<usuario>/<repo>/actions/workflows/data.yml/dispatches
+  Authorization: Bearer <token>
+  Accept: application/vnd.github+json
+  X-GitHub-Api-Version: 2022-11-28
+  Content-Type: application/json
+
+  {"ref":"main"}
+  ```
+
+  GitHub responde `204 No Content`. El token es uno *fine-grained* limitado a este repositorio, con el único permiso **Actions: Read and write**; se guarda solo en el servicio de cron, nunca en el repositorio. GitHub retirará la versión `2022-11-28` de la API el 10 de marzo de 2028: antes de esa fecha hay que cambiar esa cabecera por la versión vigente.
+- **Una vez por hora**, el cron del propio `data.yml`, solo como respaldo por si el servicio externo deja de llamar.
+
+Sin programador externo todo sigue funcionando, pero los datos llegan cada varias horas.
 
 Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub pausa las tareas programadas si el repositorio pasa 60 días sin actividad; `data.yml` lo evita reactivándolas en cada ejecución programada, y si aun así se pararan se reactivan desde *Actions*.
 
-Como los datos de la DGT pueden tener horas, la app indica su antigüedad: si las incidencias superan los 90 minutos aparece un aviso «DGT hace X h» en la cabecera y en el panel de alertas, y las velocidades medidas con más de 45 minutos dejan de aplicarse al tiempo de la ruta.
+### Antigüedad de los datos
+
+Si el programador externo falla, los datos de la DGT pueden tener horas, así que la app indica siempre su antigüedad: si las incidencias superan los 90 minutos aparece un aviso «DGT hace X h» en la cabecera y en el panel de alertas, y las velocidades medidas con más de 45 minutos dejan de aplicarse al tiempo de la ruta.
 
 ---
 
 ## 🏛️ Fuentes de Información y Créditos
 
-- **Cámaras de Tráfico**: imágenes del Centro de Control de Tráfico del Ayuntamiento de Alicante (movilidad.alicante.es).
+- **Cámaras de Tráfico**: imágenes del Centro de Control de Tráfico del Ayuntamiento de Alicante (movilidad.alicante.es). La posición de cada cámara es la de su cruce en el mapa de movilidad municipal.
 - **Incidencias**: DGT, Punto de Acceso Nacional de tráfico (nap.dgt.es), feed DATEX II de situaciones.
 - **Radares**: DGT, inventario de cinemómetros fijos y de velocidad media (nap.dgt.es, DATEX II).
 - **Velocidad medida**: DGT, detectores de tráfico (nap.dgt.es, DATEX II MeasuredDataPublication).

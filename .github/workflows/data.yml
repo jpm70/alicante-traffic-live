@@ -12,14 +12,19 @@ name: Update DGT data
 # deployment, a few seconds per run. The site itself is deployed only when the code
 # changes (deploy.yml).
 #
-# The cron asks for a run every 15 minutes, but GitHub gives scheduled runs low priority
-# (in practice one every few hours). A run started through the API (`workflow_dispatch`,
-# for example from an external scheduler) is not delayed. Either way the app shows the
-# age of the data and ignores measured speeds that are too old.
+# Two things start it:
+#  - An external scheduler that calls the API every 15 minutes (`workflow_dispatch`).
+#    Runs started that way are not delayed. It is set up outside this repository (see
+#    "Programador externo" in the README).
+#  - The cron below, once an hour, only as a backup in case the external scheduler stops.
+#    GitHub gives scheduled runs low priority: in practice it starts one every few hours.
+#    It is also the run that keeps the scheduled workflows enabled (last step).
+# Either way the app shows the age of the data and ignores measured speeds that are too old.
 on:
   schedule:
-    # Away from the start of the hour, when GitHub is busiest
-    - cron: '7,22,37,52 * * * *'
+    # Away from the start of the hour, when GitHub is busiest, and between two calls of
+    # the external scheduler (minutes 0, 15, 30 and 45)
+    - cron: '37 * * * *'
   workflow_dispatch:
 
 permissions:
