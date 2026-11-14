@@ -10,6 +10,7 @@ import {
   makeLocalProjection,
   buildRouteIndex,
   pointAtDistance,
+  projectOnRoute,
 } from './geometry';
 
 export { getDistanceMeters } from './geometry';
@@ -83,12 +84,20 @@ export interface RouteCalculationOptions {
 // Camera matching
 // ---------------------------------------------------------------------------
 
-// Camera coordinates in the municipal dataset are rounded to 3-4 decimals (±50 m),
-// so a tight buffer misses cameras that are really on the route, and the old 380 m
-// buffer swallowed cameras on parallel streets. We accept a camera when it is very
-// close, or reasonably close AND its name matches the street the route is using.
+// The cameras are placed at their junction: the City Council publishes the exact position
+// of every junction with cameras ("C01 Plaza de la Estrella") and the cameras that hang
+// there, each looking down a different street (see scripts/update-camera-positions.ts).
+// So the route is matched against junctions, and at each junction on the route the app
+// shows the cameras that look at the street the route is using.
 const CAMERA_NEAR_METERS = 60;
+// A big roundabout or square can leave its reference point this far from the carriageway;
+// beyond the near distance a junction only counts if one of its cameras names the street.
 const CAMERA_NAME_MATCH_METERS = 160;
+// Streets of the route that count as "at the junction" when choosing its cameras
+const JUNCTION_STREETS_METERS = 80;
+
+// "C15F3" hangs at junction "C15"
+export const junctionOf = (cameraId: string): string => cameraId.slice(0, 3);
 
 const STOP_WORDS = new Set([
   'avenida', 'avda', 'calle', 'plaza', 'paseo', 'rambla', 'glorieta', 'rotonda', 'carrer', 'placa',
@@ -112,13 +121,18 @@ function streetTokens(text: string): string[] {
     .filter((t) => t.length >= 4 && !STOP_WORDS.has(t));
 }
 
-function namesMatch(a: string, b: string): boolean {
+// The Council names the cameras in Spanish ("Reyes Católicos", "Avda. de la Estación") and
+// the routing engine gives the streets in Valencian ("Carrer dels Reis Catòlics", "Avinguda
+// de l'Estació"): two words also match when they start with the same five letters.
+const sameWord = (a: string, b: string) => a === b || (a.length >= 5 && b.length >= 5 && a.slice(0, 5) === b.slice(0, 5));
+
+export function namesMatch(a: string, b: string): boolean {
   if (!a || !b) return false;
-  const tb = new Set(streetTokens(b));
-  return streetTokens(a).some((t) => tb.has(t));
+  const tb = streetTokens(b);
+  return streetTokens(a).some((t) => tb.some((u) => sameWord(t, u)));
 }
 
-function matchCamerasToRoute(
+export function matchCamerasToRoute(
   coordinates: LatLng[],
   steps: RouteStep[],
   allCameras: TrafficCamera[]
@@ -135,44 +149,47 @@ function matchCamerasToRoute(
   }
   const pad = 0.003;
 
+  const junctions = new Map<string, TrafficCamera[]>();
+  for (const cam of allCameras) {
+    const key = junctionOf(cam.id);
+    if (!junctions.has(key)) junctions.set(key, []);
+    junctions.get(key)!.push(cam);
+  }
+
   const matched: { camera: TrafficCamera; streetName?: string; along: number }[] = [];
   const index = buildRouteIndex(coordinates);
 
-  for (const cam of allCameras) {
-    if (cam.lat < minLat - pad || cam.lat > maxLat + pad || cam.lng < minLng - pad || cam.lng > maxLng + pad) continue;
+  for (const cams of junctions.values()) {
+    // Every camera of a junction has the junction's position
+    const { lat, lng } = cams[0];
+    if (lat < minLat - pad || lat > maxLat + pad || lng < minLng - pad || lng > maxLng + pad) continue;
 
-    const d = distanceToPolyline(cam.lat, cam.lng, coordinates);
+    const d = distanceToPolyline(lat, lng, coordinates);
     if (d > CAMERA_NAME_MATCH_METERS) continue;
 
-    // Street the route is using next to the camera
-    let streetName: string | undefined;
-    let bestStepDist = Infinity;
+    // Streets the route uses at the junction, the closest first
+    const streets: { name: string; distance: number }[] = [];
     for (const step of steps) {
       if (!step.name || step.geometry.length < 2) continue;
-      const sd = distanceToPolyline(cam.lat, cam.lng, step.geometry);
-      if (sd < bestStepDist) {
-        bestStepDist = sd;
-        streetName = step.name;
-      }
+      const sd = distanceToPolyline(lat, lng, step.geometry);
+      if (sd <= Math.max(JUNCTION_STREETS_METERS, d + 20)) streets.push({ name: step.name, distance: sd });
     }
+    streets.sort((x, y) => x.distance - y.distance);
+    const streetOf = (cam: TrafficCamera) => streets.find((st) => namesMatch(cam.name, st.name))?.name;
 
-    const accept = d <= CAMERA_NEAR_METERS || (streetName !== undefined && namesMatch(cam.name, streetName));
-    if (!accept) continue;
+    const looking = cams.filter((cam) => streetOf(cam) !== undefined);
+    if (d > CAMERA_NEAR_METERS && looking.length === 0) continue;
 
-    // Order cameras by their position along the route
-    let along = 0;
-    let best = Infinity;
-    for (let i = 0; i < coordinates.length; i++) {
-      const dd = getDistanceMeters(cam.lat, cam.lng, coordinates[i][0], coordinates[i][1]);
-      if (dd < best) {
-        best = dd;
-        along = index.cumulative[i];
-      }
+    // The cameras that look at the route's street; when none says so by name (many are
+    // called just "Cámara - C21F4"), one camera stands for the junction
+    const chosen = looking.length > 0 ? looking : [[...cams].sort((x, y) => x.id.localeCompare(y.id))[0]];
+    const along = projectOnRoute(index, lat, lng).alongMeters;
+    for (const camera of chosen) {
+      matched.push({ camera, streetName: streetOf(camera) ?? streets[0]?.name, along });
     }
-    matched.push({ camera: cam, streetName, along });
   }
 
-  return matched.sort((a, b) => a.along - b.along);
+  return matched.sort((x, y) => x.along - y.along || x.camera.id.localeCompare(y.camera.id));
 }
 
 // Kept for other consumers: cameras within a buffer of a polyline
@@ -494,10 +511,19 @@ export async function calculateAlternativeRoutes(
   const results: CalculatedRoute[] = candidates.map((candidate) => {
     const { coordinates, distanceKm, baseMinutes, steps } = candidate.raw;
 
-    const evaluatedCams = matchCamerasToRoute(coordinates, steps, CAMERAS).map(({ camera, streetName }) => ({
-      ...evaluateCameraTraffic(camera, hour, rushHourForced),
-      streetName,
-    }));
+    // The estimate is per junction: its cameras show the same traffic from different
+    // sides, so they share one status and the delay is counted once.
+    const junctionTraffic = new Map<string, RouteTrafficCamera>();
+    const evaluatedCams = matchCamerasToRoute(coordinates, steps, CAMERAS).map(({ camera, streetName }) => {
+      const key = junctionOf(camera.id);
+      const first = junctionTraffic.get(key);
+      if (!first) {
+        const evaluated = evaluateCameraTraffic(camera, hour, rushHourForced);
+        junctionTraffic.set(key, evaluated);
+        return { ...evaluated, streetName };
+      }
+      return { ...camera, status: first.status, speedKmH: first.speedKmH, delayContributionMin: 0, streetName };
+    });
 
     // Bus-taxi lanes: decided by the real street names of the route, not by its label
     const usesBusLane = (name?: string) => {
@@ -560,10 +586,11 @@ export function applyIncidents(routes: CalculatedRoute[], incidents: TrafficAler
     const liveDelay = Math.round(liveStations.reduce((sum, s) => sum + s.delayMinutes, 0));
     const trafficDelayMinutes = route.cameraDelayMinutes + incidentDelay + liveDelay;
 
-    const redCount =
-      route.cameras.filter((x) => x.status === 'retencion').length + liveStations.filter((x) => x.status === 'retencion').length;
-    const yellowCount =
-      route.cameras.filter((x) => x.status === 'denso').length + liveStations.filter((x) => x.status === 'denso').length;
+    // Congested points: junctions (not cameras: several can show the same junction) and detectors
+    const junctionsWith = (status: RouteTrafficCamera['status']) =>
+      new Set(route.cameras.filter((x) => x.status === status).map((x) => junctionOf(x.id))).size;
+    const redCount = junctionsWith('retencion') + liveStations.filter((x) => x.status === 'retencion').length;
+    const yellowCount = junctionsWith('denso') + liveStations.filter((x) => x.status === 'denso').length;
     const severeIncident = routeIncidents.some((a) => a.severity === 'alta');
 
     let status: CalculatedRoute['status'] = 'fluido';

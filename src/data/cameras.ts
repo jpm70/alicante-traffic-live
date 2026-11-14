@@ -2,6 +2,12 @@
  * Alicante Traffic Cameras Dataset
  * Source: Ayuntamiento de Alicante (movilidad.alicante.es)
  * Original repo: github.com/jpm70/TraficoAlicante
+ *
+ * "lat"/"lng" are the position of the junction where the camera hangs, as published by the
+ * City Council's mobility map (https://movilidad.alicante.es/asmpois). The first three
+ * characters of the id are the junction ("C15F3" is at junction C15), and the cameras of
+ * a junction share its position. Refresh them with `npm run cameras`
+ * (scripts/update-camera-positions.ts); do not edit the coordinates by hand.
  */
 
 export interface TrafficCamera {
@@ -26,8 +32,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Cardenal Francisco Álvarez",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C29M6.jpg?itok=FOrqa30Q",
-    "lat": 38.3535,
-    "lng": -0.505,
+    "lat": 38.355225,
+    "lng": -0.502147,
     "index": 0
   },
   {
@@ -35,8 +41,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Dr. Jiménez Díaz",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C29M4.jpg?itok=Y8CQk6-U",
-    "lat": 38.351,
-    "lng": -0.503,
+    "lat": 38.355225,
+    "lng": -0.502147,
     "index": 1
   },
   {
@@ -44,8 +50,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Orión",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C11M5.jpg?itok=0cgKRmwy",
-    "lat": 38.3495,
-    "lng": -0.5045,
+    "lat": 38.344451,
+    "lng": -0.507429,
     "index": 2
   },
   {
@@ -53,8 +59,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Bellea del foc",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C52M3.jpg?itok=ktqVY-XN",
-    "lat": 38.3668,
-    "lng": -0.4705,
+    "lat": 38.365858,
+    "lng": -0.471539,
     "index": 3
   },
   {
@@ -62,8 +68,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Plaza del Milenio",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C52M2.jpg?itok=GmfyLoGq",
-    "lat": 38.366,
-    "lng": -0.468,
+    "lat": 38.365858,
+    "lng": -0.471539,
     "index": 4
   },
   {
@@ -71,8 +77,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Novelda",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C39F3.jpg?itok=bSrCE-tR",
-    "lat": 38.3615,
-    "lng": -0.4935,
+    "lat": 38.362215,
+    "lng": -0.493039,
     "index": 5
   },
   {
@@ -80,8 +86,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ México",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C19M4.jpg?itok=BvOYg6rO",
-    "lat": 38.334,
-    "lng": -0.503,
+    "lat": 38.33596,
+    "lng": -0.50777,
     "index": 6
   },
   {
@@ -89,8 +95,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "A 31",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C19M2.jpg?itok=oBHrBvX5",
-    "lat": 38.331,
-    "lng": -0.51,
+    "lat": 38.33596,
+    "lng": -0.50777,
     "index": 7
   },
   {
@@ -98,8 +104,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Dr. Jiménez Díaz",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C29M3.jpg?itok=PnF9s481",
-    "lat": 38.349,
-    "lng": -0.502,
+    "lat": 38.355225,
+    "lng": -0.502147,
     "index": 8
   },
   {
@@ -107,8 +113,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Orihuela",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C11M4.jpg?itok=r3cXc6qD",
-    "lat": 38.3465,
-    "lng": -0.508,
+    "lat": 38.344451,
+    "lng": -0.507429,
     "index": 9
   },
   {
@@ -116,8 +122,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Pintor Xavier Soler",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C52M4.jpg?itok=qDfjrER2",
-    "lat": 38.3665,
-    "lng": -0.473,
+    "lat": 38.365858,
+    "lng": -0.471539,
     "index": 10
   },
   {
@@ -125,8 +131,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Dr. Rico - Campo de Mirra",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C54M1.jpg?itok=UxQdl1KP",
-    "lat": 38.354,
-    "lng": -0.498,
+    "lat": 38.357585,
+    "lng": -0.496796,
     "index": 11
   },
   {
@@ -134,8 +140,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Dr. Jiménez Díaz",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C29M1.jpg?itok=lrmp0MYg",
-    "lat": 38.347,
-    "lng": -0.5015,
+    "lat": 38.355225,
+    "lng": -0.502147,
     "index": 12
   },
   {
@@ -143,8 +149,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ México",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C22M4.jpg?itok=bu2at0Wb",
-    "lat": 38.334,
-    "lng": -0.503,
+    "lat": 38.339077,
+    "lng": -0.507991,
     "index": 13
   },
   {
@@ -152,8 +158,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Alcalde Lorenzo Carbonell",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C22M2.jpg?itok=mNmDMC7L",
-    "lat": 38.337,
-    "lng": -0.501,
+    "lat": 38.339077,
+    "lng": -0.507991,
     "index": 14
   },
   {
@@ -161,8 +167,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "A. L. Carbonell - Cat. Soler",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C22M3.jpg?itok=3xHATAXl",
-    "lat": 38.337,
-    "lng": -0.501,
+    "lat": 38.339077,
+    "lng": -0.507991,
     "index": 15
   },
   {
@@ -170,8 +176,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Vnte. Blasco Ibáñez",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C24M3.jpg?itok=nW0YZ5il",
-    "lat": 38.352,
-    "lng": -0.491,
+    "lat": 38.352218,
+    "lng": -0.504103,
     "index": 16
   },
   {
@@ -179,8 +185,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía - Puente Rojo",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C24F2.jpg?itok=CQhlqGoZ",
-    "lat": 38.344,
-    "lng": -0.5035,
+    "lat": 38.352218,
+    "lng": -0.504103,
     "index": 17
   },
   {
@@ -188,8 +194,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran vía - C/ Isla de Corfú",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C29M2.jpg?itok=rNXu0qpY",
-    "lat": 38.355,
-    "lng": -0.506,
+    "lat": 38.355225,
+    "lng": -0.502147,
     "index": 18
   },
   {
@@ -197,8 +203,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Marcelino Champagnat",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C29M5.jpg?itok=hMd73UGO",
-    "lat": 38.3525,
-    "lng": -0.508,
+    "lat": 38.355225,
+    "lng": -0.502147,
     "index": 19
   },
   {
@@ -206,8 +212,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía -Av. Orihuela",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C11M1.jpg?itok=NHSoIkHa",
-    "lat": 38.3465,
-    "lng": -0.508,
+    "lat": 38.344451,
+    "lng": -0.507429,
     "index": 20
   },
   {
@@ -215,8 +221,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Bulevar de Teulada",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C13M5.jpg?itok=hk1gjG33",
-    "lat": 38.359,
-    "lng": -0.497,
+    "lat": 38.360748,
+    "lng": -0.496575,
     "index": 21
   },
   {
@@ -224,8 +230,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Santa Pola",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C13M4.jpg?itok=tsmYWBkw",
-    "lat": 38.351,
-    "lng": -0.499,
+    "lat": 38.360748,
+    "lng": -0.496575,
     "index": 22
   },
   {
@@ -233,8 +239,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Dr. Jiménez Díaz",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C13M2.jpg?itok=4hNnhXYj",
-    "lat": 38.3485,
-    "lng": -0.5025,
+    "lat": 38.360748,
+    "lng": -0.496575,
     "index": 23
   },
   {
@@ -242,8 +248,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran vía",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C19F3.jpg?itok=GspY1yr6",
-    "lat": 38.361,
-    "lng": -0.489,
+    "lat": 38.33596,
+    "lng": -0.50777,
     "index": 24
   },
   {
@@ -251,8 +257,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Dr. Jiménez Díaz",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C11M3.jpg?itok=zVcVbGOL",
-    "lat": 38.3485,
-    "lng": -0.5025,
+    "lat": 38.344451,
+    "lng": -0.507429,
     "index": 25
   },
   {
@@ -260,8 +266,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía -Av. Orihuela",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C11M2.jpg?itok=M8PpBN9D",
-    "lat": 38.3465,
-    "lng": -0.508,
+    "lat": 38.344451,
+    "lng": -0.507429,
     "index": 26
   },
   {
@@ -269,8 +275,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Teulada - E.F .Rico Pérez",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C13M3.jpg?itok=e6w7cyiN",
-    "lat": 38.357,
-    "lng": -0.493,
+    "lat": 38.360748,
+    "lng": -0.496575,
     "index": 27
   },
   {
@@ -278,8 +284,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C08F2.jpg?itok=B9dYkwP8",
-    "lat": 38.361,
-    "lng": -0.489,
+    "lat": 38.364894,
+    "lng": -0.484501,
     "index": 28
   },
   {
@@ -287,8 +293,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ del Maestro Alonso",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C08F6.jpg?itok=dHunh88y",
-    "lat": 38.3645,
-    "lng": -0.482,
+    "lat": 38.364894,
+    "lng": -0.484501,
     "index": 29
   },
   {
@@ -296,8 +302,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ del Maestro Alonso",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C08F3.jpg?itok=EVIbz5Sa",
-    "lat": 38.3645,
-    "lng": -0.482,
+    "lat": 38.364894,
+    "lng": -0.484501,
     "index": 30
   },
   {
@@ -305,8 +311,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía - Maestro Alonso",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C08F5.jpg?itok=tkKXCaB5",
-    "lat": 38.3645,
-    "lng": -0.482,
+    "lat": 38.364894,
+    "lng": -0.484501,
     "index": 31
   },
   {
@@ -314,8 +320,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C08F4.jpg?itok=5gdVK_ZH",
-    "lat": 38.361,
-    "lng": -0.489,
+    "lat": 38.364894,
+    "lng": -0.484501,
     "index": 32
   },
   {
@@ -323,8 +329,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía - Avda. Novelda",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C39F5.jpg?itok=xR3aVmc9",
-    "lat": 38.3615,
-    "lng": -0.4935,
+    "lat": 38.362215,
+    "lng": -0.493039,
     "index": 33
   },
   {
@@ -332,8 +338,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía - Av. Buenos Aires",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C39F4.jpg?itok=__O20mKa",
-    "lat": 38.363,
-    "lng": -0.486,
+    "lat": 38.362215,
+    "lng": -0.493039,
     "index": 34
   },
   {
@@ -341,8 +347,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Gran Vía - Avda. Colombia",
     "zona": "Gran Vía",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C39F2.jpg?itok=VuSTAP8-",
-    "lat": 38.3655,
-    "lng": -0.479,
+    "lat": 38.362215,
+    "lng": -0.493039,
     "index": 35
   },
   {
@@ -350,8 +356,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda Aguilera",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C01F4.jpg?itok=5bER9ZLG",
-    "lat": 38.3425,
-    "lng": -0.4965,
+    "lat": 38.343212,
+    "lng": -0.494571,
     "index": 36
   },
   {
@@ -359,8 +365,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Oscar Esplá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C01M5.jpg?itok=N2QI7Hpq",
-    "lat": 38.34,
-    "lng": -0.491,
+    "lat": 38.343212,
+    "lng": -0.494571,
     "index": 37
   },
   {
@@ -368,8 +374,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Oscar Esplá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C02F5.jpg?itok=ic65iwAY",
-    "lat": 38.34,
-    "lng": -0.491,
+    "lat": 38.339921,
+    "lng": -0.493678,
     "index": 38
   },
   {
@@ -377,8 +383,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Jijona",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C09M4.jpg?itok=BkuxrdGk",
-    "lat": 38.3515,
-    "lng": -0.486,
+    "lat": 38.352255,
+    "lng": -0.485379,
     "index": 39
   },
   {
@@ -386,8 +392,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Salamanca - Estación",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C35F4.jpg?itok=MpgZFZVp",
-    "lat": 38.3445,
-    "lng": -0.494,
+    "lat": 38.344614,
+    "lng": -0.494645,
     "index": 40
   },
   {
@@ -395,8 +401,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ San Fernando",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C16F3.jpg?itok=bBIv8nxx",
-    "lat": 38.344,
-    "lng": -0.485,
+    "lat": 38.34375,
+    "lng": -0.483018,
     "index": 41
   },
   {
@@ -404,8 +410,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "L. Casanova - Oscar Esplá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C02F3.jpg?itok=Z7CiHG1T",
-    "lat": 38.341,
-    "lng": -0.492,
+    "lat": 38.339921,
+    "lng": -0.493678,
     "index": 42
   },
   {
@@ -413,8 +419,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "E. Sempere - Oscar Esplá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C02F2.jpg?itok=MWD4LuJz",
-    "lat": 38.3395,
-    "lng": -0.49,
+    "lat": 38.339921,
+    "lng": -0.493678,
     "index": 43
   },
   {
@@ -422,8 +428,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Cat. Soler - Oscar Esplá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C02F4.jpg?itok=8eNFAGNc",
-    "lat": 38.337,
-    "lng": -0.501,
+    "lat": 38.339921,
+    "lng": -0.493678,
     "index": 44
   },
   {
@@ -431,8 +437,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Salamanca -  Estación",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C35F2.jpg?itok=SclSf87b",
-    "lat": 38.3445,
-    "lng": -0.494,
+    "lat": 38.344614,
+    "lng": -0.494645,
     "index": 45
   },
   {
@@ -440,8 +446,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. de la Estación",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C10F2.jpg?itok=DrT9DIfQ",
-    "lat": 38.3445,
-    "lng": -0.494,
+    "lat": 38.345856,
+    "lng": -0.49098,
     "index": 46
   },
   {
@@ -449,8 +455,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Vázquez de Mella",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C55M1.jpg?itok=lgpQYfEj",
-    "lat": 38.349,
-    "lng": -0.479,
+    "lat": 38.352337,
+    "lng": -0.477477,
     "index": 47
   },
   {
@@ -458,8 +464,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Oscar Esplá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C01F3.jpg?itok=4SKlaoaT",
-    "lat": 38.34,
-    "lng": -0.491,
+    "lat": 38.343212,
+    "lng": -0.494571,
     "index": 48
   },
   {
@@ -467,8 +473,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Óscar Esplá - Cat. Soler",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C02F6.jpg?itok=xuTcIBfe",
-    "lat": 38.337,
-    "lng": -0.501,
+    "lat": 38.339921,
+    "lng": -0.493678,
     "index": 49
   },
   {
@@ -476,8 +482,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "B. P. Galdós - Gral. Marvá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C36F4.jpg?itok=5H7SXW0F",
-    "lat": 38.3475,
-    "lng": -0.49,
+    "lat": 38.347943,
+    "lng": -0.491871,
     "index": 50
   },
   {
@@ -485,8 +491,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Salamanca",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C12F2.jpg?itok=UX31HMxD",
-    "lat": 38.3445,
-    "lng": -0.494,
+    "lat": 38.346876,
+    "lng": -0.494203,
     "index": 51
   },
   {
@@ -494,8 +500,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Dr. Gadea",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C17F2.jpg?itok=FOPbckH4",
-    "lat": 38.3428,
-    "lng": -0.4875,
+    "lat": 38.343224,
+    "lng": -0.488516,
     "index": 52
   },
   {
@@ -503,8 +509,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Rambla de Méndez Núñez",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C16F2.jpg?itok=VdNERR6t",
-    "lat": 38.345,
-    "lng": -0.4815,
+    "lat": 38.34375,
+    "lng": -0.483018,
     "index": 53
   },
   {
@@ -512,8 +518,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "B. P. Galdós - Gral. Marvá",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C36F3.jpg?itok=xw80e0lo",
-    "lat": 38.3475,
-    "lng": -0.49,
+    "lat": 38.347943,
+    "lng": -0.491871,
     "index": 54
   },
   {
@@ -521,8 +527,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "B. P. Galdós - Pza. España",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C36F2.jpg?itok=UClZaiKh",
-    "lat": 38.349,
-    "lng": -0.486,
+    "lat": 38.347943,
+    "lng": -0.491871,
     "index": 55
   },
   {
@@ -530,8 +536,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Novelda",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C07M1.jpg?itok=rU946dn_",
-    "lat": 38.356,
-    "lng": -0.491,
+    "lat": 38.359854,
+    "lng": -0.491337,
     "index": 56
   },
   {
@@ -539,8 +545,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Pintor Murillo",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C09F2.jpg?itok=CYXu76Ex",
-    "lat": 38.35,
-    "lng": -0.484,
+    "lat": 38.352255,
+    "lng": -0.485379,
     "index": 57
   },
   {
@@ -548,8 +554,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Calderón de la Barca",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C15F3.jpg?itok=F8nuVFKx",
-    "lat": 38.3485,
-    "lng": -0.4835,
+    "lat": 38.348106,
+    "lng": -0.485036,
     "index": 58
   },
   {
@@ -557,8 +563,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Reyes Católicos",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C17F3.jpg?itok=SQcRlgBo",
-    "lat": 38.3435,
-    "lng": -0.489,
+    "lat": 38.343224,
+    "lng": -0.488516,
     "index": 59
   },
   {
@@ -566,8 +572,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "B. P. Galdós - Salamanca",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C36F1.jpg?itok=rHjJLmav",
-    "lat": 38.3445,
-    "lng": -0.494,
+    "lat": 38.347943,
+    "lng": -0.491871,
     "index": 60
   },
   {
@@ -575,8 +581,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Benito Pérez Galdós",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C12F3.jpg?itok=EG41BYp0",
-    "lat": 38.347,
-    "lng": -0.489,
+    "lat": 38.346876,
+    "lng": -0.494203,
     "index": 61
   },
   {
@@ -584,8 +590,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Conde Lumiares - Av. Alcoy",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C07F2.jpg?itok=WU4T8amJ",
-    "lat": 38.353,
-    "lng": -0.487,
+    "lat": 38.359854,
+    "lng": -0.491337,
     "index": 62
   },
   {
@@ -593,8 +599,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Alfonso X El Sabio",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C15F2.jpg?itok=dMvADY21",
-    "lat": 38.3472,
-    "lng": -0.485,
+    "lat": 38.348106,
+    "lng": -0.485036,
     "index": 63
   },
   {
@@ -602,8 +608,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Rambla de Méndez Núñez",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C15F5.jpg?itok=qL4AM8tw",
-    "lat": 38.345,
-    "lng": -0.4815,
+    "lat": 38.348106,
+    "lng": -0.485036,
     "index": 64
   },
   {
@@ -611,8 +617,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "A. El Sabio - San Vicente",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C15F4.jpg?itok=ezPCaGrh",
-    "lat": 38.3472,
-    "lng": -0.485,
+    "lat": 38.348106,
+    "lng": -0.485036,
     "index": 65
   },
   {
@@ -620,8 +626,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Maisonnave",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C01F2.jpg?itok=DEuQ1vIh",
-    "lat": 38.343,
-    "lng": -0.4895,
+    "lat": 38.343212,
+    "lng": -0.494571,
     "index": 66
   },
   {
@@ -629,8 +635,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. de Alcoy",
     "zona": "Centro Ciudad",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C09M3.jpg?itok=ENwJ4U2h",
-    "lat": 38.353,
-    "lng": -0.487,
+    "lat": 38.352255,
+    "lng": -0.485379,
     "index": 67
   },
   {
@@ -638,8 +644,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Bulevar de Teulada",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C37F6.jpg?itok=Mm4gjdt0",
-    "lat": 38.359,
-    "lng": -0.497,
+    "lat": 38.365132,
+    "lng": -0.500032,
     "index": 68
   },
   {
@@ -647,8 +653,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Novelda",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C25M4.jpg?itok=vPOv8212",
-    "lat": 38.369,
-    "lng": -0.501,
+    "lat": 38.366921,
+    "lng": -0.496079,
     "index": 69
   },
   {
@@ -656,8 +662,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Gastón Castelló",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C32M5.jpg?itok=t8hr4Q3u",
-    "lat": 38.374,
-    "lng": -0.486,
+    "lat": 38.367978,
+    "lng": -0.485657,
     "index": 70
   },
   {
@@ -665,8 +671,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. A. Ramos Carratalá",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C51M2.jpg?itok=VbamDPG2",
-    "lat": 38.365,
-    "lng": -0.461,
+    "lat": 38.369059,
+    "lng": -0.470949,
     "index": 71
   },
   {
@@ -674,8 +680,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Montesinos - Pl. Castalla",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C51M3.jpg?itok=ds3Rhwmi",
-    "lat": 38.37,
-    "lng": -0.495,
+    "lat": 38.369059,
+    "lng": -0.470949,
     "index": 72
   },
   {
@@ -683,8 +689,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Universidad - Fortuny",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C27M5.jpg?itok=wIG1a07O",
-    "lat": 38.381,
-    "lng": -0.508,
+    "lat": 38.373727,
+    "lng": -0.506962,
     "index": 73
   },
   {
@@ -692,8 +698,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Jaime I",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C25M2.jpg?itok=njNRZPS9",
-    "lat": 38.367,
-    "lng": -0.502,
+    "lat": 38.366921,
+    "lng": -0.496079,
     "index": 74
   },
   {
@@ -701,8 +707,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ José Luis Barceló",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C32M3.jpg?itok=okWXWcHg",
-    "lat": 38.37,
-    "lng": -0.495,
+    "lat": 38.367978,
+    "lng": -0.485657,
     "index": 75
   },
   {
@@ -710,8 +716,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. UNICEF",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C32M6.jpg?itok=fF1_a-Fb",
-    "lat": 38.372,
-    "lng": -0.497,
+    "lat": 38.367978,
+    "lng": -0.485657,
     "index": 76
   },
   {
@@ -719,8 +725,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Fortuny",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C27M2.jpg?itok=IrurkCg7",
-    "lat": 38.377,
-    "lng": -0.502,
+    "lat": 38.373727,
+    "lng": -0.506962,
     "index": 77
   },
   {
@@ -728,8 +734,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Novelda",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C34F4.jpg?itok=1kUMND07",
-    "lat": 38.369,
-    "lng": -0.501,
+    "lat": 38.375785,
+    "lng": -0.498834,
     "index": 78
   },
   {
@@ -737,8 +743,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ del Cuarzo",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C33M1.jpg?itok=ByfluLv0",
-    "lat": 38.371,
-    "lng": -0.484,
+    "lat": 38.376926,
+    "lng": -0.487615,
     "index": 79
   },
   {
@@ -746,8 +752,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Teulada",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C37F2.jpg?itok=1QJObaEo",
-    "lat": 38.359,
-    "lng": -0.497,
+    "lat": 38.365132,
+    "lng": -0.500032,
     "index": 80
   },
   {
@@ -755,8 +761,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Poeta Pedro Salinas",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C32M2.jpg?itok=1TkNygEg",
-    "lat": 38.373,
-    "lng": -0.488,
+    "lat": 38.367978,
+    "lng": -0.485657,
     "index": 81
   },
   {
@@ -764,8 +770,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Universidad",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C27M4.jpg?itok=NDanDYu7",
-    "lat": 38.381,
-    "lng": -0.508,
+    "lat": 38.373727,
+    "lng": -0.506962,
     "index": 82
   },
   {
@@ -773,8 +779,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Fortuny",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C34F5.jpg?itok=s6Fla1zP",
-    "lat": 38.377,
-    "lng": -0.502,
+    "lat": 38.375785,
+    "lng": -0.498834,
     "index": 83
   },
   {
@@ -782,8 +788,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Baronía de Polop",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C33M4.jpg?itok=EXtTx1mN",
-    "lat": 38.376,
-    "lng": -0.489,
+    "lat": 38.376926,
+    "lng": -0.487615,
     "index": 84
   },
   {
@@ -791,8 +797,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Pintor Gastón Castelló",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C33M3.jpg?itok=rADvCIES",
-    "lat": 38.374,
-    "lng": -0.486,
+    "lat": 38.376926,
+    "lng": -0.487615,
     "index": 85
   },
   {
@@ -800,8 +806,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ del Padre Arrupe",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C06M5.jpg?itok=pZZ8Du6h",
-    "lat": 38.368,
-    "lng": -0.463,
+    "lat": 38.357845,
+    "lng": -0.469522,
     "index": 86
   },
   {
@@ -809,8 +815,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Denia",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C06M2.jpg?itok=sxOLYKQn",
-    "lat": 38.37,
-    "lng": -0.495,
+    "lat": 38.357845,
+    "lng": -0.469522,
     "index": 87
   },
   {
@@ -818,8 +824,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Vía Parque - Jaime I",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C37F3.jpg?itok=_PnWFp8X",
-    "lat": 38.367,
-    "lng": -0.502,
+    "lat": 38.365132,
+    "lng": -0.500032,
     "index": 88
   },
   {
@@ -827,8 +833,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Maestro Alonso",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C32M4.jpg?itok=4Hn3wIOp",
-    "lat": 38.3645,
-    "lng": -0.482,
+    "lat": 38.367978,
+    "lng": -0.485657,
     "index": 89
   },
   {
@@ -836,8 +842,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Baronía de Polop",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C34F3.jpg?itok=GYZMaap9",
-    "lat": 38.376,
-    "lng": -0.489,
+    "lat": 38.375785,
+    "lng": -0.498834,
     "index": 90
   },
   {
@@ -845,8 +851,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Villafranqueza",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C33M2.jpg?itok=rtOwODFs",
-    "lat": 38.384,
-    "lng": -0.488,
+    "lat": 38.376926,
+    "lng": -0.487615,
     "index": 91
   },
   {
@@ -854,8 +860,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Jaime I-Judoka JA Valverde",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C43F4.jpg?itok=JScG-CDL",
-    "lat": 38.367,
-    "lng": -0.502,
+    "lat": 38.362877,
+    "lng": -0.503838,
     "index": 92
   },
   {
@@ -863,8 +869,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Jaime I - Ftas. Tradicionales",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C43F3.jpg?itok=PQQ-1ki5",
-    "lat": 38.367,
-    "lng": -0.502,
+    "lat": 38.362877,
+    "lng": -0.503838,
     "index": 93
   },
   {
@@ -872,8 +878,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Jaime I",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C37F5.jpg?itok=CuBgLp89",
-    "lat": 38.367,
-    "lng": -0.502,
+    "lat": 38.365132,
+    "lng": -0.500032,
     "index": 94
   },
   {
@@ -881,8 +887,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Novelda - Av. UNICEF",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C25M3.jpg?itok=yptLjCHS",
-    "lat": 38.369,
-    "lng": -0.501,
+    "lat": 38.366921,
+    "lng": -0.496079,
     "index": 95
   },
   {
@@ -890,8 +896,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. UNICEF",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C25M5.jpg?itok=Sv1ZBOqY",
-    "lat": 38.372,
-    "lng": -0.497,
+    "lat": 38.366921,
+    "lng": -0.496079,
     "index": 96
   },
   {
@@ -899,8 +905,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Novelda - San Vicente",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C34F2.jpg?itok=jZ1qau6n",
-    "lat": 38.369,
-    "lng": -0.501,
+    "lat": 38.375785,
+    "lng": -0.498834,
     "index": 97
   },
   {
@@ -908,8 +914,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Cámara - C21F4",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C21F4.jpg?itok=78XDZAv1",
-    "lat": 38.37,
-    "lng": -0.495,
+    "lat": 38.345426,
+    "lng": -0.517333,
     "index": 98
   },
   {
@@ -917,8 +923,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Cámara - C21F2",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C21F2.jpg?itok=ZJ3uqx7d",
-    "lat": 38.37,
-    "lng": -0.495,
+    "lat": 38.345426,
+    "lng": -0.517333,
     "index": 99
   },
   {
@@ -926,8 +932,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Río Muni",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C21F5.jpg?itok=gr2_Ghkb",
-    "lat": 38.369,
-    "lng": -0.506,
+    "lat": 38.345426,
+    "lng": -0.517333,
     "index": 100
   },
   {
@@ -935,8 +941,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Fiestas P. y Tradicionales",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C41F3.jpg?itok=IWs33oCB",
-    "lat": 38.364,
-    "lng": -0.503,
+    "lat": 38.358687,
+    "lng": -0.509622,
     "index": 101
   },
   {
@@ -944,8 +950,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Isla de Corfú",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C41F4.jpg?itok=GzmvHNvC",
-    "lat": 38.355,
-    "lng": -0.506,
+    "lat": 38.358687,
+    "lng": -0.509622,
     "index": 102
   },
   {
@@ -953,8 +959,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avd. Jaime I - Teulada",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C43F2.jpg?itok=e6iCNADI",
-    "lat": 38.359,
-    "lng": -0.497,
+    "lat": 38.362877,
+    "lng": -0.503838,
     "index": 103
   },
   {
@@ -962,8 +968,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "N 330",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C21F3.jpg?itok=fznqM6SA",
-    "lat": 38.37,
-    "lng": -0.495,
+    "lat": 38.345426,
+    "lng": -0.517333,
     "index": 104
   },
   {
@@ -971,8 +977,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Dpta. Isabel Fernández",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C41F5.jpg?itok=B3c-sw6U",
-    "lat": 38.363,
-    "lng": -0.504,
+    "lat": 38.358687,
+    "lng": -0.509622,
     "index": 105
   },
   {
@@ -980,8 +986,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Fiestas P. y Tradicionales",
     "zona": "Vía Parque · Norte",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C41F2.jpg?itok=NBgsgESu",
-    "lat": 38.364,
-    "lng": -0.503,
+    "lat": 38.358687,
+    "lng": -0.509622,
     "index": 106
   },
   {
@@ -989,8 +995,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Martires de la libertad",
     "zona": "Litoral",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C03M2.jpg?itok=K8SAt93P",
-    "lat": 38.3425,
-    "lng": -0.48,
+    "lat": 38.344462,
+    "lng": -0.47956,
     "index": 107
   },
   {
@@ -998,8 +1004,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Salida Puerto",
     "zona": "Litoral",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C03M4.jpg?itok=oS2tpsEr",
-    "lat": 38.3395,
-    "lng": -0.483,
+    "lat": 38.344462,
+    "lng": -0.47956,
     "index": 108
   },
   {
@@ -1007,8 +1013,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Juan Bautista Lafora",
     "zona": "Litoral",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C03M3.jpg?itok=zUlMYPpA",
-    "lat": 38.344,
-    "lng": -0.476,
+    "lat": 38.344462,
+    "lng": -0.47956,
     "index": 109
   },
   {
@@ -1016,8 +1022,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. de Denia",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C04F5.jpg?itok=PcYuQWfJ",
-    "lat": 38.361,
-    "lng": -0.464,
+    "lat": 38.368352,
+    "lng": -0.458285,
     "index": 110
   },
   {
@@ -1025,8 +1031,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. A. Ramos Carratalá",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C04F3.jpg?itok=kfZg2JBp",
-    "lat": 38.365,
-    "lng": -0.461,
+    "lat": 38.368352,
+    "lng": -0.458285,
     "index": 111
   },
   {
@@ -1034,8 +1040,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "c/ Dep. Alejandra Quereda",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C04F4.jpg?itok=cntVZ8Bz",
-    "lat": 38.369,
-    "lng": -0.457,
+    "lat": 38.368352,
+    "lng": -0.458285,
     "index": 112
   },
   {
@@ -1043,8 +1049,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Albufereta",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C56F1.jpg?itok=Onw-QxIq",
-    "lat": 38.363,
-    "lng": -0.458,
+    "lat": 38.365031,
+    "lng": -0.460443,
     "index": 113
   },
   {
@@ -1052,8 +1058,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Denia - Acceso A-70",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C49M3.jpg?itok=JMBk5Gjl",
-    "lat": 38.379,
-    "lng": -0.448,
+    "lat": 38.379927,
+    "lng": -0.452175,
     "index": 114
   },
   {
@@ -1061,8 +1067,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Denia",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C14M4.jpg?itok=vVPQ5iM8",
-    "lat": 38.361,
-    "lng": -0.464,
+    "lat": 38.361334,
+    "lng": -0.465179,
     "index": 115
   },
   {
@@ -1070,8 +1076,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Denia - Torres de la huerta",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C49M2.jpg?itok=x3Bm8RRQ",
-    "lat": 38.373,
-    "lng": -0.453,
+    "lat": 38.379927,
+    "lng": -0.452175,
     "index": 116
   },
   {
@@ -1079,8 +1085,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Denia",
     "zona": "Avda. Denia",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C30M4.jpg?itok=owqHBUSg",
-    "lat": 38.361,
-    "lng": -0.464,
+    "lat": 38.349398,
+    "lng": -0.472877,
     "index": 117
   },
   {
@@ -1088,8 +1094,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Elche - N 332",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C40F3.jpg?itok=fbOmRP-N",
-    "lat": 38.322,
-    "lng": -0.516,
+    "lat": 38.312418,
+    "lng": -0.516645,
     "index": 118
   },
   {
@@ -1097,8 +1103,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ México",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C18M4.jpg?itok=TV_pZJ3-",
-    "lat": 38.334,
-    "lng": -0.503,
+    "lat": 38.333726,
+    "lng": -0.505336,
     "index": 119
   },
   {
@@ -1106,8 +1112,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Elche",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C18M2.jpg?itok=LzbrlAfs",
-    "lat": 38.33,
-    "lng": -0.505,
+    "lat": 38.333726,
+    "lng": -0.505336,
     "index": 120
   },
   {
@@ -1115,8 +1121,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. de Elche - C/ Federico Mayo",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C50M1.jpg?itok=6suge2Ah",
-    "lat": 38.327,
-    "lng": -0.51,
+    "lat": 38.33722,
+    "lng": -0.500389,
     "index": 121
   },
   {
@@ -1124,8 +1130,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Elche - J. C. Combaldieu",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C40F4.jpg?itok=X9JSZh-n",
-    "lat": 38.319,
-    "lng": -0.521,
+    "lat": 38.312418,
+    "lng": -0.516645,
     "index": 122
   },
   {
@@ -1133,8 +1139,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Elche",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C40F2.jpg?itok=K9R-cwuA",
-    "lat": 38.33,
-    "lng": -0.505,
+    "lat": 38.312418,
+    "lng": -0.516645,
     "index": 123
   },
   {
@@ -1142,8 +1148,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Casa del Mediterráneo",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C31F3.jpg?itok=HSDqzrqH",
-    "lat": 38.337,
-    "lng": -0.493,
+    "lat": 38.338466,
+    "lng": -0.493392,
     "index": 124
   },
   {
@@ -1151,8 +1157,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Loring",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C31F4.jpg?itok=uwAoD7fo",
-    "lat": 38.3395,
-    "lng": -0.489,
+    "lat": 38.338466,
+    "lng": -0.493392,
     "index": 125
   },
   {
@@ -1160,8 +1166,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Ctra. del Saladar",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C28F3.jpg?itok=FetFQ1oc",
-    "lat": 38.314,
-    "lng": -0.528,
+    "lat": 38.29956,
+    "lng": -0.520694,
     "index": 126
   },
   {
@@ -1169,8 +1175,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "N 332",
     "zona": "Avda. Elche",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C28F2.jpg?itok=MyGA31yz",
-    "lat": 38.322,
-    "lng": -0.516,
+    "lat": 38.29956,
+    "lng": -0.520694,
     "index": 127
   },
   {
@@ -1178,8 +1184,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Mártires de la Libertad",
     "zona": "Puerto · Postiguet",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C20F2.jpg?itok=fcEJrssh",
-    "lat": 38.3425,
-    "lng": -0.48,
+    "lat": 38.339331,
+    "lng": -0.48835,
     "index": 128
   },
   {
@@ -1187,8 +1193,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Portugal",
     "zona": "Puerto · Postiguet",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C20F3.jpg?itok=3OrRBIvZ",
-    "lat": 38.3415,
-    "lng": -0.486,
+    "lat": 38.339331,
+    "lng": -0.48835,
     "index": 129
   },
   {
@@ -1196,8 +1202,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Av. Denia - Av. Villajoyosa",
     "zona": "Puerto · Postiguet",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C30F2.jpg?itok=7cuPqaGB",
-    "lat": 38.359,
-    "lng": -0.456,
+    "lat": 38.349398,
+    "lng": -0.472877,
     "index": 130
   },
   {
@@ -1205,8 +1211,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Juan Bautista Lafora",
     "zona": "Puerto · Postiguet",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C30F3.jpg?itok=Zw9owqJS",
-    "lat": 38.344,
-    "lng": -0.476,
+    "lat": 38.349398,
+    "lng": -0.472877,
     "index": 131
   },
   {
@@ -1214,8 +1220,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Entrada Ciudad",
     "zona": "Puerto · Postiguet",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C26F1.jpg?itok=cTd9qFxW",
-    "lat": 38.3385,
-    "lng": -0.488,
+    "lat": 38.352588,
+    "lng": -0.473277,
     "index": 132
   },
   {
@@ -1223,8 +1229,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Salida Ciudad",
     "zona": "Puerto · Postiguet",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C26F4.jpg?itok=ADbf32qa",
-    "lat": 38.3375,
-    "lng": -0.4895,
+    "lat": 38.352588,
+    "lng": -0.473277,
     "index": 133
   },
   {
@@ -1232,8 +1238,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Villajoyosa - Sol Naciente",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C46M1.jpg?itok=YQoeb2Du",
-    "lat": 38.3635,
-    "lng": -0.448,
+    "lat": 38.36172,
+    "lng": -0.448664,
     "index": 134
   },
   {
@@ -1241,8 +1247,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Costablanca",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C44M2.jpg?itok=W9g50DjL",
-    "lat": 38.369,
-    "lng": -0.426,
+    "lat": 38.362741,
+    "lng": -0.419119,
     "index": 135
   },
   {
@@ -1250,8 +1256,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. de las Naciones",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C38F2.jpg?itok=U9YORs9e",
-    "lat": 38.374,
-    "lng": -0.432,
+    "lat": 38.376383,
+    "lng": -0.420378,
     "index": 136
   },
   {
@@ -1259,8 +1265,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. De Oviedo",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C38F3.jpg?itok=gOUn6Lo4",
-    "lat": 38.379,
-    "lng": -0.428,
+    "lat": 38.376383,
+    "lng": -0.420378,
     "index": 137
   },
   {
@@ -1268,8 +1274,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Vicente Hipólito",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C38F5.jpg?itok=YI7t6VKF",
-    "lat": 38.384,
-    "lng": -0.429,
+    "lat": 38.376383,
+    "lng": -0.420378,
     "index": 138
   },
   {
@@ -1277,8 +1283,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Caja de Ahorros - Av. Denia",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C42F1.jpg?itok=oeMlifAA",
-    "lat": 38.368,
-    "lng": -0.445,
+    "lat": 38.367493,
+    "lng": -0.453842,
     "index": 139
   },
   {
@@ -1286,8 +1292,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Villajoyosa - Pl. Isleta",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C46M2.jpg?itok=N8ld6sCH",
-    "lat": 38.3635,
-    "lng": -0.448,
+    "lat": 38.36172,
+    "lng": -0.448664,
     "index": 140
   },
   {
@@ -1295,8 +1301,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Costablanca",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C05M1.jpg?itok=dCzcU4gm",
-    "lat": 38.369,
-    "lng": -0.426,
+    "lat": 38.362353,
+    "lng": -0.437802,
     "index": 141
   },
   {
@@ -1304,8 +1310,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Caja de Ahorros",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C23M1.jpg?itok=rrjwrwai",
-    "lat": 38.368,
-    "lng": -0.445,
+    "lat": 38.370762,
+    "lng": -0.437248,
     "index": 142
   },
   {
@@ -1313,8 +1319,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Naciones",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C44M1.jpg?itok=vGm55tNu",
-    "lat": 38.374,
-    "lng": -0.432,
+    "lat": 38.362741,
+    "lng": -0.419119,
     "index": 143
   },
   {
@@ -1322,8 +1328,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Pintor Pérez Gil",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C38F4.jpg?itok=vYzqV4tR",
-    "lat": 38.378,
-    "lng": -0.439,
+    "lat": 38.376383,
+    "lng": -0.420378,
     "index": 144
   },
   {
@@ -1331,8 +1337,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Caja de Ahorros - Playas",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C42F2.jpg?itok=XfTmE5Hz",
-    "lat": 38.368,
-    "lng": -0.445,
+    "lat": 38.367493,
+    "lng": -0.453842,
     "index": 145
   },
   {
@@ -1340,8 +1346,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Condomina",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C05F2.jpg?itok=CR2iiMAu",
-    "lat": 38.365,
-    "lng": -0.441,
+    "lat": 38.362353,
+    "lng": -0.437802,
     "index": 146
   },
   {
@@ -1349,8 +1355,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. Vicente Hipólito",
     "zona": "Albufereta · Playa San Juan",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C23F2.jpg?itok=nepIAtOg",
-    "lat": 38.384,
-    "lng": -0.429,
+    "lat": 38.370762,
+    "lng": -0.437248,
     "index": 147
   },
   {
@@ -1358,8 +1364,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "A. Amarga - Anta. Moreno",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C62M2.jpg?itok=EPxZf0dx",
-    "lat": 38.311,
-    "lng": -0.531,
+    "lat": 38.306913,
+    "lng": -0.518703,
     "index": 148
   },
   {
@@ -1367,8 +1373,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Agua Amarga - N 332",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C62M1.jpg?itok=v1GfnRa8",
-    "lat": 38.311,
-    "lng": -0.531,
+    "lat": 38.306913,
+    "lng": -0.518703,
     "index": 149
   },
   {
@@ -1376,8 +1382,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Arco iris - G. Stewart Howie",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C67M3.jpg?itok=TxjK7AKD",
-    "lat": 38.347,
-    "lng": -0.538,
+    "lat": 38.346973,
+    "lng": -0.553088,
     "index": 150
   },
   {
@@ -1385,8 +1391,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Arco iris - Salida A 31",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C67M2.jpg?itok=OVqGTH8j",
-    "lat": 38.331,
-    "lng": -0.51,
+    "lat": 38.346973,
+    "lng": -0.553088,
     "index": 151
   },
   {
@@ -1394,8 +1400,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Mistral (68- C/ MISTRAL (PV2))",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C68M1.jpg?itok=qdPCcibk",
-    "lat": 38.349,
-    "lng": -0.541,
+    "lat": 38.346025,
+    "lng": -0.554817,
     "index": 152
   },
   {
@@ -1403,8 +1409,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ G. Stewart Howie - C/ Mistral",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C69M1.jpg?itok=6x1GNiU7",
-    "lat": 38.347,
-    "lng": -0.538,
+    "lat": 38.346973,
+    "lng": -0.553088,
     "index": 153
   },
   {
@@ -1412,8 +1418,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Ant. Peseta - C/ del Franco",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C70M1.jpg?itok=w_fFrzf3",
-    "lat": 38.341,
-    "lng": -0.548,
+    "lat": 38.343121,
+    "lng": -0.564147,
     "index": 154
   },
   {
@@ -1421,8 +1427,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Rot. Ant. Peseta - A 31",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C70M2.jpg?itok=zFrmlMg_",
-    "lat": 38.331,
-    "lng": -0.51,
+    "lat": 38.343121,
+    "lng": -0.564147,
     "index": 155
   },
   {
@@ -1430,8 +1436,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "C/ Ant. Peseta - Cno. Viejo",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C71M1.jpg?itok=hXb-lhSQ",
-    "lat": 38.341,
-    "lng": -0.548,
+    "lat": 38.334348,
+    "lng": -0.559708,
     "index": 156
   },
   {
@@ -1439,8 +1445,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. del Euro - C/ del Marco",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C72M1.jpg?itok=4ko8e1yF",
-    "lat": 38.338,
-    "lng": -0.552,
+    "lat": 38.341071,
+    "lng": -0.572421,
     "index": 157
   },
   {
@@ -1448,8 +1454,8 @@ export const CAMERAS: TrafficCamera[] = [
     "name": "Avda. del Euro - C/ de la Libra",
     "zona": "Polígonos Industriales",
     "url": "https://movilidad.alicante.es/sites/default/files/styles/upload_fotograma_big/public/camara/C73M1.jpg?itok=pGvrNvA7",
-    "lat": 38.338,
-    "lng": -0.552,
+    "lat": 38.342274,
+    "lng": -0.550758,
     "index": 158
   }
 ];

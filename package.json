@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit",
     "buildings": "tsx scripts/build-buildings.ts",
     "streets": "tsx scripts/build-streets.ts",
+    "cameras": "tsx scripts/update-camera-positions.ts",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },

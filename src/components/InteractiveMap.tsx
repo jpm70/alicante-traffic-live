@@ -7,6 +7,7 @@ import { Radar, describeRadar } from '../services/radars';
 import { LiveStation, liveStatus, describeStation } from '../services/liveTraffic';
 import { escapeHtml } from '../services/dataAge';
 import { countLabel } from '../services/text';
+import { spreadSharedPositions } from '../services/cameraLayout';
 import { ALICANTE_TAXI_STANDS, TaxiStand, ALICANTE_LOCAL_CLOSURES } from '../data/publicTransport';
 
 type MapStyle = 'dark' | 'streets' | 'satellite';
@@ -33,6 +34,9 @@ interface InteractiveMapProps {
   radars?: Radar[];
   liveStations?: LiveStation[];
 }
+
+// Cameras of the same junction share its position: drawn in a small circle around it
+const cameraPositions = spreadSharedPositions(CAMERAS);
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   origin,
@@ -351,7 +355,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       const radius = isOnRoute ? 8 : 5.5;
 
-      const marker = L.circleMarker([cam.lat, cam.lng], {
+      const marker = L.circleMarker(cameraPositions.get(cam.id) || [cam.lat, cam.lng], {
         radius,
         fillColor,
         color: isOnRoute ? '#ffffff' : '#1e293b',
