@@ -2,9 +2,9 @@
 // Feed: https://nap.dgt.es — Punto de Acceso Nacional de tráfico. ~5 MB of XML with
 // every active incident on Spanish interurban roads, refreshed by the DGT every minute.
 //
-// The DGT server does not allow browser (CORS) requests, so this runs at build time:
-// the GitHub Pages workflow downloads the feed every 15 minutes and publishes the
-// incidents around Alicante as data/alerts.json next to the app.
+// The DGT server does not allow browser (CORS) requests, so this runs in a workflow:
+// data.yml downloads the feed and publishes the incidents around Alicante as alerts.json
+// in the `data` branch, which the app reads.
 
 export interface DgtAlert {
   id: string;

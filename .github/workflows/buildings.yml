@@ -3,8 +3,8 @@ name: Update OpenStreetMap buildings
 # Monthly refresh of the 3D buildings (public/buildings) and of the street index for the
 # address search (public/geo/streets.json) from OpenStreetMap.
 # Overpass is often busy, so the job is slow and long; parts that do not answer keep
-# the buildings already published. If anything changed it is committed to main, and
-# the next scheduled deploy (every 15 min) publishes it.
+# the buildings already published. If anything changed it is committed to main and the
+# deployment is started (a push made with the workflow's own token does not start it).
 on:
   schedule:
     - cron: '17 3 1 * *' # day 1 of every month, 03:17 UTC
@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: buildings
@@ -60,3 +61,6 @@ jobs:
           git add public/buildings public/geo
           git commit -m "chore: actualizar edificios y callejero de OpenStreetMap ($(date -u +%Y-%m))"
           git push
+          gh workflow run deploy.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}

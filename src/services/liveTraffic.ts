@@ -1,9 +1,9 @@
-// Real traffic measured by the DGT road detectors (data/traffic.json, generated every
-// 15 minutes by scripts/update-dgt-data.ts). Covers the A-70 ring road and the A-31
+// Real traffic measured by the DGT road detectors (traffic.json, refreshed by the data
+// workflow from scripts/update-dgt-data.ts). Covers the A-70 ring road and the A-31
 // around Alicante; city streets keep the time-of-day estimate.
 import type { CalculatedRoute } from './routing';
 import { RouteIndex, buildRouteIndex, projectOnRoute } from './geometry';
-import { fetchWithTimeout } from './routing';
+import { loadDataFile } from './dataSource';
 import { routeUsesRoad } from './radars';
 import { LIVE_SPEED_MAX_AGE_MIN, isOlderThan } from './dataAge';
 
@@ -38,14 +38,9 @@ export interface RouteLiveStation {
   delayMinutes: number;
 }
 
-export const TRAFFIC_URL = `${import.meta.env.BASE_URL}data/traffic.json`;
-
 export async function loadLiveTraffic(): Promise<LiveTrafficResponse | null> {
   try {
-    const res = await fetchWithTimeout(`${TRAFFIC_URL}?t=${Date.now()}`, 15000);
-    if (!res.ok) return null;
-    const data: LiveTrafficResponse = await res.json();
-    return Array.isArray(data.stations) ? data : null;
+    return await loadDataFile<LiveTrafficResponse>('traffic', (d) => Array.isArray((d as LiveTrafficResponse)?.stations));
   } catch {
     return null;
   }

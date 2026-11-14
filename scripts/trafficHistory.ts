@@ -1,13 +1,13 @@
 // Real traffic history built from the DGT detector measurements.
 //
-// Every run of the data workflow (every 15 min) adds the measured speed of each
+// Every run of the data workflow adds the measured speed of each
 // measuring point to a profile with one value per 15-minute slot of the day, separately
 // for weekdays and weekends. Each value is a running mean that weighs the last ~20
 // samples (≈ 4 weeks of weekdays), so it follows seasonal changes.
 //
-// The file is published with the site (data/history.json). The next run starts from the
-// published copy, so no commits are needed; if that copy cannot be read the run fails and
-// the previous deployment (with its history) stays online.
+// The file is published in the `data` branch (history.json), rewritten as a single commit.
+// The next run starts from that copy; if the branch cannot be read the run fails and the
+// published history stays as it was.
 
 export const SLOTS = 96;
 const MAX_WEIGHT = 20;
