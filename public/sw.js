@@ -4,7 +4,7 @@
 // map tiles, traffic cameras, Google) go straight to the network: intercepting them
 // used to answer a failed routing request with the cached index.html, which the app
 // then could not parse and drew the route as a straight line.
-const CACHE_NAME = 'alicante-trafico-v3';
+const CACHE_NAME = 'alicante-trafico-v4';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
@@ -50,6 +50,25 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => caches.match('./index.html').then((res) => res || Response.error()))
+    );
+    return;
+  }
+
+  // DGT data files (data/alerts.json, traffic.json...): the app asks for them with a
+  // "?t=..." cache buster, so they are stored and looked up without the query. Offline,
+  // the last copy is served and the app shows how old it is.
+  if (/\/data\/[^/]+\.json$/.test(url.pathname)) {
+    const key = url.origin + url.pathname;
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(key, copy)).catch(() => {});
+          }
+          return response;
+        })
+        .catch(() => caches.match(key).then((res) => res || Response.error()))
     );
     return;
   }

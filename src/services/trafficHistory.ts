@@ -27,7 +27,7 @@ export const HISTORY_URL = `${import.meta.env.BASE_URL}data/history.json`;
 
 export async function loadTrafficHistory(): Promise<TrafficHistory | null> {
   try {
-    const res = await fetchWithTimeout(`${HISTORY_URL}?t=${Date.now()}`, 15000, { cache: 'no-store' });
+    const res = await fetchWithTimeout(`${HISTORY_URL}?t=${Date.now()}`, 15000);
     if (!res.ok) return null;
     const data = await res.json();
     return data?.version === 1 ? data : null;
