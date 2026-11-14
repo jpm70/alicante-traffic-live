@@ -1,0 +1,109 @@
+name: Update DGT data
+
+# Downloads the official DGT data the browser cannot read (the DGT servers do not allow
+# CORS requests) and publishes it in the `data` branch, which the app reads from
+# raw.githubusercontent.com:
+#   alerts.json   incidents around Alicante
+#   traffic.json  speeds measured by the road detectors
+#   radars.json   speed-camera inventory
+#   history.json  typical speed per 15-minute slot, continued from the previous run
+#
+# It is deliberately light: no dependencies to install, no build and no GitHub Pages
+# deployment, a few seconds per run. The site itself is deployed only when the code
+# changes (deploy.yml).
+#
+# The cron asks for a run every 15 minutes, but GitHub gives scheduled runs low priority
+# (in practice one every few hours). A run started through the API (`workflow_dispatch`,
+# for example from an external scheduler) is not delayed. Either way the app shows the
+# age of the data and ignores measured speeds that are too old.
+on:
+  schedule:
+    # Away from the start of the hour, when GitHub is busiest
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: data
+  cancel-in-progress: false
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.4'
+
+      # The previous files are the starting point: the history continues from them, and a
+      # file whose DGT feed fails in this run keeps its last valid copy.
+      - name: Restore the data of the last run
+        run: |
+          mkdir -p public/data
+          set +e
+          git ls-remote --exit-code --heads origin data > /dev/null
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            git fetch --depth 1 origin data
+            git archive FETCH_HEAD | tar -x -C public/data
+            rm -f public/data/README.md
+            echo "Restored from the data branch:"; ls -l public/data
+          elif [ "$code" -eq 2 ]; then
+            echo "The data branch does not exist yet: the history starts from the copy published with the site."
+          else
+            # Any other failure must not replace the published history with an empty one
+            echo "::error::Could not check the data branch (git ls-remote exited with $code)"
+            exit 1
+          fi
+
+      # HISTORY_URL is only used when there is no history in the data branch (first run)
+      - name: Download the DGT data
+        run: HISTORY_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/data/history.json" bun scripts/update-dgt-data.ts
+
+      # One commit that is rewritten on every run, so the repository does not grow
+      - name: Publish in the data branch
+        run: |
+          for file in alerts traffic radars history; do
+            test -s "public/data/$file.json" || { echo "::error::$file.json is missing"; exit 1; }
+          done
+          mkdir out
+          cp public/data/*.json out/
+          cd out
+          cat > README.md <<'EOF'
+          # Datos de Alicante Tráfico en Vivo
+
+          Rama generada por `.github/workflows/data.yml` a partir de los datos oficiales de la
+          DGT (incidencias, detectores de velocidad y radares) y del histórico de velocidades.
+          Se reescribe en cada ejecución (un solo commit) para que el repositorio no crezca.
+          No editar a mano.
+          EOF
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Datos DGT $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # GitHub disables every scheduled workflow of a public repository after 60 days
+      # without activity. Enabling a workflow through the API (even one that is already
+      # enabled) restarts that count, so the data keeps being refreshed with no commits
+      # to main.
+      - name: Keep the scheduled workflows enabled
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for workflow in data.yml buildings.yml gemini-check.yml; do
+            gh api --silent -X PUT "repos/${{ github.repository }}/actions/workflows/$workflow/enable" \
+              && echo "$workflow: enabled" || echo "::warning::could not re-enable $workflow"
+          done

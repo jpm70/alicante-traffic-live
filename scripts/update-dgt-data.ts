@@ -3,9 +3,10 @@
 //   public/data/radars.json  speed-camera inventory of the province (fixed cabins and sections)
 //   public/data/traffic.json measured speed/flow of the DGT road detectors of the province
 //   public/data/history.json typical measured speed per 15-minute slot (see trafficHistory.ts)
-// The DGT servers do not allow browser (CORS) requests, so this runs in the GitHub Pages
-// workflow every 15 minutes and in `npm run dev`. It never fails the build: if the DGT is
-// unreachable it keeps the previous file, or writes an empty one flagged with the error.
+// The DGT servers do not allow browser (CORS) requests, so this runs in the data workflow
+// (.github/workflows/data.yml, which publishes the files in the `data` branch) and in
+// `npm run dev`. It does not fail when the DGT is unreachable: it keeps the previous file,
+// or writes an empty one flagged with the error.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { downloadDgtAlerts } from './dgtIncidents';
@@ -77,8 +78,9 @@ async function updateTraffic(): Promise<{ stations: LiveDetector[]; publishedAt:
   }
 }
 
-// Previous history: the local file (development) or the copy published with the site
-// (HISTORY_URL, set by the GitHub Pages workflow). A missing file starts a new history;
+// Previous history: the local file (restored from the `data` branch by the workflow, or
+// left by the last run in development) or, without one, the copy published with the site
+// (HISTORY_URL). A missing file starts a new history;
 // any other problem stops the run so that the published history is never replaced by
 // an empty one.
 async function loadPreviousHistory(file: string): Promise<TrafficHistory | null> {

@@ -1,17 +1,13 @@
 name: Deploy to GitHub Pages
 
-# Publishes the app and refreshes the official DGT incidents (data/alerts.json).
-# The DGT feed does not allow browser requests, so it is downloaded here and published
-# with the site. The cron asks for a run every 15 minutes, but GitHub gives scheduled
-# runs low priority: in practice this repository gets one every 3 to 9 hours. The app
-# shows the age of the data and ignores measured speeds that are too old.
-# GitHub also disables scheduled workflows after 60 days without activity in the
-# repository; the "keepalive" job below resets that count.
+# Builds and publishes the app when its code changes (push to main) or on demand.
+# The DGT data is refreshed by a separate, much lighter workflow (data.yml) that writes
+# to the `data` branch; the app reads it from there. A copy of that data is also bundled
+# with the site at build time, as the reserve the app falls back to if the branch cannot
+# be read.
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -40,40 +36,35 @@ jobs:
       - name: Type check and unit tests
         run: bun run lint && bun run test
 
-      - name: Download DGT data (incidents, speed cameras, detectors, history)
-        run: bun scripts/update-dgt-data.ts
-        env:
-          # The history continues from the copy published with the site
-          HISTORY_URL: https://jpm70.github.io/alicante-traffic-live/data/history.json
+      # Reserve copy of the data: the data branch as it is now, or the DGT directly while
+      # that branch does not exist yet (first deployment)
+      - name: Data bundled with the site
+        run: |
+          mkdir -p public/data
+          set +e
+          git ls-remote --exit-code --heads origin data > /dev/null
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            git fetch --depth 1 origin data
+            git archive FETCH_HEAD | tar -x -C public/data
+            rm -f public/data/README.md
+          else
+            HISTORY_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/data/history.json" bun scripts/update-dgt-data.ts
+          fi
+          ls -l public/data
 
       - name: Build
         run: bun run build
+        env:
+          # Where the app reads the fresh data from (the `data` branch of this repository)
+          VITE_DATA_BASE: https://raw.githubusercontent.com/${{ github.repository }}/data
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
-
-  # GitHub disables every scheduled workflow of a public repository after 60 days without
-  # activity. Enabling a workflow through the API (even one that is already enabled)
-  # restarts that count, so the data keeps being refreshed with no commits.
-  keepalive:
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    continue-on-error: true
-    permissions:
-      actions: write
-    steps:
-      - name: Keep the scheduled workflows enabled
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          for workflow in deploy.yml buildings.yml gemini-check.yml; do
-            gh api --silent -X PUT "repos/${{ github.repository }}/actions/workflows/$workflow/enable" \
-              && echo "$workflow: enabled" || echo "::warning::could not re-enable $workflow"
-          done
 
   deploy:
     needs: build

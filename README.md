@@ -130,7 +130,7 @@ Activando el modo **"Transporte público"** en la barra superior, la interfaz de
 - **Mapas y Geometría**: [Leaflet](https://leafletjs.com/), OpenStreetMap cartography
 - **Gráficos 3D y WebGL**: [Three.js](https://threejs.org/)
 - **Iconografía**: [Lucide React](https://lucide.dev/)
-- **Sin servidor propio**: sitio estático en GitHub Pages; los datos de la DGT se generan en cada despliegue y los edificios cada mes (GitHub Actions).
+- **Sin servidor propio**: sitio estático en GitHub Pages; los datos de la DGT los publica un workflow ligero en la rama `data` y los edificios se regeneran cada mes (GitHub Actions).
 - **Inteligencia Artificial (Opcional)**: [@google/genai](https://github.com/google-gemini/generative-ai-js) llamado desde el navegador con la clave Gemini de cada usuario. Usa un modelo fijado (`gemini-3.8-flash`); si Google lo retira, pasa solo al alias `gemini-flash-latest` o al Flash más reciente de la lista de modelos de Google, y lo recuerda. Un workflow semanal (`gemini-check.yml`) avisa cuando el modelo fijado desaparece; necesita el secreto opcional `GEMINI_API_KEY` en el repositorio y, sin él, no hace nada.
 
 ---
@@ -190,7 +190,8 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 
 ```text
 ├── .github/workflows/
-│   ├── deploy.yml            # Build y despliegue en GitHub Pages (push a main y programado) 
+│   ├── deploy.yml            # Build y despliegue en GitHub Pages (al cambiar el código)
+│   ├── data.yml              # Datos de la DGT → rama `data` (programado, sin compilar ni desplegar)
 │   ├── buildings.yml         # Regenera los edificios y el callejero OSM el día 1 de cada mes
 │   ├── gemini-check.yml      # Comprueba cada lunes que el modelo de Gemini sigue existiendo
 │   └── ci.yml                # Tests en cada pull request
@@ -260,15 +261,18 @@ Fuera de esa zona, el 3D los pide en directo a Overpass.
 
 ## 🌐 Despliegue en GitHub Pages
 
-El workflow `.github/workflows/deploy.yml` compila y publica la app en GitHub Pages:
+Hay dos workflows separados:
 
-- en cada push a `main`,
-- de forma programada, para refrescar las incidencias, los radares y la velocidad medida de la DGT, cuyo servidor no admite peticiones desde el navegador (se pide cada 15 minutos, pero GitHub da poca prioridad a las tareas programadas y en la práctica lo ejecuta cada 3 a 9 horas),
-- y a mano desde la pestaña *Actions* (*Run workflow*).
+- **`deploy.yml`** compila y publica la app. Se ejecuta en cada push a `main` y a mano desde la pestaña *Actions* (*Run workflow*). No está programado.
+- **`data.yml`** descarga las incidencias, los radares y la velocidad medida de la DGT (cuyo servidor no admite peticiones desde el navegador), actualiza el histórico y lo publica todo en la rama **`data`**. No instala dependencias, no compila y no despliega: tarda unos segundos.
 
-El histórico de velocidades (`data/history.json`) continúa en cada ejecución a partir de la copia ya publicada, sin hacer commits; si esa copia no se puede leer, la ejecución falla y la web anterior sigue publicada, para no perder el histórico.
+La app lee esos ficheros desde `raw.githubusercontent.com/<usuario>/<repo>/data/…` (variable `VITE_DATA_BASE`, que `deploy.yml` fija al compilar). Con la web se publica además una copia de reserva hecha en el momento del despliegue (`data/*.json`): es la que se usa si la rama no responde, y la única en desarrollo y en los tests.
 
-Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub pausa las tareas programadas si el repositorio pasa 60 días sin actividad; el propio workflow lo evita (trabajo `keepalive`), y si aun así se pararan se reactivan desde *Actions*.
+La rama `data` se reescribe en cada ejecución como un solo commit, para que el repositorio no crezca. El histórico de velocidades (`history.json`) continúa a partir de la copia de esa rama; si la rama existe pero no se puede leer, la ejecución falla sin tocar nada, para no perder el histórico.
+
+`data.yml` pide ejecutarse cada 15 minutos, pero GitHub da poca prioridad a las tareas programadas y en la práctica lo lanza cada varias horas. Una ejecución lanzada por la API (`workflow_dispatch`), por ejemplo desde un programador externo, sí arranca al momento.
+
+Requisitos: en *Settings → Pages*, origen **GitHub Actions**. GitHub pausa las tareas programadas si el repositorio pasa 60 días sin actividad; `data.yml` lo evita reactivándolas en cada ejecución programada, y si aun así se pararan se reactivan desde *Actions*.
 
 Como los datos de la DGT pueden tener horas, la app indica su antigüedad: si las incidencias superan los 90 minutos aparece un aviso «DGT hace X h» en la cabecera y en el panel de alertas, y las velocidades medidas con más de 45 minutos dejan de aplicarse al tiempo de la ruta.
 

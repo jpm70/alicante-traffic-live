@@ -1,7 +1,7 @@
 // Typical measured speeds (data/history.json, built by scripts/trafficHistory.ts) and their
 // comparison with the current measurement for the motorway stretches of a route.
 import type { RouteLiveStation } from './liveTraffic';
-import { fetchWithTimeout } from './routing';
+import { loadDataFile } from './dataSource';
 
 export interface StationProfile {
   road: string;
@@ -23,14 +23,9 @@ export interface TrafficHistory {
 
 export type DayType = 'weekday' | 'weekend';
 
-export const HISTORY_URL = `${import.meta.env.BASE_URL}data/history.json`;
-
 export async function loadTrafficHistory(): Promise<TrafficHistory | null> {
   try {
-    const res = await fetchWithTimeout(`${HISTORY_URL}?t=${Date.now()}`, 15000);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.version === 1 ? data : null;
+    return await loadDataFile<TrafficHistory>('history', (d) => (d as TrafficHistory)?.version === 1);
   } catch {
     return null;
   }
