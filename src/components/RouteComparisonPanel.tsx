@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { CalculatedRoute, RoutePoint } from '../services/routing';
-import { HistoricalTrafficChart } from './HistoricalTrafficChart';
 import { askTrafficAdvisor, getStoredGeminiKey } from '../services/gemini';
 import { Radar, radarsAlongRoute } from '../services/radars';
 import type { TrafficHistory } from '../services/trafficHistory';
@@ -40,6 +39,9 @@ import { calculateAlicanteTaxiFare, isNightOrHolidayAlicante } from '../data/pub
 
 import { ageMinutes, describeAge, formatUpdatedAt } from '../services/dataAge';
 import { ROUTE_STATUS_LABEL, ROUTE_STATUS_STYLE, cameraStatusLabel, countLabel } from '../services/text';
+// The chart library (recharts, ~370 kB) is not needed to see the route and the map
+const HistoricalTrafficChart = lazy(() => import('./HistoricalTrafficChart').then((m) => ({ default: m.HistoricalTrafficChart })));
+
 interface RouteComparisonPanelProps {
   routes: CalculatedRoute[];
   selectedRouteId: string;
@@ -445,7 +447,12 @@ ${advice}`;
       {/* Historical vs Real-time Traffic Line Chart */}
       {(() => {
         const activeRoute = routes.find((r) => r.id === selectedRouteId) || fastestRoute;
-        return <HistoricalTrafficChart route={activeRoute} history={trafficHistory} />;
+        return (
+          // Same height as the folded chart, so the list below does not jump when it loads
+          <Suspense fallback={<div className="bg-[#111827] border border-slate-800 rounded-xl h-40 animate-pulse" aria-hidden="true" />}>
+            <HistoricalTrafficChart route={activeRoute} history={trafficHistory} />
+          </Suspense>
+        );
       })()}
 
       {/* Alternative Routes Comparison List */}

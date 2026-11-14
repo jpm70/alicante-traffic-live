@@ -220,3 +220,47 @@ test('el estado del tráfico se escribe bien y con su color, y los plurales conc
   expect(text).not.toMatch(/\b1 activas\b/i);
   expect(text).not.toMatch(/Critico|Retencion\b/);
 });
+
+test('sin conexión conserva las últimas incidencias de la DGT y el estilo del mapa', async ({ page, context, browserName }) => {
+  await openApp(page);
+  const alerts = await page.evaluate(async () => (await (await fetch('data/alerts.json')).json()).alerts.length);
+  test.skip(alerts === 0, 'La DGT no publicó incidencias en esta ejecución');
+  // The service worker must control the page and have stored the data files
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload();
+  await expect(page.getByText(/Tiempo base: motor de rutas/)).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByRole('button', { name: new RegExp(`Alertas.*${alerts}`) }).first()).toBeVisible();
+
+  await context.setOffline(true);
+  await page.reload();
+  // The incidents come from the copy kept by the service worker, asked for with a new "?t="
+  await expect(page.getByRole('button', { name: new RegExp(`Alertas.*${alerts}`) }).first()).toBeVisible({ timeout: 45_000 });
+  expect(await page.evaluate(async () => (await (await fetch(`data/alerts.json?t=${Date.now()}`)).json()).alerts.length)).toBe(alerts);
+  // No routing server: the app says so instead of failing. (Playwright's offline mode
+  // does not cut requests to other sites in Firefox, so this part is checked in Chromium.)
+  if (browserName === 'chromium') await expect(page.getByText('Trazado aproximado').first()).toBeVisible({ timeout: 45_000 });
+  // Leaflet's stylesheet ships with the app: the map keeps its layout
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('.leaflet-container')!).position)).toBe('relative');
+  await context.setOffline(false);
+});
+
+test('los fotogramas de las cámaras no se recargan con la pestaña oculta', async ({ page }) => {
+  await openApp(page);
+  const countdown = () => page.evaluate(() => (document.querySelector('header')?.textContent || '').match(/(\d+)s/)?.[1]);
+  const setHidden = (hidden: boolean) =>
+    page.evaluate((h) => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, hidden);
+
+  await setHidden(true);
+  const frozen = await countdown();
+  await page.waitForTimeout(3200);
+  expect(await countdown()).toBe(frozen);
+
+  // Back on screen: refreshed at once and counting again
+  await setHidden(false);
+  await expect.poll(countdown).toMatch(/^1[45]$/);
+  await expect.poll(countdown, { timeout: 8000 }).toMatch(/^1[0-2]$/);
+});
+

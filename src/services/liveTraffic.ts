@@ -42,7 +42,7 @@ export const TRAFFIC_URL = `${import.meta.env.BASE_URL}data/traffic.json`;
 
 export async function loadLiveTraffic(): Promise<LiveTrafficResponse | null> {
   try {
-    const res = await fetchWithTimeout(`${TRAFFIC_URL}?t=${Date.now()}`, 15000, { cache: 'no-store' });
+    const res = await fetchWithTimeout(`${TRAFFIC_URL}?t=${Date.now()}`, 15000);
     if (!res.ok) return null;
     const data: LiveTrafficResponse = await res.json();
     return Array.isArray(data.stations) ? data : null;

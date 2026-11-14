@@ -22,7 +22,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: '1.4.4'
 
       - name: Check the pinned model
         run: bun scripts/check-gemini.ts
