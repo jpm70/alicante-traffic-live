@@ -618,11 +618,11 @@ export default function App() {
               {sharedBannerInfo.originName} ➔ {sharedBannerInfo.destinationName}
             </span>
             {sharedBannerInfo.rushHour ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex-shrink-0">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex-shrink-0">
                 🔥 Hora Punta
               </span>
             ) : (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex-shrink-0">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex-shrink-0">
                 🟢 Tráfico Normal
               </span>
             )}
@@ -667,7 +667,7 @@ export default function App() {
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
                   <span>Alertas e Incidencias</span>
-                  <span className="text-[10px] px-1.5 rounded-full font-mono bg-slate-950/40 text-amber-300">
+                  <span className="text-[11px] px-1.5 rounded-full font-mono bg-slate-950/40 text-amber-300">
                     {alerts.length}
                   </span>
                 </button>
@@ -759,7 +759,7 @@ export default function App() {
                       <GhostLogo className="w-full h-full object-contain aspect-square select-none group-hover:scale-105 transition-transform" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[10px] text-slate-400 block font-mono leading-none mb-0.5">
+                      <span className="text-[11px] text-slate-400 block font-mono leading-none mb-0.5">
                         Creado por
                       </span>
                       <span className="font-bold text-white group-hover:text-cyan-300 transition-colors truncate block text-xs">

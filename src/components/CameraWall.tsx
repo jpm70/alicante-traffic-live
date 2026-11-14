@@ -127,7 +127,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({
               <Navigation className="w-3.5 h-3.5" />
               <span>Cámaras de mi Ruta</span>
               {activeRoute && (
-                <span className="text-[10px] bg-slate-950/30 px-1.5 py-0.2 rounded-full font-mono">
+                <span className="text-[11px] bg-slate-950/30 px-1.5 py-0.2 rounded-full font-mono">
                   {activeRoute.cameras.length}
                 </span>
               )}
@@ -143,7 +143,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({
             >
               <CheckSquare className="w-3.5 h-3.5" />
               <span>Personalizadas</span>
-              <span className="text-[10px] bg-slate-950/30 px-1.5 py-0.2 rounded-full font-mono">
+              <span className="text-[11px] bg-slate-950/30 px-1.5 py-0.2 rounded-full font-mono">
                 {selectedCameraIds.size}
               </span>
             </button>
@@ -187,7 +187,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({
           {/* Grid Layout Selector & Counters */}
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-1 text-xs text-slate-400">
-              <span className="text-[10px] uppercase font-mono px-1.5 text-slate-500 hidden sm:inline">Rejilla:</span>
+              <span className="text-[11px] uppercase font-mono px-1.5 text-slate-500 hidden sm:inline">Rejilla:</span>
               <button
                 onClick={() => setGridLayout('auto')}
                 className={`px-2 py-1 rounded ${gridLayout === 'auto' ? 'bg-slate-800 text-cyan-400 font-bold' : ''}`}
@@ -333,7 +333,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({
                   {/* Top Bar inside card */}
                   <div className="bg-slate-950/80 px-2.5 py-1.5 flex items-center justify-between border-b border-slate-800/80 text-[11px]">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-mono font-bold text-cyan-400 bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-800/40 text-[10px]">
+                      <span className="font-mono font-bold text-cyan-400 bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-800/40 text-[11px]">
                         {cam.id}
                       </span>
                       <span className="font-medium text-slate-300 truncate" title={cam.name}>
@@ -375,14 +375,14 @@ export const CameraWall: React.FC<CameraWallProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent pointer-events-none" />
 
                     {/* Live Dot & Timestamp */}
-                    <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30">
+                    <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded text-[11px] font-mono text-emerald-400 border border-emerald-500/30">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       <span>{timestamp}</span>
                     </div>
 
                     {/* Route Corridor Badge */}
                     {isOnActiveRoute && (
-                      <div className="absolute top-2 right-2 bg-cyan-500/90 text-slate-950 text-[10px] font-bold px-1.5 py-0.5 rounded shadow">
+                      <div className="absolute top-2 right-2 bg-cyan-500/90 text-slate-950 text-[11px] font-bold px-1.5 py-0.5 rounded shadow">
                         EN TU RUTA
                       </div>
                     )}
@@ -396,7 +396,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({
                     </div>
 
                     {/* Bottom Metadata */}
-                    <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between text-[10px] text-slate-400 pointer-events-none">
+                    <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between text-[11px] text-slate-400 pointer-events-none">
                       <span className="font-mono text-slate-300 truncate">{cam.zona}</span>
                       {routeCameraStatus.has(cam.id) && (
                         <span

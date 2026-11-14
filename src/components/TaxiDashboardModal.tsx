@@ -29,6 +29,7 @@ import {
   isNightOrHolidayAlicante,
 } from '../data/publicTransport';
 
+import { useDialog } from '../hooks/useDialog';
 interface TaxiDashboardModalProps {
   route: CalculatedRoute;
   origin: RoutePoint & { name: string };
@@ -46,6 +47,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dialog = useDialog(onClose, { label: 'Panel del taxista', ref: containerRef });
 
   // Digital Taximeter simulation
   const isNight = isNightOrHolidayAlicante();
@@ -176,8 +178,8 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
 
   return (
     <div
-      ref={containerRef}
-      className="fixed inset-0 z-[99999] bg-black text-white flex flex-col justify-between p-3 sm:p-6 select-none font-sans overflow-hidden"
+      {...dialog}
+      className="fixed inset-0 z-[99999] bg-black text-white flex flex-col justify-between p-3 sm:p-6 select-none font-sans overflow-hidden outline-none"
     >
       {/* Top Bar: Taxi Header & Status */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 pb-3">
@@ -305,7 +307,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
             </div>
           </div>
 
-          <p className="text-[10px] text-slate-500 text-center -mt-2 mb-2">
+          <p className="text-[11px] text-slate-500 text-center -mt-2 mb-2">
             Estimación orientativa: no sustituye al taxímetro homologado del vehículo.
             {gpsError ? ` ${gpsError}` : ''}
           </p>
@@ -313,17 +315,17 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
           {/* Taximeter Telemetry: Km, Time, Wait */}
           <div className="grid grid-cols-3 gap-2 text-center bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
             <div>
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">Km Carrera</span>
+              <span className="text-[11px] uppercase font-mono text-slate-400 block">Km Carrera</span>
               <span className="text-lg font-mono font-bold text-white">{simKm.toFixed(2)} km</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">Tiempo Espera</span>
+              <span className="text-[11px] uppercase font-mono text-slate-400 block">Tiempo Espera</span>
               <span className="text-lg font-mono font-bold text-amber-400">
                 {Math.floor(simWaitSeconds / 60)}m {simWaitSeconds % 60}s
               </span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-mono text-slate-400 block">Bajada Bandera</span>
+              <span className="text-[11px] uppercase font-mono text-slate-400 block">Bajada Bandera</span>
               <span className="text-lg font-mono font-bold text-slate-200">{flagDrop.toFixed(2)} €</span>
             </div>
           </div>
@@ -370,7 +372,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
         >
           <MapPin className="w-6 h-6 text-amber-400 shrink-0" />
           <div className="min-w-0">
-            <span className="text-[10px] font-mono text-slate-400 block">PARADA PRÓXIMA</span>
+            <span className="text-[11px] font-mono text-slate-400 block">PARADA PRÓXIMA</span>
             <span className="text-xs font-bold text-white truncate block">
               {closestStand.name}
             </span>
@@ -388,7 +390,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
         >
           <Camera className="w-6 h-6 text-cyan-400 shrink-0" />
           <div className="min-w-0">
-            <span className="text-[10px] font-mono text-slate-400 block">CÁMARAS ACCESOS</span>
+            <span className="text-[11px] font-mono text-slate-400 block">CÁMARAS ACCESOS</span>
             <span className="text-xs font-bold text-white truncate block">
               {route.cameras.length} en tu ruta
             </span>
@@ -399,7 +401,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
         <div className="p-3 bg-slate-900/60 border-2 border-slate-800 rounded-2xl flex items-center gap-2.5 text-left">
           <Navigation className="w-6 h-6 text-emerald-400 shrink-0" />
           <div className="min-w-0">
-            <span className="text-[10px] font-mono text-slate-400 block">PRIORIDAD BUS-TAXI</span>
+            <span className="text-[11px] font-mono text-slate-400 block">PRIORIDAD BUS-TAXI</span>
             <span className="text-xs font-bold text-emerald-300 truncate block">
               Habilitado en ciudad
             </span>
@@ -410,7 +412,7 @@ export const TaxiDashboardModal: React.FC<TaxiDashboardModalProps> = ({
         <div className="p-3 bg-slate-900/60 border-2 border-slate-800 rounded-2xl flex items-center gap-2.5 text-left">
           <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />
           <div className="min-w-0">
-            <span className="text-[10px] font-mono text-slate-400 block">AVISOS LOCALES</span>
+            <span className="text-[11px] font-mono text-slate-400 block">AVISOS LOCALES</span>
             <span className="text-xs font-bold text-slate-200 truncate block">
               Luceros / Rambla
             </span>

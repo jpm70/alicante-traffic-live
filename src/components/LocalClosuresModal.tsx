@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ALICANTE_LOCAL_CLOSURES, LocalClosureAlert } from '../data/publicTransport';
 
+import { useDialog } from '../hooks/useDialog';
 interface LocalClosuresModalProps {
   onClose: () => void;
   onSelectClosureOnMap?: (closure: LocalClosureAlert) => void;
@@ -20,9 +21,11 @@ export const LocalClosuresModal: React.FC<LocalClosuresModalProps> = ({
   onClose,
   onSelectClosureOnMap,
 }) => {
+  const dialog = useDialog(onClose, { label: 'Cortes locales y fiestas' });
   return (
     <div
-      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+      {...dialog}
+      className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 outline-none"
       onClick={onClose}
     >
       <div
@@ -40,7 +43,7 @@ export const LocalClosuresModal: React.FC<LocalClosuresModalProps> = ({
                 <h3 className="text-base sm:text-lg font-black text-white">
                   Cortes y Fiestas Locales de Alicante
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">
                   AVISOS MUNICIPALES
                 </span>
               </div>
@@ -67,11 +70,11 @@ export const LocalClosuresModal: React.FC<LocalClosuresModalProps> = ({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40 font-bold uppercase">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40 font-bold uppercase">
                       {item.festivityOrReason}
                     </span>
                     <span
-                      className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
+                      className={`text-[11px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
                         item.severity === 'corte-total'
                           ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                           : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
@@ -90,7 +93,7 @@ export const LocalClosuresModal: React.FC<LocalClosuresModalProps> = ({
 
               {/* Streets affected */}
               <div className="bg-slate-950/70 rounded-lg p-2.5 border border-slate-800/80 space-y-1 text-xs">
-                <span className="text-[10px] uppercase font-mono text-slate-400 font-bold block">
+                <span className="text-[11px] uppercase font-mono text-slate-400 font-bold block">
                   Calles Afectadas:
                 </span>
                 <div className="flex flex-wrap gap-1.5">

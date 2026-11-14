@@ -148,7 +148,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div style="font-weight:700; font-size:12px; color:#f8fafc; margin-bottom:2px;">
               📍 Punto en el mapa
             </div>
-            <div style="font-size:10px; color:#94a3b8; margin-bottom:8px; font-family:monospace;">
+            <div style="font-size: 11px; color:#94a3b8; margin-bottom:8px; font-family:monospace;">
               ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}
             </div>
             <div style="display:flex; gap:6px;">
@@ -235,7 +235,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       html: `
         <div style="position:relative; width:34px; height:34px; display:flex; align-items:center; justify-content:center;">
           <div style="position:absolute; width:${isMyLocation ? '32px' : '26px'}; height:${isMyLocation ? '32px' : '26px'}; border-radius:50%; background:${isMyLocation ? 'rgba(6,182,212,0.45)' : 'rgba(34,197,94,0.35)'}; animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
-          <div style="position:relative; width:22px; height:22px; border-radius:50%; background:${isMyLocation ? '#06b6d4' : '#22c55e'}; border:2.5px solid #ffffff; box-shadow:0 0 12px ${isMyLocation ? 'rgba(6,182,212,0.9)' : 'rgba(34,197,94,0.8)'}; display:flex; align-items:center; justify-content:center; color:#0f172a; font-size:${isMyLocation ? '11px' : '10px'}; font-weight:900;">
+          <div style="position:relative; width:22px; height:22px; border-radius:50%; background:${isMyLocation ? '#06b6d4' : '#22c55e'}; border:2.5px solid #ffffff; box-shadow:0 0 12px ${isMyLocation ? 'rgba(6,182,212,0.9)' : 'rgba(34,197,94,0.8)'}; display:flex; align-items:center; justify-content:center; color:#0f172a; font-size:11px; font-weight:900;">
             ${isMyLocation ? '📍' : 'A'}
           </div>
         </div>
@@ -250,7 +250,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       html: `
         <div style="position:relative; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">
           <div style="position:absolute; width:26px; height:26px; border-radius:50%; background:rgba(239,68,68,0.3); animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
-          <div style="position:relative; width:18px; height:18px; border-radius:50%; background:#ef4444; border:2.5px solid #ffffff; box-shadow:0 0 10px rgba(239,68,68,0.8); display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:10px; font-weight:900;">B</div>
+          <div style="position:relative; width:18px; height:18px; border-radius:50%; background:#ef4444; border:2.5px solid #ffffff; box-shadow:0 0 10px rgba(239,68,68,0.8); display:flex; align-items:center; justify-content:center; color:#ffffff; font-size: 11px; font-weight:900;">B</div>
         </div>
       `,
       iconSize: [30, 30],
@@ -365,7 +365,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <div style="min-width: 220px; font-family: system-ui, sans-serif;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
             <span style="font-weight: 800; font-size: 11px; background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${cam.id}</span>
-            <span style="font-size: 10px; color: #94a3b8; font-weight: 600;">${cam.zona}</span>
+            <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">${cam.zona}</span>
           </div>
           <div style="font-weight: 700; font-size: 13px; color: #f8fafc; margin-bottom: 8px;">${cam.name}</div>
           
@@ -377,7 +377,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               style="width: 100%; height: 100%; object-fit: cover;"
               onerror="this.style.opacity='0.2'; this.parentElement.insertAdjacentHTML('beforeend', '<div style=\\'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;\\'>Cámara no disponible</div>');"
             />
-            <div style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.7); color: #22c55e; font-size: 9px; font-family: monospace; padding: 2px 4px; border-radius: 3px;">● EN VIVO</div>
+            <div style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.7); color: #22c55e; font-size: 11px; font-family: monospace; padding: 2px 4px; border-radius: 3px;">● EN VIVO</div>
           </div>
 
           <div style="display: flex; gap: 6px;">
@@ -475,7 +475,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const popupHtml = `
         <div style="min-width: 230px; font-family: system-ui, sans-serif; line-height: 1.4;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-            <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: ${iconBg}; color: white; padding: 2px 6px; border-radius: 4px; font-family: monospace;">
+            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; background: ${iconBg}; color: white; padding: 2px 6px; border-radius: 4px; font-family: monospace;">
               ${escapeHtml(alert.type.toUpperCase())} · ${escapeHtml(alert.severity.toUpperCase())}
             </span>
             <span style="font-size: 11px; font-weight: 800; color: #f59e0b; font-family: monospace;">
@@ -495,7 +495,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             ${escapeHtml(alert.description)}
           </div>
 
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: #94a3b8; font-family: monospace;">
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #94a3b8; font-family: monospace;">
             <span>${escapeHtml(alert.source)}</span>
             <span>${escapeHtml(alert.timestamp)}</span>
           </div>
@@ -577,7 +577,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const marker = L.marker([st.lat, st.lng], {
         icon: L.divIcon({
           className: 'dgt-live-station',
-          html: `<div style="min-width:30px;height:18px;padding:0 4px;border-radius:9px;background:${colors[status]};border:2px solid #0f172a;color:#0f172a;font:700 10px/14px monospace;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.5)">${st.speed !== null ? Number(st.speed) : '–'}</div>`,
+          html: `<div style="min-width:30px;height:18px;padding:0 4px;border-radius:9px;background:${colors[status]};border:2px solid #0f172a;color:#0f172a;font:700 11px/14px monospace;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.5)">${st.speed !== null ? Number(st.speed) : '–'}</div>`,
           iconSize: [34, 18],
           iconAnchor: [17, 9],
         }),
@@ -637,10 +637,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const popupHtml = `
         <div style="min-width: 230px; font-family: system-ui, sans-serif; line-height: 1.4;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-            <span style="font-size: 10px; font-weight: 900; background: #fbbf24; color: #000; padding: 2px 6px; border-radius: 4px; font-family: monospace;">
+            <span style="font-size: 11px; font-weight: 900; background: #fbbf24; color: #000; padding: 2px 6px; border-radius: 4px; font-family: monospace;">
               🚖 PARADA OFICIAL DE TAXI
             </span>
-            <span style="font-size: 10px; font-weight: 700; color: #38bdf8; font-family: monospace;">
+            <span style="font-size: 11px; font-weight: 700; color: #38bdf8; font-family: monospace;">
               ${stand.capacity} PLAZAS
             </span>
           </div>
@@ -654,7 +654,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
           ${
             stand.notes
-              ? `<div style="font-size: 10px; color: #cbd5e1; background: #0f172a; padding: 4px 6px; border-radius: 4px; margin-bottom: 8px; border: 1px solid #334155;">
+              ? `<div style="font-size: 11px; color: #cbd5e1; background: #0f172a; padding: 4px 6px; border-radius: 4px; margin-bottom: 8px; border: 1px solid #334155;">
                   ℹ️ ${stand.notes}
                 </div>`
               : ''
@@ -722,7 +722,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       const popupHtml = `
         <div style="min-width: 230px; font-family: system-ui, sans-serif; line-height: 1.4;">
-          <div style="font-size: 10px; font-weight: 800; background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-family: monospace; display: inline-block; margin-bottom: 4px;">
+          <div style="font-size: 11px; font-weight: 800; background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-family: monospace; display: inline-block; margin-bottom: 4px;">
             ${closure.festivityOrReason.toUpperCase()}
           </div>
           <div style="font-weight: 800; font-size: 13px; color: #f8fafc; margin-bottom: 2px;">
@@ -734,7 +734,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <div style="font-size: 11px; color: #10b981; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 5px 7px; border-radius: 5px; margin-bottom: 6px;">
             <strong>Desvío Taxi:</strong> ${closure.detourAdvice}
           </div>
-          <div style="font-size: 10px; color: #94a3b8;">
+          <div style="font-size: 11px; color: #94a3b8;">
             ⏱️ ${closure.dateOrHours}
           </div>
         </div>
@@ -762,14 +762,14 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <span className="font-black text-white uppercase font-mono">
               Modo Selección: {isPickOnMapActive === 'origin' ? 'Punto de Partida (Origen)' : 'Punto de Llegada (Destino)'}
             </span>
-            <p className="text-[10px] text-emerald-300 font-medium">
+            <p className="text-[11px] text-emerald-300 font-medium">
               Haz clic en cualquier calle o rotonda de Alicante para fijarlo
             </p>
           </div>
           {onCancelPickMode && (
             <button
               onClick={onCancelPickMode}
-              className="ml-2 px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold border border-slate-700 transition-colors"
+              className="ml-2 px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 text-[11px] font-bold border border-slate-700 transition-colors"
             >
               Cancelar
             </button>
@@ -844,7 +844,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <div className="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-md z-[400] bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-lg p-2.5 text-[11px] shadow-lg pointer-events-auto">
           <div className="font-bold text-slate-200 mb-1.5 flex items-center justify-between gap-3">
             <span>Leyenda</span>
-            <span className="text-[10px] text-cyan-400 font-mono">
+            <span className="text-[11px] text-cyan-400 font-mono">
               159 cámaras · {alerts.length} incidencias · {radars.length} radares
             </span>
             <button onClick={() => setLegendOpen(false)} className="text-slate-400 hover:text-white px-1" aria-label="Ocultar leyenda">
@@ -862,11 +862,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="text-slate-400 w-full sm:w-auto">Datos oficiales DGT:</span>
               <span className="flex items-center gap-1.5">
-                <span className="px-1 rounded-full bg-emerald-500 text-slate-950 font-mono font-bold text-[10px] leading-4 border border-slate-950">95</span>
+                <span className="px-1 rounded-full bg-emerald-500 text-slate-950 font-mono font-bold text-[11px] leading-4 border border-slate-950">95</span>
                 Velocidad medida (km/h)
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-4 h-4 rounded bg-slate-950 border-2 border-white ring-1 ring-red-600 flex items-center justify-center text-[9px]">📷</span>
+                <span className="w-4 h-4 rounded bg-slate-950 border-2 border-white ring-1 ring-red-600 flex items-center justify-center text-[11px]">📷</span>
                 Radar
               </span>
               <span className="flex items-center gap-1.5"><span className="text-xs">🚧</span>Incidencia</span>

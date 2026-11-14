@@ -264,3 +264,48 @@ test('los fotogramas de las cámaras no se recargan con la pestaña oculta', asy
   await expect.poll(countdown, { timeout: 8000 }).toMatch(/^1[0-2]$/);
 });
 
+test('accesibilidad: controles táctiles de 44 px, texto legible y diálogos con rol, foco y Escape', async ({ page }) => {
+  await openApp(page);
+
+  // Smallest text on screen
+  const tiny = await page.evaluate(() => {
+    const out: string[] = [];
+    for (const el of Array.from(document.querySelectorAll('body *'))) {
+      if (el.children.length || !el.textContent?.trim()) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      if (parseFloat(getComputedStyle(el).fontSize) < 11) out.push(el.textContent.trim().slice(0, 20));
+    }
+    return out;
+  });
+  expect(tiny).toEqual([]);
+
+  // On a touch screen (the phone project) every button is at least 44 x 44 px
+  if (await page.evaluate(() => matchMedia('(pointer: coarse)').matches)) {
+    const small = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('button, select, .leaflet-control-zoom a'))
+        .map((el) => ({ el, r: el.getBoundingClientRect() }))
+        .filter(({ r }) => r.width > 0 && r.height > 0 && (r.width < 43.5 || r.height < 43.5))
+        .map(({ el, r }) => `${(el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || '').trim().slice(0, 25)} ${Math.round(r.width)}x${Math.round(r.height)}`)
+    );
+    expect(small).toEqual([]);
+    // The header tools stay in one row on a phone
+    const header = await page.locator('header').boundingBox();
+    expect(header!.height).toBeLessThan(200);
+  }
+
+  // The GPS is a modal dialog: named, takes the focus, closes with Escape and gives the focus back
+  const open = page.getByRole('button', { name: /^Navegador GPS$/ }).first();
+  await open.click();
+  const dialog = page.getByRole('dialog', { name: 'Navegador GPS' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute('aria-modal', 'true');
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true);
+  // Tab never leaves the dialog
+  for (let i = 0; i < 12; i++) await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(open).toBeFocused();
+});
+

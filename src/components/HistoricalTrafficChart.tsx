@@ -60,11 +60,11 @@ const EstimatedTrafficChart: React.FC<{ route: CalculatedRoute }> = ({ route }) 
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <span>Tiempo por hora</span>
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 normal-case tracking-normal">
+              <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 normal-case tracking-normal">
                 ESTIMACIÓN
               </span>
             </h4>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[11px] text-slate-400">
               Sin detectores DGT en esta ruta: patrón horario estimado, no medido
             </p>
           </div>
@@ -109,23 +109,23 @@ const EstimatedTrafficChart: React.FC<{ route: CalculatedRoute }> = ({ route }) 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
         {/* Metric 1: Real-time duration */}
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Estimado ahora</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Estimado ahora</span>
           <span className="text-base font-black font-mono text-cyan-400">
-            {comparison.tiempoActual} <span className="text-[10px] font-normal text-slate-400">min</span>
+            {comparison.tiempoActual} <span className="text-[11px] font-normal text-slate-400">min</span>
           </span>
         </div>
 
         {/* Metric 2: Historical average at current hour */}
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Patrón a esta hora</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Patrón a esta hora</span>
           <span className="text-base font-black font-mono text-slate-200">
-            {comparison.tiempoHistoricoActual} <span className="text-[10px] font-normal text-slate-400">min</span>
+            {comparison.tiempoHistoricoActual} <span className="text-[11px] font-normal text-slate-400">min</span>
           </span>
         </div>
 
         {/* Metric 3: Delta Comparison */}
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Diferencia</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Diferencia</span>
           <div className="flex items-center justify-center gap-1">
             {comparison.estadoComparativo === 'mejor' ? (
               <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-0.5">
@@ -145,7 +145,7 @@ const EstimatedTrafficChart: React.FC<{ route: CalculatedRoute }> = ({ route }) 
 
         {/* Metric 4: Optimal hour */}
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Mejor Hora</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Mejor Hora</span>
           <span className="text-xs font-bold text-emerald-400 font-mono">
             {comparison.mejorHora.hour} ({comparison.mejorHora.tiempo}m)
           </span>
@@ -179,14 +179,14 @@ const EstimatedTrafficChart: React.FC<{ route: CalculatedRoute }> = ({ route }) 
               <XAxis
                 dataKey="hour"
                 stroke="#64748b"
-                tick={{ fontSize: 10, fill: '#64748b' }}
+                tick={{ fontSize: 11, fill: '#64748b' }}
                 axisLine={{ stroke: '#334155' }}
                 tickLine={{ stroke: '#334155' }}
               />
 
               <YAxis
                 stroke="#64748b"
-                tick={{ fontSize: 10, fill: '#64748b' }}
+                tick={{ fontSize: 11, fill: '#64748b' }}
                 axisLine={{ stroke: '#334155' }}
                 tickLine={{ stroke: '#334155' }}
                 unit="m"
@@ -201,7 +201,7 @@ const EstimatedTrafficChart: React.FC<{ route: CalculatedRoute }> = ({ route }) 
                       <div className="bg-[#0f172a] border border-slate-700 p-2.5 rounded-lg shadow-xl text-xs space-y-1">
                         <div className="font-bold text-white font-mono flex items-center justify-between gap-3 border-b border-slate-800 pb-1">
                           <span>Hora: {data.hour}</span>
-                          <span className="text-[10px] text-cyan-400 px-1.5 py-0.2 rounded bg-cyan-950/60 border border-cyan-800/40">
+                          <span className="text-[11px] text-cyan-400 px-1.5 py-0.2 rounded bg-cyan-950/60 border border-cyan-800/40">
                             Congestión {data.nivelCongestion}
                           </span>
                         </div>
@@ -235,7 +235,7 @@ const EstimatedTrafficChart: React.FC<{ route: CalculatedRoute }> = ({ route }) 
                   value: 'AHORA',
                   position: 'top',
                   fill: '#38bdf8',
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 'bold',
                 }}
               />
@@ -264,7 +264,7 @@ const EstimatedTrafficChart: React.FC<{ route: CalculatedRoute }> = ({ route }) 
           </ResponsiveContainer>
 
           {/* Legend and Footnote */}
-          <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1">
+          <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-0.5 bg-cyan-400 inline-block" />
@@ -313,7 +313,7 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
           </div>
           <div className="min-w-0">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">Velocidad real: habitual vs ahora</h4>
-            <p className="text-[10px] text-slate-400 truncate">
+            <p className="text-[11px] text-slate-400 truncate">
               Detectores DGT en {data.roads.join(', ')} · {data.stations} punto{data.stations > 1 ? 's' : ''} de tu ruta · datos desde el {sinceLabel}
             </p>
           </div>
@@ -342,23 +342,23 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Ahora (medida)</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Ahora (medida)</span>
           <span className="text-base font-black font-mono text-cyan-400">
-            {data.current ?? '–'} <span className="text-[10px] font-normal text-slate-400">km/h</span>
+            {data.current ?? '–'} <span className="text-[11px] font-normal text-slate-400">km/h</span>
           </span>
         </div>
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Habitual a esta hora</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Habitual a esta hora</span>
           <span className="text-base font-black font-mono text-slate-200">
             {data.typicalNow !== null && !data.typicalNowReliable ? '~' : ''}
-            {data.typicalNow ?? '–'} <span className="text-[10px] font-normal text-slate-400">km/h</span>
+            {data.typicalNow ?? '–'} <span className="text-[11px] font-normal text-slate-400">km/h</span>
           </span>
           {data.typicalNow !== null && !data.typicalNowReliable && (
-            <span className="block text-[9px] text-amber-300/90 font-mono">pocas medidas</span>
+            <span className="block text-[11px] text-amber-300/90 font-mono">pocas medidas</span>
           )}
         </div>
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Diferencia</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Diferencia</span>
           {diff === null ? (
             <span className="text-xs font-bold text-slate-400 font-mono">
               {data.current === null ? 'Sin medida actual' : 'Sin referencia aún'}
@@ -376,7 +376,7 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
           )}
         </div>
         <div>
-          <span className="block text-[10px] uppercase font-mono text-slate-400">Hora más lenta</span>
+          <span className="block text-[11px] uppercase font-mono text-slate-400">Hora más lenta</span>
           <span className="text-xs font-bold text-amber-400 font-mono">
             {worst ? `${label(worst.hour)} (${worst.typical} km/h)` : 'Faltan medidas'}
           </span>
@@ -399,8 +399,8 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="hour" stroke="#64748b" tick={{ fontSize: 10, fill: '#64748b' }} interval={3} />
-              <YAxis stroke="#64748b" tick={{ fontSize: 10, fill: '#64748b' }} unit="" domain={[0, 130]} />
+              <XAxis dataKey="hour" stroke="#64748b" tick={{ fontSize: 11, fill: '#64748b' }} interval={3} />
+              <YAxis stroke="#64748b" tick={{ fontSize: 11, fill: '#64748b' }} unit="" domain={[0, 130]} />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload || !payload.length) return null;
@@ -411,7 +411,7 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
                       <div className="text-cyan-300">
                         {p.typical !== null ? `${p.typical} km/h habitual` : 'Sin datos todavía'}
                       </div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[11px] text-slate-400">
                         {p.samples} {p.samples === 1 ? 'medida' : 'medidas'}
                         {p.typical !== null && !p.reliable ? ' · orientativo' : ''}
                       </div>
@@ -419,7 +419,7 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
                   );
                 }}
               />
-              <ReferenceLine x={label(nowHour)} stroke="#38bdf8" strokeDasharray="4 4" label={{ value: 'AHORA', position: 'top', fill: '#38bdf8', fontSize: 10, fontWeight: 'bold' }} />
+              <ReferenceLine x={label(nowHour)} stroke="#38bdf8" strokeDasharray="4 4" label={{ value: 'AHORA', position: 'top', fill: '#38bdf8', fontSize: 11, fontWeight: 'bold' }} />
               {data.current !== null && (
                 <ReferenceDot x={label(nowHour)} y={data.current} r={6} fill="#10b981" stroke="#ffffff" strokeWidth={2} />
               )}
@@ -439,7 +439,7 @@ const RealTrafficChart: React.FC<{ route: CalculatedRoute; history: TrafficHisto
               />
             </LineChart>
           </ResponsiveContainer>
-          <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1">
+          <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-cyan-400 inline-block" />Habitual (km/h)</span>
               {reliableHours.length < 24 && (

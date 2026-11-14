@@ -40,7 +40,7 @@ export const FloatingCameraPip: React.FC<FloatingCameraPipProps> = ({
       <div className="flex items-center justify-between px-3 py-2 bg-slate-900 border-b border-slate-800 cursor-default select-none">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-          <span className="text-[10px] font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
+          <span className="text-[11px] font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
             {camera.id}: {camera.name}
           </span>
         </div>
@@ -97,7 +97,7 @@ export const FloatingCameraPip: React.FC<FloatingCameraPipProps> = ({
             }}
           />
 
-          <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm px-1.5 py-0.5 rounded text-[9px] font-mono text-emerald-400 flex items-center gap-1">
+          <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm px-1.5 py-0.5 rounded text-[11px] font-mono text-emerald-400 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
             EN VIVO
           </div>
@@ -106,7 +106,7 @@ export const FloatingCameraPip: React.FC<FloatingCameraPipProps> = ({
             <p className="text-[11px] font-bold text-white truncate leading-tight">
               {camera.name}
             </p>
-            <p className="text-[10px] text-slate-300 font-mono">
+            <p className="text-[11px] text-slate-300 font-mono">
               Zona {camera.zona} · ID {camera.id}
             </p>
           </div>

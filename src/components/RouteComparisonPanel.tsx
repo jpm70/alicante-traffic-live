@@ -39,6 +39,7 @@ import { calculateAlicanteTaxiFare, isNightOrHolidayAlicante } from '../data/pub
 
 import { ageMinutes, describeAge, formatUpdatedAt } from '../services/dataAge';
 import { ROUTE_STATUS_LABEL, ROUTE_STATUS_STYLE, cameraStatusLabel, countLabel } from '../services/text';
+import { useDialog } from '../hooks/useDialog';
 // The chart library (recharts, ~370 kB) is not needed to see the route and the map
 const HistoricalTrafficChart = lazy(() => import('./HistoricalTrafficChart').then((m) => ({ default: m.HistoricalTrafficChart })));
 
@@ -95,6 +96,14 @@ export const RouteComparisonPanel: React.FC<RouteComparisonPanelProps> = ({
   const [carLauncherRoute, setCarLauncherRoute] = useState<CalculatedRoute | null>(null);
 
   const hasUserAiKey = typeof window !== 'undefined' && Boolean(localStorage.getItem('alicante_gemini_api_key'));
+
+  const shareDialog = useDialog(
+    () => {
+      setShowShareModal(false);
+      onShareModalToggle?.(false);
+    },
+    { label: 'Compartir la ruta', active: showShareModal, closeOnEscape: false }
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -279,7 +288,7 @@ ${advice}`;
         {/* Quick Route Stats */}
         <div className="grid grid-cols-3 gap-2 my-3 py-2 px-3 bg-slate-950/60 rounded-lg border border-slate-800/80 text-center">
           <div>
-            <span className="block text-[10px] text-slate-400 uppercase font-mono">Estado Tráfico</span>
+            <span className="block text-[11px] text-slate-400 uppercase font-mono">Estado Tráfico</span>
             <span
               data-testid="route-status"
               data-status={fastestRoute.status}
@@ -290,18 +299,18 @@ ${advice}`;
             </span>
           </div>
           <div>
-            <span className="block text-[10px] text-slate-400 uppercase font-mono">Cámaras en Ruta</span>
+            <span className="block text-[11px] text-slate-400 uppercase font-mono">Cámaras en Ruta</span>
             <span className="text-xs font-bold text-cyan-400 font-mono">{countLabel(fastestRoute.cameras.length, 'activa', 'activas')}</span>
           </div>
           <div>
-            <span className="block text-[10px] text-slate-400 uppercase font-mono">Velocidad Med.</span>
+            <span className="block text-[11px] text-slate-400 uppercase font-mono">Velocidad Med.</span>
             <span className="text-xs font-bold text-slate-200 font-mono">
               {Math.round((fastestRoute.distanceKm / (fastestRoute.totalMinutes / 60)) * 10) / 10} km/h
             </span>
           </div>
         </div>
 
-        <p className="text-[10px] text-slate-500 leading-snug -mt-1 mb-2">
+        <p className="text-[11px] text-slate-500 leading-snug -mt-1 mb-2">
           Tiempo base: motor de rutas {fastestRoute.routingProvider && fastestRoute.routingProvider !== 'none' ? `(${fastestRoute.routingProvider})` : ''}.
           Retenciones: estimación por franja horaria en {fastestRoute.cameras.length} cámara{fastestRoute.cameras.length === 1 ? '' : 's'}
           {fastestRoute.incidents.length > 0
@@ -337,7 +346,7 @@ ${advice}`;
                   <span className="font-extrabold text-amber-300 text-sm">
                     Taxímetro Oficial: ~{calculateAlicanteTaxiFare(fastestRoute.distanceKm, fastestRoute.trafficDelayMinutes, originName, destinationName).estimatedTotal.toFixed(2)} €
                   </span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
+                  <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold">
                     {isNightOrHolidayAlicante() ? 'Tarifa 2' : 'Tarifa 1'}
                   </span>
                 </div>
@@ -496,7 +505,7 @@ ${advice}`;
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-white">{route.name}</span>
                         {isWinner && (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="text-[11px] px-1.5 py-0.2 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                             MÁS RÁPIDA
                           </span>
                         )}
@@ -513,7 +522,7 @@ ${advice}`;
                     >
                       {route.totalMinutes} min
                     </span>
-                    <span className="block text-[10px] text-slate-400 font-mono">
+                    <span className="block text-[11px] text-slate-400 font-mono">
                       {route.distanceKm} km
                     </span>
                   </div>
@@ -653,7 +662,8 @@ ${advice}`;
       {/* Direct Route Share Modal (Portaled directly to document.body at z-[99999] so map can never cover it) */}
       {showShareModal && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
+          {...shareDialog}
+          className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 outline-none"
           onClick={() => {
             setShowShareModal(false);
             onShareModalToggle?.(false);
@@ -690,7 +700,7 @@ ${advice}`;
 
             {/* Configuration Summary Card */}
             <div className="bg-slate-900/90 rounded-xl p-3.5 border border-slate-800 space-y-2 text-xs">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 block font-mono">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 block font-mono">
                 Parámetros de Ruta Incluidos
               </span>
 
@@ -821,7 +831,7 @@ ${advice}`;
               )}
             </div>
 
-            <p className="text-[10px] text-slate-500 text-center leading-normal">
+            <p className="text-[11px] text-slate-500 text-center leading-normal">
               Cualquiera que abra este enlace verá automáticamente el mapa, cámaras en vivo y cálculo de tiempos con esta misma configuración.
             </p>
           </div>

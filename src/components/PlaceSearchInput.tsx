@@ -176,7 +176,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({ label, value
           )}
           <span className={`flex-shrink-0 w-3 h-3 rounded-full ring-4 ${dot}`} />
           <div className="flex-1 min-w-0">
-            <label htmlFor={`${listId}-input`} className="block text-[10px] uppercase font-mono tracking-wider text-slate-400">
+            <label htmlFor={`${listId}-input`} className="block text-[11px] uppercase font-mono tracking-wider text-slate-400">
               {label}
             </label>
             <input
@@ -253,7 +253,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({ label, value
               </div>
             )}
             {typing && (
-              <div className="px-3 py-1.5 text-[10px] text-slate-500 bg-slate-900/60">Calles y lugares © colaboradores de OpenStreetMap</div>
+              <div className="px-3 py-1.5 text-[11px] text-slate-500 bg-slate-900/60">Calles y lugares © colaboradores de OpenStreetMap</div>
             )}
           </div>
         )}
